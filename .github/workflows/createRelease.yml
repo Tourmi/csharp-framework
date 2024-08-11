@@ -50,4 +50,4 @@ jobs:
         NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
         NUGET_DEPLOY_URL: ${{  vars.NUGET_DEPLOY_URL }}
       run: |
-        dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key "$NUGET_TOKEN" --source "$NUGET_DEPLOY_URL"
+        dotnet nuget push "src/**/*.nupkg" --skip-duplicate --api-key "$NUGET_TOKEN" --source "$NUGET_DEPLOY_URL"
