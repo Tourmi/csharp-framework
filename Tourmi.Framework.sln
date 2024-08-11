@@ -1,0 +1,68 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4D1A2EF6-3C20-4C39-AF5E-E0E834DEF340}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework", "src\Framework\Framework.csproj", "{DDD716EB-1BBD-4ECE-9E0A-05580E1E6E28}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{91FC8D87-4950-4C45-BF76-884DAB100E54}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3AAC582D-BA17-46AD-B312-5AC7B9B3F0A5}"
+	ProjectSection(SolutionItems) = preProject
+		tests\Directory.Build.props = tests\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.UnitTests", "tests\Framework.UnitTests\Framework.UnitTests.csproj", "{BEE3E116-207E-43A2-82E2-221FF7155E53}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{73CDA76D-ECB5-4F8B-9378-77B38D5205AF}"
+	ProjectSection(SolutionItems) = preProject
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{C06215A5-5DCA-4586-A570-457C6BE6C1CC}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\buildAndTest.yml = .github\workflows\buildAndTest.yml
+		.github\workflows\createRelease.yml = .github\workflows\createRelease.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DDD716EB-1BBD-4ECE-9E0A-05580E1E6E28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDD716EB-1BBD-4ECE-9E0A-05580E1E6E28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDD716EB-1BBD-4ECE-9E0A-05580E1E6E28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDD716EB-1BBD-4ECE-9E0A-05580E1E6E28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{91FC8D87-4950-4C45-BF76-884DAB100E54} = {4D1A2EF6-3C20-4C39-AF5E-E0E834DEF340}
+		{3AAC582D-BA17-46AD-B312-5AC7B9B3F0A5} = {4D1A2EF6-3C20-4C39-AF5E-E0E834DEF340}
+		{73CDA76D-ECB5-4F8B-9378-77B38D5205AF} = {4D1A2EF6-3C20-4C39-AF5E-E0E834DEF340}
+		{C06215A5-5DCA-4586-A570-457C6BE6C1CC} = {73CDA76D-ECB5-4F8B-9378-77B38D5205AF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {081AF8C9-E423-4323-834C-3A1D794E4380}
+	EndGlobalSection
+EndGlobal

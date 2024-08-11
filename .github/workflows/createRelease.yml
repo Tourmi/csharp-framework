@@ -1,0 +1,53 @@
+name: Create release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: release ${{inputs.version}}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Setup cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0
+    - name: .NET version
+      run: dotnet --version
+    - name: Restore dependencies
+      run: dotnet restore --packages ${{ github.workspace }}/.nuget/packages
+    - name: Build
+      env:
+        VERSION: ${{ inputs.version }}
+      run: dotnet build -p:Version="$VERSION" -c release --no-restore
+    - name: Test
+      run: dotnet test -c release --no-build --verbosity normal --blame-hang-timeout 5m
+
+    - name: Create release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ inputs.version }}
+      run: |
+        gh release create "$TAG" src/*/bin/Release/*.*nupkg --generate-notes --title "$TAG"
+    - name: Publish on Nuget
+      env:
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+        NUGET_DEPLOY_URL: ${{  variables.NUGET_DEPLOY_URL }}
+      run: |
+        dotnet nuget push "**/*.nupkg" --skip-duplicate --api-key "$NUGET_TOKEN" --source "$NUGET_DEPLOY_URL"
