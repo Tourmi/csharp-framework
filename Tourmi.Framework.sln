@@ -25,7 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3AAC582D
 		tests\Directory.Build.props = tests\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.UnitTests", "tests\Framework.UnitTests\Framework.UnitTests.csproj", "{BEE3E116-207E-43A2-82E2-221FF7155E53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework.UnitTests", "tests\Framework.UnitTests\Framework.UnitTests.csproj", "{BEE3E116-207E-43A2-82E2-221FF7155E53}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{73CDA76D-ECB5-4F8B-9378-77B38D5205AF}"
 	ProjectSection(SolutionItems) = preProject
@@ -37,6 +37,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\buildAndTest.yml = .github\workflows\buildAndTest.yml
 		.github\workflows\createRelease.yml = .github\workflows\createRelease.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogame", "src\Monogame\Monogame.csproj", "{5AF32252-AAAD-46AC-B2FC-DF75530BDC25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogame.UnitTests", "tests\Monogame.UnitTests\Monogame.UnitTests.csproj", "{6398D88A-4276-4EAF-A300-279AF8F1A646}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aseprite", "src\Aseprite\Aseprite.csproj", "{D9D3A100-D9FA-4FD4-8FBC-B38AC26E96AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aseprite.UnitTests", "tests\Aseprite.UnitTests\Aseprite.UnitTests.csproj", "{5D1D623B-CCF6-4820-9244-CF4651283087}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +60,22 @@ Global
 		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEE3E116-207E-43A2-82E2-221FF7155E53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AF32252-AAAD-46AC-B2FC-DF75530BDC25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AF32252-AAAD-46AC-B2FC-DF75530BDC25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AF32252-AAAD-46AC-B2FC-DF75530BDC25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AF32252-AAAD-46AC-B2FC-DF75530BDC25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6398D88A-4276-4EAF-A300-279AF8F1A646}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6398D88A-4276-4EAF-A300-279AF8F1A646}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6398D88A-4276-4EAF-A300-279AF8F1A646}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6398D88A-4276-4EAF-A300-279AF8F1A646}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9D3A100-D9FA-4FD4-8FBC-B38AC26E96AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9D3A100-D9FA-4FD4-8FBC-B38AC26E96AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9D3A100-D9FA-4FD4-8FBC-B38AC26E96AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9D3A100-D9FA-4FD4-8FBC-B38AC26E96AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D1D623B-CCF6-4820-9244-CF4651283087}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D1D623B-CCF6-4820-9244-CF4651283087}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D1D623B-CCF6-4820-9244-CF4651283087}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D1D623B-CCF6-4820-9244-CF4651283087}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

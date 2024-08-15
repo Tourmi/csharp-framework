@@ -1,5 +1,6 @@
 <Project>
   <ItemGroup Label="Packages">
+    <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
   </ItemGroup>
   <ItemGroup Label="Test Packages">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />

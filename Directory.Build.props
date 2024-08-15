@@ -15,7 +15,9 @@
     <WarningLevel>9999</WarningLevel>
     <AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
-
+  <ItemGroup Condition="'$(MSBuildProjectName)'!='Framework'">
+    <ProjectReference Include="..\..\src\Framework\Framework.csproj" />
+  </ItemGroup>
   <ItemGroup>
     <Using Include="System"/>
     <Using Include="System.Collections"/>
