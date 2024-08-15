@@ -10,7 +10,7 @@ public static class NumberExtensions
     /// <summary>
     /// Computes the modulo of the two given numbers
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Strictly positive result</returns>
     public static TSelf Modulo<TSelf>(this TSelf value, TSelf modulus) where TSelf : INumber<TSelf>
     {
         var res = value % modulus;
