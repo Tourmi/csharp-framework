@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Monogame.Extensions;
 
 [TestFixture(TestOf = typeof(RectangleExtensions))]
-internal class RectangleExtensionsUnitTests
+internal class RectangleExtensionsTests
 {
     public static object[][] RectangleMultiplyTestSource =
     [

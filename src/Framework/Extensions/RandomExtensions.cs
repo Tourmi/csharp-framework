@@ -16,9 +16,9 @@ public static class RandomExtensions
         => collection.ThrowIfNullOrEmpty().ElementAt(random.ThrowIfNull().Next(collection.Count));
 
     /// <summary>
-    /// Returns <paramref name="amount"/> random elements from the given <paramref name="collection"/>
+    /// Picks <paramref name="amount"/> random elements from the given <paramref name="collection"/>
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">Type of the items in the collection</typeparam>
     /// <param name="random">Random source, called up to N times, where N is the amount of items in <paramref name="collection"/></param>
     /// <param name="collection">The collection to take from</param>
     /// <param name="amount">The amount to take from the collection</param>

@@ -3,7 +3,7 @@
 /// <summary>
 /// Data structure used by Aseprite representing a Rectangle. 
 /// </summary>
-public class AsepriteRectangle
+public class Rectangle
 {
     /// <summary>
     /// X location

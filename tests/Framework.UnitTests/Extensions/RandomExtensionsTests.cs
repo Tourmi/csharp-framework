@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Framework.Extensions;
 
 [TestFixture(TestOf = typeof(RandomExtensions))]
-internal class RandomExtensionsUnitTests
+internal class RandomExtensionsTests
 {
     private Random? _random;
     private Random Random => _random.ThrowIfNull();

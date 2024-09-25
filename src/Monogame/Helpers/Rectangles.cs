@@ -8,16 +8,15 @@ public static class Rectangles
     /// <summary>
     /// Returns the bounding <see cref="Rectangle"/> with the given <paramref name="position"/>, <paramref name="offset"/> and <paramref name="size"/>
     /// </summary>
-    /// <returns>Returns the bounding <see cref="Rectangle"/> of the <paramref name="position"/> and <paramref name="size"/></returns>
     public static Rectangle GetBoundingRectangle(Vector2 position, Vector2 offset, Vector2 size)
-    {
-        var realPos = position + offset;
-        var aabb = new Rectangle(
-            (int)Math.Floor(realPos.X),
-            (int)Math.Floor(realPos.Y),
-            (int)Math.Ceiling(Math.Ceiling(realPos.X + size.X) - realPos.X),
-            (int)Math.Ceiling(Math.Ceiling(realPos.Y + size.Y) - realPos.Y));
+        => GetBoundingRectangle(position + offset, size);
 
-        return aabb;
-    }
+    /// <summary>
+    /// Returns the bounding <see cref="Rectangle"/> with the given <paramref name="position"/> and <paramref name="size"/>.
+    /// </summary>
+    public static Rectangle GetBoundingRectangle(Vector2 position, Vector2 size) => new(
+            (int)Math.Floor(position.X),
+            (int)Math.Floor(position.Y),
+            (int)Math.Ceiling(Math.Ceiling(position.X + size.X) - position.X),
+            (int)Math.Ceiling(Math.Ceiling(position.Y + size.Y) - position.Y));
 }

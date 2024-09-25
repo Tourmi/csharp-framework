@@ -5,7 +5,6 @@
 /// </summary>
 public static class DictionaryWithPointKeyExtensions
 {
-
     /// <summary>
     /// Returns a subset of a <see cref="Dictionary{TKey, TValue}"/> with a <see cref="Point"/> Key. 
     /// <para/>The subset returned will have all the keys contained within the given <paramref name="subsetBounds"/>, 

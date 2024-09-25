@@ -93,6 +93,11 @@ public static class VectorReconstructingExtensions
     public static Vector3 WithXYZ(this Vector2 v, Vector2 xy, float z) => Create(xy, z);
     public static Vector3 WithXYZ(this Vector2 v, float x, Vector2 yz) => Create(x, yz);
     public static Vector3 WithXYZ(this Vector2 v, Vector3 xyz) => xyz;
+    public static Vector4 WithXZW(this Vector2 v, float x, float z, float w) => Create(x, v.Y(), z, w);
+    public static Vector4 WithXZW(this Vector2 v, float xzw) => Create(xzw, v.Y(), xzw, xzw);
+    public static Vector4 WithXZW(this Vector2 v, Vector2 xz, float w) => Create(xz.X(), v.Y(), xz.Y(), w);
+    public static Vector4 WithXZW(this Vector2 v, float x, Vector2 zw) => Create(x, v.Y(), zw.XY());
+    public static Vector4 WithXZW(this Vector2 v, Vector3 xzw) => Create(xzw.X(), v.Y(), xzw.YZ());
     public static Vector4 WithYZW(this Vector2 v, float y, float z, float w) => Create(v.X(), y, z, w);
     public static Vector4 WithYZW(this Vector2 v, float yzw) => Create(v.X(), yzw.XXX());
     public static Vector4 WithYZW(this Vector2 v, Vector2 yz, float w) => Create(v.X(), yz, w);
@@ -108,6 +113,11 @@ public static class VectorReconstructingExtensions
     public static Vector4 WithXYW(this Vector3 v, Vector2 xy, float w) => Create(xy, v.Z(), w);
     public static Vector4 WithXYW(this Vector3 v, float x, Vector2 yw) => Create(x, yw.X(), v.Z(), yw.Y());
     public static Vector4 WithXYW(this Vector3 v, Vector3 xyw) => Create(xyw.XY(), v.Z(), xyw.Z());
+    public static Vector4 WithXZW(this Vector3 v, float x, float z, float w) => Create(x, v.Y(), z, w);
+    public static Vector4 WithXZW(this Vector3 v, float xzw) => Create(xzw, v.Y(), xzw, xzw);
+    public static Vector4 WithXZW(this Vector3 v, Vector2 xz, float w) => Create(xz.X(), v.Y(), xz.Y(), w);
+    public static Vector4 WithXZW(this Vector3 v, float x, Vector2 zw) => Create(x, v.Y(), zw.XY());
+    public static Vector4 WithXZW(this Vector3 v, Vector3 xzw) => Create(xzw.X(), v.Y(), xzw.YZ());
     public static Vector4 WithYZW(this Vector3 v, float y, float z, float w) => Create(v.X(), y, z, w);
     public static Vector4 WithYZW(this Vector3 v, float yzw) => Create(v.X(), yzw.XXX());
     public static Vector4 WithYZW(this Vector3 v, Vector2 yz, float w) => Create(v.X(), yz, w);
@@ -123,6 +133,11 @@ public static class VectorReconstructingExtensions
     public static Vector4 WithXYW(this Vector4 v, Vector2 xy, float w) => Create(xy, v.Z(), w);
     public static Vector4 WithXYW(this Vector4 v, float x, Vector2 yw) => Create(x, yw.X(), v.Z(), yw.Y());
     public static Vector4 WithXYW(this Vector4 v, Vector3 xyw) => Create(xyw.XY(), v.Z(), xyw.Z());
+    public static Vector4 WithXZW(this Vector4 v, float x, float z, float w) => Create(x, v.Y(), z, w);
+    public static Vector4 WithXZW(this Vector4 v, float xzw) => Create(xzw, v.Y(), xzw, xzw);
+    public static Vector4 WithXZW(this Vector4 v, Vector2 xz, float w) => Create(xz.X(), v.Y(), xz.Y(), w);
+    public static Vector4 WithXZW(this Vector4 v, float x, Vector2 zw) => Create(x, v.Y(), zw.XY());
+    public static Vector4 WithXZW(this Vector4 v, Vector3 xzw) => Create(xzw.X(), v.Y(), xzw.YZ());
     public static Vector4 WithYZW(this Vector4 v, float y, float z, float w) => Create(v.X(), y, z, w);
     public static Vector4 WithYZW(this Vector4 v, float yzw) => Create(v.X(), yzw.XXX());
     public static Vector4 WithYZW(this Vector4 v, Vector2 yz, float w) => Create(v.X(), yz, w);
