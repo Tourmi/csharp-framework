@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Framework.Extensions;
 
 [TestFixture(TestOf = typeof(NumberExtensions))]
-internal class NumberExtensionsUnitTests
+internal class NumberExtensionsTests
 {
     [Test]
     [TestCase(-5, 3, 1)]

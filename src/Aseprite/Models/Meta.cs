@@ -6,7 +6,7 @@ namespace Tourmi.RLMV.Aseprite;
 /// <summary>
 /// Meta data for the Sprite
 /// </summary>
-public class AsepriteMeta
+public class Meta
 {
     /// <summary>
     /// Version sprite was exported with
@@ -17,11 +17,19 @@ public class AsepriteMeta
     /// </summary>
     public string Image { get; set; }
     /// <summary>
+    /// Image format string for the sprite
+    /// </summary>
+    public string Format { get; set; }
+    /// <summary>
     /// Size of the image file
     /// </summary>
-    public AsepriteRectangle Size { get; set; }
+    public Rectangle Size { get; set; }
+    /// <summary>
+    /// Scale string
+    /// </summary>
+    public string Scale { get; set; }
     /// <summary>
     /// Frame tags of the sprite
     /// </summary>
-    public AsepriteFrameTag[] FrameTags { get; set; }
+    public FrameTag[] FrameTags { get; set; }
 }

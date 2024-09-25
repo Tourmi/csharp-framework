@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Monogame.Extensions;
 
 [TestFixture(TestOf = typeof(DictionaryWithPointKeyExtensions))]
-internal class DictionaryWithPointKeyExtensionsUnitTests
+internal class DictionaryWithPointKeyExtensionsTests
 {
     [Test]
     public void SubsetTest()

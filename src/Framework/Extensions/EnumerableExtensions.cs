@@ -12,6 +12,6 @@ public static class EnumerableExtensions
     /// <param name="enumerable">The enumerable to order randomly</param>
     /// <param name="random">The random source</param>
     /// <returns>The randomly ordered enumerable</returns>
-    public static IOrderedEnumerable<T> OrderByRandom<T>(this IEnumerable<T> enumerable, Random random)
+    public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> enumerable, Random random)
         => enumerable.OrderBy(_ => random.Next());
 }

@@ -37,7 +37,7 @@ public static class Vector2Extensions
     /// Rotates the Vector by the specified angle.
     /// </summary>
     /// <param name="v">This vector</param>
-    /// <param name="angle">should be between -1 to 1</param>
+    /// <param name="angle">should be between a number between -1 and 1, where 1 represents a full rotation</param>
     public static Vector2 Rotate(this Vector2 v, float angle)
     {
         angle *= MathHelper.Tau;
@@ -45,7 +45,7 @@ public static class Vector2Extensions
     }
 
     /// <summary>
-    /// Returns the angle of the vector, as a value between 0 to 1, 0 being an angle pointing right
+    /// Returns the angle of the vector, as a value between 0 to 1, 0 being an angle pointing towards positive X
     /// </summary>
     public static float Angle01(this Vector2 v)
     {

@@ -18,3 +18,4 @@ Contains useful extension methods and helper functions for Monogame/XNA
 
 ## Tourmi.Aseprite
 Models for Serialization/deserialization of Aseprite json data
+- For Spritesheet exports in version 1.3 of Aseprite

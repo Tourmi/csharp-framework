@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Framework.Extensions;
 
 [TestFixture(TestOf = typeof(EnumerableExtensions))]
-internal class EnumerableExtensionsUnitTests
+internal class EnumerableExtensionsTests
 {
     private Random? _random;
     private IEnumerable<int>? _collection;
@@ -19,7 +19,7 @@ internal class EnumerableExtensionsUnitTests
     [Test]
     public void OrderByRandomReturnsRandomEnumerable()
     {
-        var actual = Collection.OrderByRandom(Random).ToList();
+        var actual = Collection.OrderBy(Random).ToList();
 
         Assert.That(actual, Is.EquivalentTo(Collection));
         Assert.That(actual, Is.Not.EqualTo(Collection));

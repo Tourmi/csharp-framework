@@ -6,7 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace Tourmi.Monogame.Rendering;
 
 /// <summary>
-/// Shape drawing utility. Should only be used for debugging.
+/// Shape drawing utility. 
+/// Should only be used for debugging, as these functions are extremely inefficient. 
+/// The Texture2D `whitePixel` needs to be a 1x1 white pixel.
 /// </summary>
 [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Debug utilities, no need for validation")]
 public static class DebugDrawShapes

@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Framework.ServiceProviders;
 
 [TestFixture(TestOf = typeof(ServiceProviderExtensions))]
-internal class ServiceProviderExtensionsUnitTests
+internal class ServiceProviderExtensionsTests
 {
     private ServiceProvider? _serviceProvider;
     private ServiceProvider ServiceProvider => _serviceProvider.ThrowIfNull();

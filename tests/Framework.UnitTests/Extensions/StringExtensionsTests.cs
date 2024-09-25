@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.Framework.Extensions;
 
 [TestFixture(TestOf = typeof(StringExtensions))]
-internal class StringExtensionsUnitTests
+internal class StringExtensionsTests
 {
     [Test]
     [TestCase("value1", "value1")]
