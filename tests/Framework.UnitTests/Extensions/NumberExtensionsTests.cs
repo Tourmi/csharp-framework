@@ -7,7 +7,7 @@ internal class NumberExtensionsTests
     [TestCase(-5, 3, 1)]
     [TestCase(-6, 3, 0)]
     [TestCase(-7, 3, 2)]
-    public void ModuloReturnsCorrectValueForNegativeValue(int value, int modulus, int expected)
+    public void ModuloReturnsExpectedValueForNegativeValue(int value, int modulus, int expected)
     {
         var actual = value.Modulo(modulus);
 
@@ -19,9 +19,22 @@ internal class NumberExtensionsTests
     [TestCase(1, 10, 1)]
     [TestCase(12, 10, 2)]
     [TestCase(115, 10, 5)]
-    public void ModuloReturnsCorrectValue(int value, int modulus, int expected)
+    public void ModuloReturnsExpectedValue(int value, int modulus, int expected)
     {
         var actual = value.Modulo(modulus);
+
+        Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [TestCase(5, 0, 10, 5)]
+    [TestCase(0, 0, 10, 0)]
+    [TestCase(-5, 0, 10, 0)]
+    [TestCase(10, 0, 10, 10)]
+    [TestCase(15, 0, 10, 10)]
+    public void ClampReturnsExpectedValue(int value, int min, int max, int expected)
+    {
+        var actual = value.Clamp(min, max);
 
         Assert.That(actual, Is.EqualTo(expected));
     }

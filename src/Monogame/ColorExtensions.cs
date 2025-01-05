@@ -1,4 +1,4 @@
-﻿namespace Tourmi.Monogame.Extensions;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// Extension methods for <see cref="Color"/>
