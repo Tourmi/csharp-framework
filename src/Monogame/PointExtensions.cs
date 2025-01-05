@@ -1,5 +1,4 @@
 ﻿using Tourmi.Monogame;
-using Tourmi.Monogame.Extensions;
 
 namespace Tourmi.Monogame;
 

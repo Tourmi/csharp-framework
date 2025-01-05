@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Tourmi.Monogame.Extensions;
+namespace Tourmi.Monogame;
 
 [TestFixture(TestOf = typeof(VectorReconstructingExtensions))]
 internal partial class VectorReconstructingExtensionsComponentPickerTests
