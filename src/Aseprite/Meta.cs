@@ -1,7 +1,7 @@
 ﻿#pragma warning disable CA1819 // Properties should not return arrays
 #nullable disable
 
-namespace Tourmi.RLMV.Aseprite;
+namespace Tourmi.Aseprite;
 
 /// <summary>
 /// Meta data for the Sprite

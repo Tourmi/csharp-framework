@@ -1,5 +1,7 @@
 ﻿#nullable disable
-namespace Tourmi.RLMV.Aseprite;
+using Tourmi;
+
+namespace Tourmi.Aseprite;
 
 /// <summary>
 /// Metadata for an individual animation in the sprite
