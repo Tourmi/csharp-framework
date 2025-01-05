@@ -1,9 +1,9 @@
-﻿namespace Tourmi.Monogame.Helpers;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// Helper class for XNA vectors
 /// </summary>
-public static class Vectors
+public static class VectorFactory
 {
     /// <summary>
     /// Creates a new Vector using the specified components

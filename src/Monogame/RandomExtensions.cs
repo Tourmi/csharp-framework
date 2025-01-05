@@ -1,4 +1,4 @@
-﻿namespace Tourmi.Monogame.Extensions;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// XNA-specific Extension methods for <see cref="Random"/>

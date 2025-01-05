@@ -1,6 +1,4 @@
-﻿using Tourmi.Monogame.Helpers;
-
-namespace Tourmi.Monogame.Extensions;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// Extension methods for <see cref="Curve"/>
@@ -50,7 +48,7 @@ public static class CurveExtensions
             currLength += curves[i].LastKey().Position;
         }
 
-        return Curves.BuildCurve([.. keys], c1.PreLoop, c1.PostLoop);
+        return CurveFactory.BuildCurve([.. keys], c1.PreLoop, c1.PostLoop);
     }
 
     /// <summary>
@@ -81,5 +79,5 @@ public static class CurveExtensions
     /// Updates all of the curve keys in the given <see cref="Curve"/> with the given <paramref name="func"/>
     /// </summary>
     /// <returns>The updated curve</returns>
-    public static Curve UpdateCurveKeys(this Curve c1, Func<CurveKey, CurveKey> func) => Curves.BuildCurve(c1.ThrowIfNull().Keys.Select(func.ThrowIfNull()).ToArray());
+    public static Curve UpdateCurveKeys(this Curve c1, Func<CurveKey, CurveKey> func) => CurveFactory.BuildCurve(c1.ThrowIfNull().Keys.Select(func.ThrowIfNull()).ToArray());
 }

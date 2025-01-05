@@ -1,9 +1,9 @@
-﻿namespace Tourmi.Monogame.Helpers;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
-/// Helper methods for <see cref="Rectangle"/>
+/// Helper methods for creating <see cref="Rectangle"/>s
 /// </summary>
-public static class Rectangles
+public static class RectangleFactory
 {
     /// <summary>
     /// Returns the bounding <see cref="Rectangle"/> with the given <paramref name="position"/>, <paramref name="offset"/> and <paramref name="size"/>

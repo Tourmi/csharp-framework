@@ -1,7 +1,7 @@
-﻿namespace Tourmi.Monogame.Helpers;
+﻿namespace Tourmi.Monogame;
 
-[TestFixture(TestOf = typeof(Rectangles))]
-internal class RectanglesTests
+[TestFixture(TestOf = typeof(RectangleFactory))]
+internal class RectangleFactoryTests
 {
     [Test]
     public void GetBoundingRectangleReturnsWorstCaseForPosition()
@@ -9,7 +9,7 @@ internal class RectanglesTests
         var position = new Vector2(-1.1f, 2.9f);
         var size = new Vector2(2f, 3f);
 
-        var actual = Rectangles.GetBoundingRectangle(position, size);
+        var actual = RectangleFactory.GetBoundingRectangle(position, size);
 
         Assert.That(actual, Is.EqualTo(new Rectangle(-2, 2, 3, 4)));
     }
@@ -20,7 +20,7 @@ internal class RectanglesTests
         var position = new Vector2(1, 1);
         var size = new Vector2(1.1f, 2.05f);
 
-        var actual = Rectangles.GetBoundingRectangle(position, size);
+        var actual = RectangleFactory.GetBoundingRectangle(position, size);
 
         Assert.That(actual, Is.EqualTo(new Rectangle(1, 1, 2, 3)));
     }
@@ -31,7 +31,7 @@ internal class RectanglesTests
         var position = new Vector2(-1, 2);
         var size = new Vector2(3, 4);
 
-        var actual = Rectangles.GetBoundingRectangle(position, size);
+        var actual = RectangleFactory.GetBoundingRectangle(position, size);
 
         Assert.That(actual, Is.EqualTo(new Rectangle(-1, 2, 3, 4)));
     }
@@ -43,7 +43,7 @@ internal class RectanglesTests
         var offset = new Vector2(0.1f, -0.1f);
         var size = new Vector2(2, 3);
 
-        var actual = Rectangles.GetBoundingRectangle(position, offset, size);
+        var actual = RectangleFactory.GetBoundingRectangle(position, offset, size);
 
         Assert.That(actual, Is.EqualTo(new Rectangle(-1, 2, 3, 4)));
     }

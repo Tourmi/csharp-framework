@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
+using Tourmi.Monogame.Extensions;
 
-namespace Tourmi.Monogame.Extensions;
+namespace Tourmi.Monogame;
 
 [TestFixture(TestOf = typeof(VectorReconstructingExtensions))]
 internal class VectorReconstructingExtensionsWithComponentTests

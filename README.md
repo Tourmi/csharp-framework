@@ -15,6 +15,8 @@ No guarantees given if you use this repo or these packages.
 
 ## Tourmi.Monogame
 Contains useful extension methods and helper functions for Monogame/XNA
+- Tourmi.Monogame.Tweens
+  - Tweening for properties and fields via `TweenFactory`
 
 ## Tourmi.Aseprite
 Models for Serialization/deserialization of Aseprite json data
