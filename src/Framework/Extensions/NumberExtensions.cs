@@ -21,4 +21,22 @@ public static class NumberExtensions
 
         return res;
     }
+
+    /// <summary>
+    /// Clamps the given <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>
+    /// </summary>
+    public static TSelf Clamp<TSelf>(this TSelf value, TSelf min, TSelf max) where TSelf : INumber<TSelf>
+    {
+        if (value < min)
+        {
+            return min;
+        }
+
+        if (value > max)
+        {
+            return max;
+        }
+
+        return value;
+    }
 }
