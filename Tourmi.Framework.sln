@@ -56,6 +56,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Coroutines", "src\Coroutine
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coroutines.UnitTests", "tests\Coroutines.UnitTests\Coroutines.UnitTests.csproj", "{D707B55C-5311-4792-B511-C8CBFF1A4B7E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coroutines.IntegrationTests", "tests\Coroutines.IntegrationTests\Coroutines.IntegrationTests.csproj", "{91B473A2-FEE9-4EED-B6C3-22FE64D411E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,10 @@ Global
 		{D707B55C-5311-4792-B511-C8CBFF1A4B7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D707B55C-5311-4792-B511-C8CBFF1A4B7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D707B55C-5311-4792-B511-C8CBFF1A4B7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91B473A2-FEE9-4EED-B6C3-22FE64D411E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91B473A2-FEE9-4EED-B6C3-22FE64D411E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91B473A2-FEE9-4EED-B6C3-22FE64D411E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91B473A2-FEE9-4EED-B6C3-22FE64D411E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{5D1D623B-CCF6-4820-9244-CF4651283087} = {8EF698E3-1BCB-417F-98FC-DE658F393669}
 		{57EE7184-8419-4AF7-AFD4-6A6572C25CE2} = {79016957-7856-4572-9847-04F906A2D59E}
 		{D707B55C-5311-4792-B511-C8CBFF1A4B7E} = {79016957-7856-4572-9847-04F906A2D59E}
+		{91B473A2-FEE9-4EED-B6C3-22FE64D411E9} = {79016957-7856-4572-9847-04F906A2D59E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {081AF8C9-E423-4323-834C-3A1D794E4380}

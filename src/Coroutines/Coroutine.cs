@@ -1,148 +1,148 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Tourmi.Coroutines.CompilerServices;
+using Tourmi.Coroutines.Sources;
 
 namespace Tourmi.Coroutines;
 
-[Flags]
-internal enum CoroutineStates
-{
-    None = 0,
-    Completed = 1 << 0,
-    Running = 1 << 1,
-}
-
 /// <summary>
-/// 
+/// Represents a task that will continue its execution on the same thread later on.
 /// </summary>
-[AsyncMethodBuilder(typeof(CoroutineAsyncMethodBuilder))]
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "No need for now")]
-public struct Coroutine
+[AsyncMethodBuilder(typeof(AsyncCoroutineMethodBuilder))]
+public readonly partial struct Coroutine() : IEquatable<Coroutine>
 {
-    private CoroutineStates _state;
+    private readonly Exception? _exception;
+    private readonly CancellationToken _cancellationToken;
+    private readonly ICoroutineSource<CoroutineUnit>? _coroutineSource;
 
-    /// <inheritdoc cref="Coroutine"/>
-    public Coroutine()
+    /// <inheritdoc cref="Coroutine{TResult}"/>
+    public Coroutine(Exception exception)
+        : this()
     {
-        _state = CoroutineStates.Running;
+        _exception = exception;
+    }
+
+    /// <inheritdoc cref="Coroutine{TResult}"/>
+    public Coroutine(CancellationToken cancellationToken)
+        : this()
+    {
+        _cancellationToken = cancellationToken;
+    }
+
+    /// <inheritdoc cref="Coroutine{TResult}"/>
+    public Coroutine(ICoroutineSource<CoroutineUnit>? completionSource)
+        : this()
+    {
+        _coroutineSource = completionSource;
+    }
+
+    internal Coroutine(ICoroutineSource<CoroutineUnit>? completionSource, Exception? exception, CancellationToken cancellationToken)
+        : this(cancellationToken)
+    {
+        _coroutineSource = completionSource;
+        _exception = exception;
     }
 
     /// <summary>
-    /// Returns the default awaiter for a coroutine
+    /// Represents an already completed coroutine.
     /// </summary>
-    public readonly CoroutineAwaiter GetAwaiter() => new(in this);
+    public static Coroutine CompletedCoroutine => default;
 
-    internal CoroutineStates State
+    /// <summary>
+    /// Current state of the coroutine
+    /// </summary>
+    public CoroutineStatus Status
     {
-        readonly get => _state;
-        set => _state = value;
-    }
-}
-
-/// <summary>
-/// Awaiter for <see cref="Coroutine"/>
-/// </summary>
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "No need for an Awaiter")]
-public readonly struct CoroutineAwaiter
-    : INotifyCompletion
-{
-    private readonly Coroutine _coroutine;
-
-    /// <summary>
-    /// Constructs a <see cref="CoroutineAwaiter"/>
-    /// </summary>
-    public CoroutineAwaiter(in Coroutine coroutine)
-    {
-        _coroutine = coroutine;
-    }
-
-    /// <summary>
-    /// Whether the coroutine finished or not
-    /// </summary>
-    public bool IsCompleted => _coroutine.State == CoroutineStates.None || (_coroutine.State & CoroutineStates.Completed) != 0;
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public void GetResult() { }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="continuation"></param>
-    /// <exception cref="NotImplementedException"></exception>
-    public void OnCompleted(Action continuation) => throw new NotImplementedException();
-}
-
-/// <summary>
-/// AsyncMethodBuilder for Coroutines
-/// </summary>
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "No need for an AsyncMethodBuilder")]
-public struct CoroutineAsyncMethodBuilder
-{
-    private bool _isSuccess;
-
-    /// <summary>
-    /// Creates a new <see cref="CoroutineAsyncMethodBuilder"/>
-    /// </summary>
-    /// <returns></returns>
-    public static CoroutineAsyncMethodBuilder Create() => default;
-
-    /// <summary>
-    /// Task linked to this <see cref="CoroutineAsyncMethodBuilder"/>
-    /// </summary>
-    public Coroutine Task { get; private set; }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public void Start<TStateMachine>(ref TStateMachine stateMachine)
-        where TStateMachine : IAsyncStateMachine
-    {
-        if (!_isSuccess)
+        get
         {
-            stateMachine.MoveNext();
+            if (_coroutineSource is not null)
+            {
+                return _coroutineSource.GetStatus();
+            }
+
+            if (_exception is not null)
+            {
+                return CoroutineStatus.Failed;
+            }
+
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                return CoroutineStatus.Canceled;
+            }
+
+            return CoroutineStatus.Succeeded;
         }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="stateMachine"></param>
-    public void SetStateMachine(IAsyncStateMachine stateMachine) { }
+    internal ICoroutineSource<CoroutineUnit>? CoroutineSource => _coroutineSource;
+
+    internal Exception? Exception => _exception;
+
+    internal CancellationToken CancellationToken => _cancellationToken;
+
+    /// <inheritdoc cref="CoroutineExtensions.ToCoroutine(Coroutine{CoroutineUnit})"/>
+    [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "The method exists in CoroutineExtensions.")]
+    public static implicit operator Coroutine(Coroutine<CoroutineUnit> coroutine) => coroutine.ToCoroutine();
+
+    /// <inheritdoc/>
+    public static bool operator ==(Coroutine left, Coroutine right) => left.Equals(right);
+
+    /// <inheritdoc/>
+    public static bool operator !=(Coroutine left, Coroutine right) => !(left == right);
 
     /// <summary>
-    /// 
+    /// Returns a new Coroutine that is already complete with the given <paramref name="result"/>.
     /// </summary>
-    public void SetException(Exception exception) { }
+    public static Coroutine<TResult> FromResult<TResult>(TResult result) => new(result);
 
     /// <summary>
-    /// Sets the result of the Coroutine
+    /// Creates a new Coroutine that failed execution due to the given exception.
     /// </summary>
-    public void SetResult() => _isSuccess = true;
+    public static Coroutine FromException(Exception e) => new(e);
 
     /// <summary>
-    /// 
+    /// Creates a new Coroutine from the given <paramref name="cancellationToken"/>.
     /// </summary>
-    public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine)
-        where TAwaiter : INotifyCompletion
-        where TStateMachine : IAsyncStateMachine
+    public static Coroutine FromCanceled(CancellationToken cancellationToken = default) => new(cancellationToken);
+
+    /// <summary>
+    /// Returns the default awaiter for a coroutine.
+    /// </summary>
+    public CoroutineAwaiter GetAwaiter() => new(this);
+
+    /// <inheritdoc/>
+    public bool Equals(Coroutine other) => _coroutineSource == other._coroutineSource && _exception == other._exception;
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) => obj is Coroutine coroutine && Equals(coroutine);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => _coroutineSource?.GetHashCode() ?? _exception?.GetHashCode() ?? 0;
+
+    internal void GetResult()
     {
+        if (_coroutineSource is not null)
+        {
+            _ = _coroutineSource.GetResult();
+            return;
+        }
 
+        if (_exception is not null)
+        {
+            throw _exception;
+        }
+
+        _cancellationToken.ThrowIfCancellationRequested();
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="TAwaiter"></typeparam>
-    /// <typeparam name="TStateMachine"></typeparam>
-    /// <param name="awaiter"></param>
-    /// <param name="stateMachine"></param>
-    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine)
-        where TAwaiter : ICriticalNotifyCompletion
-        where TStateMachine : IAsyncStateMachine
+    internal void OnCompleted(Action continuation)
     {
+        if (_coroutineSource is not null)
+        {
+            _coroutineSource.OnCompleted(continuation);
+            return;
+        }
 
+        continuation();
     }
 }

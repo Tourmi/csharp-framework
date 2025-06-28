@@ -20,6 +20,7 @@
   
   <ItemGroup>
     <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+    <InternalsVisibleTo Include="$(AssemblyName).IntegrationTests" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="True" PackagePath="\" />
