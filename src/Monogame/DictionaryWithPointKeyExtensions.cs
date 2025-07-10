@@ -1,4 +1,4 @@
-﻿namespace Tourmi.Monogame.Extensions;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// Extension methods for a <see cref="Dictionary{TKey, TValue}"/> that has a <see cref="Point"/> Key

@@ -1,16 +1,15 @@
-﻿using Tourmi.Monogame.Extensions;
-
-namespace Tourmi.Monogame.Helpers;
+﻿namespace Tourmi.Monogame;
 
 /// <summary>
 /// Helper methods for <see cref="Curve"/> and <see cref="CurveKey"/>
 /// </summary>
-public static class Curves
+public static class CurveFactory
 {
     /// <summary>
     /// Builds a curve based on the given curve keys, using <see cref="CurveLoopType.Constant"/> for both Pre and PostLoop options
     /// </summary>
-    public static Curve BuildCurve(params CurveKey[] curveKeys) => BuildCurve(curveKeys, CurveLoopType.Constant, CurveLoopType.Constant);
+    public static Curve BuildCurve(params CurveKey[] curveKeys)
+        => BuildCurve(curveKeys, CurveLoopType.Constant, CurveLoopType.Constant);
 
     /// <summary>
     /// Builds a curve based on the given curve keys, preloop and postloop options

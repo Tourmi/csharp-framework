@@ -1,4 +1,6 @@
-﻿namespace Tourmi.Monogame.Extensions;
+﻿using Tourmi.Monogame;
+
+namespace Tourmi.Monogame;
 
 /// <summary>
 /// Extension methods for <see cref="Point"/>

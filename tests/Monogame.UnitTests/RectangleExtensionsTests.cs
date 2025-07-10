@@ -1,4 +1,4 @@
-﻿namespace Tourmi.Monogame.Extensions;
+﻿namespace Tourmi.Monogame;
 
 [TestFixture(TestOf = typeof(RectangleExtensions))]
 internal class RectangleExtensionsTests

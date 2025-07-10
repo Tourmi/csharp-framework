@@ -1,8 +1,8 @@
-﻿using static Tourmi.Monogame.Helpers.Vectors;
+﻿using static Tourmi.Monogame.VectorFactory;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-namespace Tourmi.Monogame.Extensions;
+namespace Tourmi.Monogame;
 
 /// <summary>
 /// Extension methods that allows re-ordering and reconstructing new vectors based on their components
