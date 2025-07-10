@@ -1,5 +1,5 @@
 ﻿#nullable disable
-namespace Tourmi.RLMV.Aseprite;
+namespace Tourmi.Aseprite;
 
 /// <summary>
 /// Represents a single animation frame.

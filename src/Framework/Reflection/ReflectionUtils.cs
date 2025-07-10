@@ -15,5 +15,5 @@ public static class ReflectionUtils
     public static IEnumerable<Type> GetImplementingTypes<T>()
         => AppDomain.CurrentDomain
         .GetAssemblies()
-        .SelectMany(a => a.GetTypes().Where(t => !t.IsAbstract && typeof(T).IsAssignableFrom(t)));
+        .SelectMany(a => a.GetTypes().Where(t => !t.IsAbstract && typeof(T).IsAssignableFrom(t) && (t.IsNestedPublic || t.IsPublic)));
 }

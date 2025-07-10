@@ -13,9 +13,12 @@ public static class ObjectGuardClauses
     /// </summary>
     /// <exception cref="ArgumentNullException"/>
     [return: NotNull]
-    public static T ThrowIfNull<T>([NotNull] this T value, [CallerArgumentExpression(nameof(value))] string? valueName = null)
+    public static T ThrowIfNull<T>([NotNull] this T? value, [CallerArgumentExpression(nameof(value))] string? valueName = null)
     {
-        ArgumentNullException.ThrowIfNull(value, nameof(value));
+        if (value is null)
+        {
+            throw new ArgumentNullException(valueName);
+        }
 
         return value;
     }

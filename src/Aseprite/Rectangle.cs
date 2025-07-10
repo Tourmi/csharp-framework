@@ -1,4 +1,4 @@
-﻿namespace Tourmi.RLMV.Aseprite;
+﻿namespace Tourmi.Aseprite;
 
 /// <summary>
 /// Data structure used by Aseprite representing a Rectangle. 
