@@ -15,11 +15,13 @@ Utility and general purpose code for any .NET project.
 - Tourmi.Framework.ServiceProviders
   - Personal implementation of a lazy service provider
 
-## Tourmi.Coroutines
-ValueTask-like type for use in games (or applications with an update loop), allowing for single-threaded async code.
+## [BETA] Tourmi.Coroutines
+ValueTask-like type for use in games (or applications with an update loop), 
+allowing for GC-free async code that can be contextualized per update loop 
+(ie: Variable Update, Fixed Update, etc).
 
-- Used through the CoroutineContext class. 
-  Coroutines can only be queued within a CoroutineContext.Enter(), and will only update once the context is exited.
+- Used through the CoroutineContext class.
+  Coroutines can only be queued within a CoroutineContext.Enter() `using` scope, and will only update once the scope is exited.
 
 ### TODO
 - Write tests
