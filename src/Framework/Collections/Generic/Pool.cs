@@ -14,5 +14,5 @@ public class Pool<T> : IPool<T>
     public bool TryTake([NotNullWhen(true)] out T? item) => _items.TryPop(out item);
 
     /// <inheritdoc/>
-    public void Return(T instance) => _items.Push(instance.ThrowIfNull());
+    public void Return(T item) => _items.Push(item.ThrowIfNull());
 }
