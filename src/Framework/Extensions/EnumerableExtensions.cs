@@ -14,4 +14,9 @@ public static class EnumerableExtensions
     /// <returns>The randomly ordered enumerable</returns>
     public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> enumerable, Random random)
         => enumerable.OrderBy(_ => random.Next());
+
+    /// <summary>
+    /// Returns an empty enumerable if the given enumerable is null.
+    /// </summary>
+    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? enumerable) => enumerable ?? [];
 }

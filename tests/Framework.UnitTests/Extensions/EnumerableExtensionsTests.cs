@@ -12,7 +12,7 @@ internal class EnumerableExtensionsTests
     [SetUp]
     public void SetUp()
     {
-        _random = new Random();
+        _random = new Random(0);
         _collection = Enumerable.Range(0, 1000).ToList();
     }
 
@@ -23,5 +23,22 @@ internal class EnumerableExtensionsTests
 
         Assert.That(actual, Is.EquivalentTo(Collection));
         Assert.That(actual, Is.Not.EqualTo(Collection));
+    }
+
+    [Test]
+    public void EmptyIfNullReturnsOriginalCollectionIfNotNull()
+    {
+        var actual = Collection.EmptyIfNull();
+
+        Assert.That(actual, Is.SameAs(Collection));
+    }
+
+    [Test]
+    public void EmptyIfNullReturnsEmptyCollectionIfNull()
+    {
+        var actual = ((IEnumerable<int>?)null).EmptyIfNull();
+
+        Assert.That(actual, Is.Not.Null);
+        Assert.That(actual, Is.Empty);
     }
 }
