@@ -13,7 +13,7 @@ tab_width = 4
 
 # New line preferences
 end_of_line = crlf
-insert_final_newline = false
+insert_final_newline = true
 
 #### .NET Coding Conventions ####
 
@@ -224,8 +224,6 @@ dotnet_naming_style.begins_with_i.capitalization = pascal_case
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_primary_constructors = true:suggestion
 
-# CA1822: Mark members as static
-dotnet_diagnostic.CA1822.severity = suggestion
 csharp_style_prefer_readonly_struct = true:suggestion
 csharp_style_prefer_readonly_struct_member = true:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
@@ -270,6 +268,21 @@ dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
 insert_final_newline = true
+
+# CA1062: Validate arguments of public methods
 dotnet_diagnostic.CA1062.severity = warning
+
+# CA5394: Do not use insecure randomness
+# This solution does not deal in anything security-critical
 dotnet_diagnostic.CA5394.severity = none
+
+# CA1822: Mark members as static
+dotnet_diagnostic.CA1822.severity = suggestion
+
+# CA1034: Nested types should not be visible
+# Broken due to extension members
+dotnet_diagnostic.CA1034.severity = silent
+
+# CA2225: Operator overloads have named alternates
+# Causes lots of boilerplate code in structs
 dotnet_diagnostic.CA2225.severity = silent

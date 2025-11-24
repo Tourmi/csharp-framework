@@ -5,18 +5,21 @@
 /// </summary>
 public static class EnumerableExtensions
 {
-    /// <summary>
-    /// Orders the given <paramref name="enumerable"/> randomly
-    /// </summary>
-    /// <typeparam name="T">Type of the items in the enumerable</typeparam>
-    /// <param name="enumerable">The enumerable to order randomly</param>
-    /// <param name="random">The random source</param>
-    /// <returns>The randomly ordered enumerable</returns>
-    public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> enumerable, Random random)
-        => enumerable.OrderBy(_ => random.Next());
+    extension<T>(IEnumerable<T> enumerable)
+    {
+        /// <summary>
+        /// Orders the given randomly
+        /// </summary>
+        /// <param name="random">The random source</param>
+        /// <returns>The randomly ordered enumerable</returns>
+        public IOrderedEnumerable<T> OrderBy(Random random) => enumerable.OrderBy(_ => random.Next());
+    }
 
-    /// <summary>
-    /// Returns an empty enumerable if the given enumerable is null.
-    /// </summary>
-    public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? enumerable) => enumerable ?? [];
+    extension<T>(IEnumerable<T>? enumerable)
+    {
+        /// <summary>
+        /// Returns an empty enumerable if the given enumerable is null.
+        /// </summary>
+        public IEnumerable<T> EmptyIfNull() => enumerable ?? [];
+    }
 }
