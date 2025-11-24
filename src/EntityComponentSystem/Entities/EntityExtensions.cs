@@ -9,11 +9,7 @@ public static class EntityExtensions
     /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.
     /// Does nothing if the entity already has the component.
     /// </summary>
-    public static void Add<TComponent>(in this Entity entity)
-        where TComponent : new()
-    {
-        throw new NotImplementedException();
-    }
+    public static void Add<TComponent>(in this Entity entity) => entity.World?.Add<TComponent>(entity);
 
     /// <summary>
     /// Adds the component with <paramref name="componentId"/> to the entity, instantiating it with the parameterless constructor.
@@ -40,10 +36,7 @@ public static class EntityExtensions
     /// <summary>
     /// Removes the <typeparamref name="TComponent"/> from the entity.
     /// </summary>
-    public static void Remove<TComponent>(in this Entity entity)
-    {
-        throw new NotImplementedException();
-    }
+    public static void Remove<TComponent>(in this Entity entity) => entity.World?.Remove<TComponent>(entity);
 
     /// <summary>
     /// Removes the component with <paramref name="componentId"/> from the entity.
@@ -57,10 +50,7 @@ public static class EntityExtensions
     /// Returns a readonly copy of the <typeparamref name="TComponent"/> from the <paramref name="entity"/>.
     /// Will throw if the entity does not contain the <typeparamref name="TComponent"/>.
     /// </summary>
-    public static TComponent Get<TComponent>(in this Entity entity)
-    {
-        throw new NotImplementedException();
-    }
+    public static TComponent? Get<TComponent>(in this Entity entity) => entity.World is null ? default : entity.World.Get<TComponent>(entity);
 
     /// <summary>
     /// Returns a readonly copy of the <typeparamref name="TComponent"/> with <paramref name="componentId"/> from the <paramref name="entity"/>.
@@ -126,10 +116,7 @@ public static class EntityExtensions
     /// <summary>
     /// Sets the component for the entity, adding it if the entity did not contain it.
     /// </summary>
-    public static void Set<TComponent>(in this Entity entity, TComponent component)
-    {
-        throw new NotImplementedException();
-    }
+    public static void Set<TComponent>(in this Entity entity, TComponent component) => entity.World?.Set(entity, component);
 
     /// <summary>
     /// Sets the component with <paramref name="componentId"/> for the entity, adding it if the entity did not contain it.
@@ -158,26 +145,10 @@ public static class EntityExtensions
     /// <summary>
     /// Returns <see langword="true"/> if the entity is alive.
     /// </summary>
-    public static bool IsAlive(in this Entity entity)
-    {
-        if (entity.World is null)
-        {
-            return false;
-        }
-
-        throw new NotImplementedException();
-    }
+    public static bool IsAlive(in this Entity entity) => entity.World?.IsAlive(entity) ?? false;
 
     /// <summary>
     /// Kills the <paramref name="entity"/>, deleting its components.
     /// </summary>
-    public static void Kill(in this Entity entity)
-    {
-        if (entity.World is null)
-        {
-            return;
-        }
-
-        throw new NotImplementedException();
-    }
+    public static void Kill(in this Entity entity) => entity.World?.Kill(entity);
 }

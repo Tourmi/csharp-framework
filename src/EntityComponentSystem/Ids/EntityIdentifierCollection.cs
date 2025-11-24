@@ -143,6 +143,9 @@ internal partial class EntityIdentifierCollection
         lastAliveEntity.IdentifierIndex = oldIndex;
     }
 
+    /// <summary>
+    /// Reserves the given region for future entity generation.
+    /// </summary>
     public void Reserve(IdentifierRegion region)
     {
         if (_reservedRegionsToCurrentDataIndex.ContainsKey(region.ThrowIfNull()))
@@ -193,6 +196,69 @@ internal partial class EntityIdentifierCollection
                 .First(ri => ri.Region.Offset == oldRegion.Offset)
                 .Index;
         }
+    }
+
+    public void AddComponent(Identifier entityId, Identifier componentId, Type? componentDataType)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        if (entity.Archetype.HasComponent(componentId))
+        {
+            return;
+        }
+
+        var (updatedEntity, toUpdate) = entity.Archetype.AddComponent(entity.ArchetypeIndex, componentId, componentDataType);
+        if (toUpdate.HasValue)
+        {
+            var (entityToUpdate, entityNewIndex) = toUpdate.Get();
+            ref var toUpdateIdToArchetype = ref _entities[entityToUpdate.ShortId];
+            toUpdateIdToArchetype.ArchetypeIndex = entityNewIndex;
+        }
+
+        entity.Archetype = updatedEntity.NewArchetype;
+        entity.ArchetypeIndex = updatedEntity.NewIndex;
+    }
+
+    public void RemoveComponent(Identifier entityId, Identifier componentId)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        if (!entity.Archetype.HasComponent(componentId))
+        {
+            return;
+        }
+
+        var (updatedEntity, toUpdate) = entity.Archetype.RemoveComponent(entity.ArchetypeIndex, componentId);
+        if (toUpdate.HasValue)
+        {
+            var (entityToUpdate, entityNewIndex) = toUpdate.Get();
+            ref var toUpdateIdToArchetype = ref _entities[entityToUpdate.ShortId];
+            toUpdateIdToArchetype.ArchetypeIndex = entityNewIndex;
+        }
+
+        entity.Archetype = updatedEntity.NewArchetype;
+        entity.ArchetypeIndex = updatedEntity.NewIndex;
+    }
+
+    public bool HasComponent(Identifier entityId, Identifier componentId)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        return entity.Archetype.HasComponent(componentId);
+    }
+
+    public T? GetComponent<T>(Identifier entityId, Identifier componentId)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        if (!entity.Archetype.HasComponent(componentId))
+        {
+            return default;
+        }
+
+        return entity.Archetype.GetValue<T>(entity.ArchetypeIndex, componentId);
+    }
+
+    public void SetComponent<T>(Identifier entityId, Identifier componentId, T value)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        entity.Archetype.SetValue(entity.ArchetypeIndex, componentId, value);
     }
 
     private Identifier Create(ref IdRegionData regionData)

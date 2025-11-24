@@ -270,7 +270,8 @@ dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
 insert_final_newline = true
 
 # CA1062: Validate arguments of public methods
-dotnet_diagnostic.CA1062.severity = warning
+# Detection is bad
+dotnet_diagnostic.CA1062.severity = silent
 
 # CA5394: Do not use insecure randomness
 # This solution does not deal in anything security-critical

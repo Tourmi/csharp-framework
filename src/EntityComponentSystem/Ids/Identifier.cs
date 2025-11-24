@@ -8,7 +8,7 @@ namespace Tourmi.EntityComponentSystem.Ids;
 /// </summary>
 /// <param name="id">Id of the entity</param>
 [StructLayout(LayoutKind.Explicit, Size = 8)]
-public readonly struct Identifier(ulong id) : IEquatable<Identifier>
+public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>
 {
     /// <summary>
     /// Mask for the short form of the identifier.
@@ -98,4 +98,7 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>
 
     /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
+
+    /// <inheritdoc/>
+    public int CompareTo(Identifier other) => Value.CompareTo(other.Value);
 }
