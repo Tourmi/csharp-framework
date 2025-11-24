@@ -1,5 +1,5 @@
 # Tourmi Framework
-Personal repo for general-use code in C# projects
+Personal repo for general-use code in .NET projects
 
 No guarantees given if you use this repo or these packages.
 
