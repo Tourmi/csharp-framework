@@ -3,6 +3,9 @@ using Tourmi.Framework.Collections;
 
 namespace Tourmi.EntityComponentSystem;
 
+/// <summary>
+/// Collection that contains a world's entitity IDs, as well as links to the archetypes of an entity.
+/// </summary>
 internal partial class EntityIdentifierCollection
 {
     /// <param name="Archetype"> Archetype of the entity. </param>
@@ -260,6 +263,11 @@ internal partial class EntityIdentifierCollection
         ref var entity = ref _entities[entityId.ShortId];
         entity.Archetype.SetValue(entity.ArchetypeIndex, componentId, value);
     }
+
+    /// <summary>
+    /// For debugging or testing purposes only.
+    /// </summary>
+    internal Archetype? GetArchetype(Identifier entityId) => _entities[entityId.ShortId].Archetype;
 
     private Identifier Create(ref IdRegionData regionData)
     {

@@ -33,6 +33,11 @@ internal partial class Archetype
     }
 
     /// <summary>
+    /// All the components represented by this archetype
+    /// </summary>
+    public IEnumerable<Identifier> Components => _componentsData.Keys;
+
+    /// <summary>
     /// Adds the entity to the archetype and returns the index it has in the archetype
     /// </summary>
     public int AddEntity(Identifier entityId)

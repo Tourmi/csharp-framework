@@ -53,14 +53,19 @@ public class World
         var name = _entities.Create(_builtInRegion);
         _typesToIdentifier[typeof(Name)] = name;
         _entities.AddComponent(name, component, null);
-        Set(name, new DataComponent() { DataType = typeof(Name) });
-        Set(name, new Name() { Value = nameof(Name) });
+        Set<DataComponent>(name, data, new(typeof(Name)));
+        Set<Name>(name, name, new(nameof(Name)));
 
-        Set(component, new Name() { Value = nameof(Component) });
-        Set(data, new Name() { Value = nameof(DataComponent) });
+        Set(component, name, new Name(nameof(Component)));
+        Set(data, name, new Name(nameof(DataComponent)));
 
         // todo: initialize rest of built-in components
     }
+
+    /// <summary>
+    /// Collection used for testing or debugging purposes.
+    /// </summary>
+    internal EntityIdentifierCollection Entities => _entities;
 
     /// <summary>
     /// Creates a new 
@@ -95,30 +100,6 @@ public class World
     public void Kill(Identifier entity) => _entities.Kill(entity);
 
     /// <summary>
-    /// Returns the entity representing the component of the given <typeparamref name="TComponent"/> type.
-    /// </summary>
-    public ComponentEntity GetComponentForType<TComponent>() => GetOrRegisterComponentEntity<TComponent>();
-
-    /// <summary>
-    /// Returns true if the entity has the given component.
-    /// </summary>
-    public bool Has<T>(Identifier targetEntity)
-    {
-        if (!_entities.IsAlive(targetEntity))
-        {
-            return false;
-        }
-
-        var component = GetComponentForType<T>();
-        if (!_entities.IsAlive(component))
-        {
-            return false;
-        }
-
-        return _entities.HasComponent(targetEntity, component);
-    }
-
-    /// <summary>
     /// Returns true if the entity has the given component.
     /// </summary>
     public bool Has(Identifier targetEntity, Identifier component)
@@ -132,31 +113,16 @@ public class World
     }
 
     /// <summary>
-    /// Returns the component value for the given entity.
+    /// Returns the component value for the given <paramref name="entity"/>.
     /// </summary>
-    public T? Get<T>(Identifier targetEntity)
+    public T? Get<T>(Identifier entity, Identifier component)
     {
-        var component = GetComponentForType<T>();
-
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
-        {
-            return default;
-        }
-
-        return _entities.GetComponent<T>(targetEntity, component);
-    }
-
-    /// <summary>
-    /// Returns the component value for the given entity.
-    /// </summary>
-    public T? Get<T>(Identifier targetEntity, Identifier component)
-    {
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
         {
             return default!;
         }
 
-        return _entities.GetComponent<T>(targetEntity, component);
+        return _entities.GetComponent<T>(entity, component);
     }
 
     /// <summary>
@@ -169,23 +135,7 @@ public class World
             return;
         }
 
-        var dataType = Get<DataComponent>(component);
-
-        _entities.AddComponent(targetEntity, component, dataType.DataType);
-    }
-
-    /// <summary>
-    /// Adds the given component to the <paramref name="targetEntity"/>, without any associated data.
-    /// </summary>
-    public void Add<T>(Identifier targetEntity)
-    {
-        var component = GetComponentForType<T>();
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
-        {
-            return;
-        }
-
-        var dataType = Get<DataComponent>(component);
+        var dataType = Get<DataComponent>(component, GetComponentForType<DataComponent>());
 
         _entities.AddComponent(targetEntity, component, dataType.DataType);
     }
@@ -195,25 +145,6 @@ public class World
     /// </summary>
     public void Set<T>(Identifier targetEntity, Identifier component, T value)
     {
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
-        {
-            return;
-        }
-
-        if (!Has(targetEntity, component))
-        {
-            Add(targetEntity, component);
-        }
-
-        _entities.SetComponent(targetEntity, component, value);
-    }
-
-    /// <summary>
-    /// Sets the component's value for the <paramref name="targetEntity"/> to the given <paramref name="value"/>
-    /// </summary>
-    public void Set<T>(Identifier targetEntity, T value)
-    {
-        var component = GetComponentForType<T>();
         if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
         {
             return;
@@ -246,26 +177,9 @@ public class World
     }
 
     /// <summary>
-    /// Removes the given component from the <paramref name="entity"/>.
+    /// Returns the entity representing the component of the given <typeparamref name="TComponent"/> type.
     /// </summary>
-    public void Remove<T>(Identifier entity)
-    {
-        var component = GetComponentForType<T>();
-
-        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
-        {
-            return;
-        }
-
-        if (!Has(entity, component))
-        {
-            return;
-        }
-
-        _entities.RemoveComponent(entity, component);
-    }
-
-    private ComponentEntity GetOrRegisterComponentEntity<TComponent>()
+    public ComponentEntity GetComponentForType<TComponent>()
     {
         if (!_typesToIdentifier.TryGetValue(typeof(TComponent), out var componentId) || !IsAlive(componentId))
         {

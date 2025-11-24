@@ -1,10 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Entity that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
+[DebuggerTypeProxy(typeof(EntityDebugView))]
+[DebuggerDisplay("{DebugView,nq}")]
 public readonly struct Entity : IEquatable<Entity>
 {
     /// <summary>
@@ -13,6 +16,8 @@ public readonly struct Entity : IEquatable<Entity>
     public Identifier Id { get; }
 
     internal World? World { get; }
+
+    private EntityDebugView DebugView => new(this);
 
     internal Entity(Identifier id, World? world)
     {
@@ -39,4 +44,18 @@ public readonly struct Entity : IEquatable<Entity>
 
     /// <inheritdoc/>
     public override bool Equals([NotNullWhen(true)] object? obj) => obj is Entity other && Equals(other);
+
+    [DebuggerDisplay("Id = { Id.Value }, IsAlive {IsAlive}, Name = { Name }")]
+    internal class EntityDebugView(Entity entity)
+    {
+        private readonly Entity _entity = entity;
+
+        public Identifier Id => _entity.Id;
+
+        public bool IsAlive => _entity.IsAlive();
+
+        public string Name => _entity.Get<Name>().Value;
+
+        public ComponentEntity[]? Components => _entity.World?.Entities.GetArchetype(_entity.Id)?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+    }
 }

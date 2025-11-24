@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Tourmi.EntityComponentSystem.Ids;
@@ -8,6 +9,8 @@ namespace Tourmi.EntityComponentSystem.Ids;
 /// </summary>
 /// <param name="id">Id of the entity</param>
 [StructLayout(LayoutKind.Explicit, Size = 8)]
+[SuppressMessage("Design", "CA1036:Override methods on comparable types", Justification = "Comparison operators do not make sense")]
+[DebuggerDisplay("{ShortId}, Types = {Types}, Version = {Version}")]
 public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>
 {
     /// <summary>

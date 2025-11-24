@@ -1,14 +1,20 @@
-﻿namespace Tourmi.EntityComponentSystem.Entities;
+﻿using System.Diagnostics;
+
+namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Entity representing a component that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
+[DebuggerTypeProxy(typeof(ComponentDebugView))]
+[DebuggerDisplay("{DebugView,nq}")]
 public readonly struct ComponentEntity(Identifier id, World? world)
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
     internal World? World { get; } = world;
+
+    private ComponentDebugView DebugView => new(this);
 
     /// <summary>
     /// Constructs an invalid entity.
@@ -31,4 +37,18 @@ public readonly struct ComponentEntity(Identifier id, World? world)
     /// Explicitely casts the entity to a component entity.
     /// </summary>
     public static explicit operator ComponentEntity(Entity entity) => new(entity);
+
+    [DebuggerDisplay("Id = { Id.Value }, Name = { Name }, DataType = { DataType }")]
+    internal class ComponentDebugView(ComponentEntity entity)
+    {
+        private readonly Entity _entity = entity;
+
+        public Identifier Id => _entity.Id;
+
+        public string Name => _entity.Get<Name>().Value;
+
+        public Type? DataType => _entity.Get<DataComponent>().DataType;
+
+        public ComponentEntity[]? Components => _entity.World?.Entities.GetArchetype(_entity.Id)?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+    }
 }
