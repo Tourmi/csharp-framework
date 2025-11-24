@@ -25,6 +25,6 @@ internal class ReflectionUtilsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "Needs to be public for test")]
     public interface ITestInterface
     {
-        public int SomeProperty { get; set; }
+        int SomeProperty { get; set; }
     }
 }

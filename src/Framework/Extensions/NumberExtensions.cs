@@ -7,36 +7,39 @@ namespace Tourmi.Framework.Extensions;
 /// </summary>
 public static class NumberExtensions
 {
-    /// <summary>
-    /// Computes the modulo of the two given numbers
-    /// </summary>
-    /// <returns>Strictly positive result</returns>
-    public static TSelf Modulo<TSelf>(this TSelf value, TSelf modulus) where TSelf : INumber<TSelf>
+    extension<T>(T value) where T : INumber<T>
     {
-        var res = value % modulus;
-        if (TSelf.IsNegative(res))
+        /// <summary>
+        /// Computes the modulo of the two given numbers
+        /// </summary>
+        /// <returns>Strictly positive result</returns>
+        public T Modulo(T modulus)
         {
-            return res + modulus;
+            var res = value % modulus;
+            if (T.IsNegative(res))
+            {
+                return res + modulus;
+            }
+
+            return res;
         }
 
-        return res;
-    }
-
-    /// <summary>
-    /// Clamps the given <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>
-    /// </summary>
-    public static TSelf Clamp<TSelf>(this TSelf value, TSelf min, TSelf max) where TSelf : INumber<TSelf>
-    {
-        if (value < min)
+        /// <summary>
+        /// Clamps the given value between <paramref name="min"/> and <paramref name="max"/>
+        /// </summary>
+        public T Clamp(T min, T max)
         {
-            return min;
-        }
+            if (value < min)
+            {
+                return min;
+            }
 
-        if (value > max)
-        {
-            return max;
-        }
+            if (value > max)
+            {
+                return max;
+            }
 
-        return value;
+            return value;
+        }
     }
 }
