@@ -1,4 +1,5 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes;
+﻿using System.Runtime.CompilerServices;
+using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.Framework.Collections;
 
 namespace Tourmi.EntityComponentSystem;
@@ -256,6 +257,17 @@ internal partial class EntityIdentifierCollection
         }
 
         return entity.Archetype.GetValue<T>(entity.ArchetypeIndex, componentId);
+    }
+
+    public ref T? GetRefComponent<T>(Identifier entityId, Identifier componentId)
+    {
+        ref var entity = ref _entities[entityId.ShortId];
+        if (!entity.Archetype.HasComponent(componentId))
+        {
+            return ref StrongBox<T?>.Default.Value;
+        }
+
+        return ref entity.Archetype.GetRef<T>(entity.ArchetypeIndex, componentId);
     }
 
     public void SetComponent<T>(Identifier entityId, Identifier componentId, T value)

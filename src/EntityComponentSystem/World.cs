@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Attributes;
 
@@ -100,7 +101,7 @@ public class World
     public void Kill(Identifier entity) => _entities.Kill(entity);
 
     /// <summary>
-    /// Returns true if the entity has the given component.
+    /// Returns true if the <paramref name="targetEntity"/> has the given <paramref name="component"/>.
     /// </summary>
     public bool Has(Identifier targetEntity, Identifier component)
     {
@@ -113,7 +114,7 @@ public class World
     }
 
     /// <summary>
-    /// Returns the component value for the given <paramref name="entity"/>.
+    /// Returns the <paramref name="component"/> value for the given <paramref name="entity"/>.
     /// </summary>
     public T? Get<T>(Identifier entity, Identifier component)
     {
@@ -123,6 +124,19 @@ public class World
         }
 
         return _entities.GetComponent<T>(entity, component);
+    }
+
+    /// <summary>
+    /// Returns a mutable reference of the <paramref name="component"/> for the given <paramref name="entity"/>.
+    /// </summary>
+    public ref T? GetMutable<T>(Identifier entity, Identifier component)
+    {
+        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
+        {
+            return ref StrongBox<T?>.Default.Value;
+        }
+
+        return ref _entities.GetRefComponent<T>(entity, component);
     }
 
     /// <summary>

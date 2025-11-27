@@ -51,7 +51,10 @@ internal partial class Archetype
         public Span<T?> GetValues()
         {
             var span = CollectionsMarshal.AsSpan(_values);
+
             return span;
         }
+
+        public ref T? GetRef(int index) => ref GetValues()[index];
     }
 }

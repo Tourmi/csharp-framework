@@ -1,4 +1,6 @@
-﻿namespace Tourmi.EntityComponentSystem.Entities;
+﻿using System.Runtime.CompilerServices;
+
+namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Extension methods for <see cref="Entity"/>
@@ -12,26 +14,13 @@ public static class EntityExtensions
     public static void Add<TComponent>(in this Entity entity) => entity.World?.Add<TComponent>(entity);
 
     /// <summary>
-    /// Adds the component with <paramref name="componentId"/> to the entity, instantiating it with the parameterless constructor.
-    /// Does nothing if the entity already has the component.
-    /// </summary>
-    public static void Add<TComponent>(in this Entity entity, Identifier componentId)
-        where TComponent : new()
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <summary>
     /// Adds the component with <paramref name="componentId"/> to the entity.
     /// Does nothing if the entity already has the component.
     /// </summary>
     /// <remarks>
     /// This overload should be used if the component does not have a value. ie: for flags or states
     /// </remarks>
-    public static void Add(in this Entity entity, Identifier componentId)
-    {
-        throw new NotImplementedException();
-    }
+    public static void Add(in this Entity entity, Identifier componentId) => entity.World?.Add(entity, componentId);
 
     /// <summary>
     /// Removes the <typeparamref name="TComponent"/> from the entity.
@@ -41,10 +30,7 @@ public static class EntityExtensions
     /// <summary>
     /// Removes the component with <paramref name="componentId"/> from the entity.
     /// </summary>
-    public static void Remove(in this Entity entity, Identifier componentId)
-    {
-        throw new NotImplementedException();
-    }
+    public static void Remove(in this Entity entity, Identifier componentId) => entity.World?.Remove(entity, componentId);
 
     /// <summary>
     /// Returns a readonly copy of the <typeparamref name="TComponent"/> from the <paramref name="entity"/>.
@@ -56,27 +42,34 @@ public static class EntityExtensions
     /// Returns a readonly copy of the <typeparamref name="TComponent"/> with <paramref name="componentId"/> from the <paramref name="entity"/>.
     /// Will throw if the entity does not contain a component with the given <paramref name="componentId"/>.
     /// </summary>
-    public static TComponent Get<TComponent>(in this Entity entity, Identifier componentId)
-    {
-        throw new NotImplementedException();
-    }
+    public static TComponent? Get<TComponent>(in this Entity entity, Identifier componentId) => entity.World is null ? default : entity.World.Get<TComponent>(entity, componentId);
 
     /// <summary>
     /// Returns the <typeparamref name="TComponent"/> from the <paramref name="entity"/>.
     /// Will throw if the entity does not contain the <typeparamref name="TComponent"/>.
     /// </summary>
-    public static ref TComponent GetMutable<TComponent>(in this Entity entity)
+    public static ref TComponent? GetMutable<TComponent>(in this Entity entity)
     {
-        throw new NotImplementedException();
+        if (entity.World is null)
+        {
+            return ref StrongBox<TComponent?>.Default.Value;
+        }
+
+        return ref entity.World.GetMutable<TComponent>(entity);
     }
 
     /// <summary>
     /// Returns the <typeparamref name="TComponent"/> with <paramref name="componentId"/> from the <paramref name="entity"/>.
     /// Will throw if the entity does not contain a component with the given <paramref name="componentId"/>.
     /// </summary>
-    public static ref TComponent GetMutable<TComponent>(in this Entity entity, Identifier componentId)
+    public static ref TComponent? GetMutable<TComponent>(in this Entity entity, Identifier componentId)
     {
-        throw new NotImplementedException();
+        if (entity.World is null)
+        {
+            return ref StrongBox<TComponent?>.Default.Value;
+        }
+
+        return ref entity.World.GetMutable<TComponent>(entity, componentId);
     }
 
     /// <summary>
@@ -100,18 +93,12 @@ public static class EntityExtensions
     /// <summary>
     /// Returns <see langword="true"/> if the entity contains the given component.
     /// </summary>
-    public static bool Has<TComponent>(in this Entity entity)
-    {
-        throw new NotImplementedException();
-    }
+    public static bool Has<TComponent>(in this Entity entity) => entity.World?.Has<TComponent>(entity) ?? false;
 
     /// <summary>
     /// Returns <see langword="true"/> if the entity contains the given component with <paramref name="componentId"/>.
     /// </summary>
-    public static bool Has(in this Entity entity, Identifier componentId)
-    {
-        throw new NotImplementedException();
-    }
+    public static bool Has(in this Entity entity, Identifier componentId) => entity.World?.Has(entity, componentId) ?? false;
 
     /// <summary>
     /// Sets the component for the entity, adding it if the entity did not contain it.
@@ -121,10 +108,7 @@ public static class EntityExtensions
     /// <summary>
     /// Sets the component with <paramref name="componentId"/> for the entity, adding it if the entity did not contain it.
     /// </summary>
-    public static void Set<TComponent>(in this Entity entity, Identifier componentId, TComponent component)
-    {
-        throw new NotImplementedException();
-    }
+    public static void Set<TComponent>(in this Entity entity, Identifier componentId, TComponent component) => entity.World?.Set(entity, componentId, component);
 
     /// <summary>
     /// Marks the <typeparamref name="TComponent"/> as modified for the entity, triggering any OnChanged systems.

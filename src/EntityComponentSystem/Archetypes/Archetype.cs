@@ -148,6 +148,16 @@ internal partial class Archetype
         return collection[index];
     }
 
+    public ref T? GetRef<T>(int index, Identifier componentId)
+    {
+        if (_componentsData[componentId] is not ComponentCollection<T> collection)
+        {
+            throw new InvalidOperationException("Given component id was of the wrong datatype");
+        }
+
+        return ref collection.GetRef(index);
+    }
+
     public static Archetype Create() => new();
 
     /// <summary>
