@@ -45,6 +45,17 @@ public static class WorldExtensions
         public ref T? GetMutable<T>(Identifier entity) => ref world.ThrowIfNull().GetMutable<T>(entity, world.GetComponentForType<T>());
 
         /// <summary>
+        /// Returns the component of type <typeparamref name="T"/> for the <paramref name="entity"/>.
+        /// </summary>
+        /// <returns>The component for the <paramref name="entity"/>, or <see langword="null"/> if the component is missing.</returns>
+        public T? Ensure<T>(Identifier entity) => world.ThrowIfNull().Ensure<T>(entity, world.GetComponentForType<T>());
+
+        /// <summary>
+        /// Returns a mutable reference of the component of type <typeparamref name="T"/> for the <paramref name="entity"/>.
+        /// </summary>
+        public ref T? EnsureMutable<T>(Identifier entity) => ref world.ThrowIfNull().EnsureMutable<T>(entity, world.GetComponentForType<T>());
+
+        /// <summary>
         /// Adds the component of type <typeparamref name="T"/> to the <paramref name="entity"/>
         /// </summary>
         public void Add<T>(Identifier entity) => world.ThrowIfNull().Add(entity, world.GetComponentForType<T>());

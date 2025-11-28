@@ -17,4 +17,7 @@ public readonly struct Name()
     /// Name of the entity.
     /// </summary>
     public string Value { get; init; } = string.Empty;
+
+    /// <inheritdoc/>
+    public override string ToString() => Value;
 }

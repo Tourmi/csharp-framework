@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
@@ -49,6 +50,13 @@ public readonly struct ComponentEntity(Identifier id, World? world)
 
         public Type? DataType => _entity.Get<DataComponent>().DataType;
 
-        public ComponentEntity[]? Components => _entity.World?.Entities.GetArchetype(_entity.Id)?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+        public ComponentEntity[]? Components => ArchetypeEntry?.Archetype?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+
+        public string[]? ComponentValues => ArchetypeEntry?.Archetype.Components
+            .Select(c => (Component: new ComponentEntity(c, _entity.World), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
+            .Select(t => $"Component: {t.Component}, Value: {t.Value ?? "NULL"}")
+            .ToArray();
+
+        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Entities.GetArchetypeEntry(_entity);
     }
 }

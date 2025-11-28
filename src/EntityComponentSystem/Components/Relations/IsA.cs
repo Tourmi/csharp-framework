@@ -5,5 +5,6 @@ namespace Tourmi.EntityComponentSystem.Components.Relations;
 /// <summary>
 /// <see cref="BuiltInRelationType.IsA"/>
 /// </summary>
-[RelationFlag]
+[ComponentFlag]
+[ComponentRelationType]
 public readonly struct IsA;

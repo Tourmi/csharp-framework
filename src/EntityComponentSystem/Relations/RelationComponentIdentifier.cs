@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Tourmi.EntityComponentSystem.Ids;
+using System.Runtime.InteropServices;
 
 namespace Tourmi.EntityComponentSystem.Relations;
 
@@ -7,6 +7,7 @@ namespace Tourmi.EntityComponentSystem.Relations;
 /// The unique identifier of a relationship component.
 /// </summary>
 /// <param name="id">Id of the entity</param>
+[StructLayout(LayoutKind.Explicit, Size = 8)]
 public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<RelationComponentIdentifier>
 {
     /// <summary>
@@ -58,17 +59,26 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     /// <summary>
     /// Value of the id of the component
     /// </summary>
+    [field: FieldOffset(0)]
     public ulong Value { get; } = id;
 
     /// <summary>
     /// Target of the relationship.
     /// </summary>
-    public uint Target => (uint)(Value & TargetBitMask);
+    [field: FieldOffset(0)]
+    public uint Target { get; }
 
     /// <summary>
     /// Relation type of the identifier.
     /// </summary>
-    public ushort RelationType => (ushort)(Value & RelationTypeBitMask >> RelationTypeBitOffset);
+    [field: FieldOffset(4)]
+    public ushort RelationType { get; }
+
+    /// <summary>
+    /// Type flags of the identifier
+    /// </summary>
+    [field: FieldOffset(7)]
+    public IdentifierTypes Types { get; }
 
     /// <summary>
     /// Shortcut property mapping the <see cref="RelationType"/> to the appropriate <see cref="Relations.BuiltInRelationType"/>.
@@ -81,17 +91,12 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
             var relationType = RelationType;
             if (relationType > 255)
             {
-                return 0;
+                return BuiltInRelationType.None;
             }
 
             return (BuiltInRelationType)relationType;
         }
     }
-
-    /// <summary>
-    /// Type flags of the identifier
-    /// </summary>
-    public IdentifierTypes Types => (IdentifierTypes)(byte)(Value & TypesBitMask >> TypesBitOffset);
 
     /// <summary>
     /// Implicitely converts the identifier to a ulong.

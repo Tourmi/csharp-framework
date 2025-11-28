@@ -104,4 +104,7 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
 
     /// <inheritdoc/>
     public int CompareTo(Identifier other) => Value.CompareTo(other.Value);
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{{ShortId = {ShortId}, Version = {Version}, Types = {Types}}}";
 }

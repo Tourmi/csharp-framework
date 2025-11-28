@@ -1,4 +1,6 @@
-﻿namespace Tourmi.EntityComponentSystem.Archetypes;
+﻿using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
+
+namespace Tourmi.EntityComponentSystem.Archetypes;
 
 internal partial class Archetype
 {
@@ -29,7 +31,7 @@ internal partial class Archetype
             return 0;
         });
 
-        private readonly Dictionary<Type, Func<ComponentCollection>> _componentCollectionFactories = [];
+        private readonly Dictionary<Type, Func<IComponentCollection>> _componentCollectionFactories = [];
         private readonly SortedDictionary<Identifier[], Archetype> _archetypes = new(IdentifierCollectionComparer);
 
         public SharedData(Archetype emptyArchetype)
@@ -37,7 +39,7 @@ internal partial class Archetype
             _archetypes[[]] = emptyArchetype;
         }
 
-        public ComponentCollection CreateComponentCollection(Type? dataType)
+        public IComponentCollection CreateComponentCollection(Type? dataType)
         {
             if (dataType is null)
             {
@@ -47,7 +49,7 @@ internal partial class Archetype
             if (!_componentCollectionFactories.TryGetValue(dataType, out var factory))
             {
                 var collectionType = typeof(ComponentCollection<>).MakeGenericType(dataType);
-                factory = () => (ComponentCollection)Activator.CreateInstance(collectionType)!;
+                factory = () => (IComponentCollection)Activator.CreateInstance(collectionType)!;
                 _componentCollectionFactories[dataType] = factory;
             }
 

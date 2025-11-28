@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Components.Tags;
-
-namespace Tourmi.EntityComponentSystem.Relations;
+﻿namespace Tourmi.EntityComponentSystem.Relations;
 
 /// <summary>
 /// Built-in relation types that are known by the ECS and have custom logic surrounding them.
@@ -32,7 +30,7 @@ public enum BuiltInRelationType : byte
     InstanceOf = 3,
 
     /// <summary>
-    /// Defines that X depends on Y. If Y is missing from the entity, an error will be thrown.
+    /// Defines that X depends on Y. Has configurable behavior (<see cref="Components.Relations.DependsOn"/>) if Y is missing or removed from the entity.
     /// <para />ie: Speed component depends on Position component.
     /// </summary>
     DependsOn = 4,

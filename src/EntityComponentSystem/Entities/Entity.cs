@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
@@ -56,6 +57,13 @@ public readonly struct Entity : IEquatable<Entity>
 
         public string Name => _entity.Get<Name>().Value;
 
-        public ComponentEntity[]? Components => _entity.World?.Entities.GetArchetype(_entity.Id)?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+        public ComponentEntity[]? Components => ArchetypeEntry?.Archetype.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public (object? Value, ComponentEntity Component)[]? ComponentValues => ArchetypeEntry?.Archetype.Components
+            .Select(c => (ArchetypeEntry!.Value.GetDebugValue(c), new ComponentEntity(c, _entity.World)))
+            .ToArray();
+
+        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Entities.GetArchetypeEntry(_entity);
     }
 }

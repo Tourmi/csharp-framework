@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
-
-using CurrentEntityNewArchetype = (Tourmi.EntityComponentSystem.Archetypes.Archetype NewArchetype, int NewIndex);
+using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 using MovedEntity = (Tourmi.EntityComponentSystem.Ids.Identifier Id, int NewIndex);
 
 namespace Tourmi.EntityComponentSystem.Archetypes;
@@ -16,7 +15,7 @@ internal partial class Archetype
 
     private readonly SharedData _sharedData;
     private readonly ImmutableSortedDictionary<Identifier, Type?> _componentsDataType;
-    private readonly ImmutableSortedDictionary<Identifier, ComponentCollection> _componentsData;
+    private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
 
     private Archetype(SharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
     {
@@ -29,7 +28,7 @@ internal partial class Archetype
     {
         _sharedData = new(this);
         _componentsDataType = Enumerable.Empty<KeyValuePair<Identifier, Type?>>().ToImmutableSortedDictionary();
-        _componentsData = Enumerable.Empty<KeyValuePair<Identifier, ComponentCollection>>().ToImmutableSortedDictionary();
+        _componentsData = Enumerable.Empty<KeyValuePair<Identifier, IComponentCollection>>().ToImmutableSortedDictionary();
     }
 
     /// <summary>
@@ -38,16 +37,26 @@ internal partial class Archetype
     public IEnumerable<Identifier> Components => _componentsData.Keys;
 
     /// <summary>
+    /// Creates a new Empty Archetype.
+    /// </summary>
+    public static Archetype Create() => new();
+
+    /// <summary>
+    /// Returns whether or not the archetype contains the given component
+    /// </summary>
+    public bool HasComponent(Identifier componentId) => _componentsData.ContainsKey(componentId);
+
+    /// <summary>
     /// Adds the entity to the archetype and returns the index it has in the archetype
     /// </summary>
-    public int AddEntity(Identifier entityId)
+    public ArchetypeEntityEntry AddEntity(Identifier entityId)
     {
         foreach (var componentCollection in _componentsData.Values)
         {
             componentCollection.AddEntry();
         }
 
-        return AddEntityInternal(entityId).NewIndex;
+        return AddEntityInternal(entityId);
     }
 
     /// <summary>
@@ -62,13 +71,7 @@ internal partial class Archetype
         }
 
         return RemoveEntityInternal(index);
-
     }
-
-    /// <summary>
-    /// Returns whether or not the archetype contains the given component
-    /// </summary>
-    public bool HasComponent(Identifier componentId) => _componentsData.ContainsKey(componentId);
 
     /// <summary>
     /// Adds the given component to the entity, moving it to a new archetype in the process.
@@ -80,7 +83,7 @@ internal partial class Archetype
     /// The entity's new archetype and index within the archetype, 
     /// as well as an entity that might have needed to move in the current archetype
     /// </returns>
-    public (CurrentEntityNewArchetype CurrentEntity, Option<MovedEntity> MovedEntity) AddComponent(int currentIndex, Identifier componentIdentifier, Type? componentDataType)
+    public (ArchetypeEntityEntry CurrentEntity, Option<MovedEntity> MovedEntity) AddComponent(int currentIndex, Identifier componentIdentifier, Type? componentDataType)
     {
         if (!_parentArchetypes.TryGetValue(componentIdentifier, out var targetArchetype))
         {
@@ -107,7 +110,7 @@ internal partial class Archetype
     /// The entity's new archetype and index within the archetype,
     /// as well as an entity that might have needed to move in the current archetype
     /// </returns>
-    public (CurrentEntityNewArchetype CurrentEntity, Option<MovedEntity> MovedEntity) RemoveComponent(int currentIndex, Identifier componentId)
+    public (ArchetypeEntityEntry CurrentEntity, Option<MovedEntity> MovedEntity) RemoveComponent(int currentIndex, Identifier componentId)
     {
         if (!_childArchetypes.TryGetValue(componentId, out var targetArchetype))
         {
@@ -128,42 +131,51 @@ internal partial class Archetype
         return MoveEntityToInternal(targetArchetype, currentIndex);
     }
 
+    /// <summary>
+    /// Sets the value of the component for the entity at the given <paramref name="index"/>
+    /// </summary>
     public void SetValue<T>(int index, Identifier componentId, T value)
     {
-        if (_componentsData[componentId] is not ComponentCollection<T> collection)
+        if (_componentsData[componentId] is not IContravariantComponentCollection<T> collection)
         {
-            throw new InvalidOperationException("Given component id was of the wrong datatype");
+            throw new InvalidOperationException($"Type {typeof(T)} not supported by component {componentId}");
         }
 
         collection[index] = value;
     }
 
+    /// <summary>
+    /// Gets the value of the component for the entity at the given <paramref name="index"/>
+    /// </summary>
     public T? GetValue<T>(int index, Identifier componentId)
     {
-        if (_componentsData[componentId] is not ComponentCollection<T> collection)
+        if (_componentsData[componentId] is not ICovariantComponentCollection<T> collection)
         {
-            throw new InvalidOperationException("Given component id was of the wrong datatype");
+            throw new InvalidOperationException($"Type {typeof(T)} not supported by component {componentId}");
         }
 
         return collection[index];
     }
 
-    public ref T? GetRef<T>(int index, Identifier componentId)
+    /// <summary>
+    /// Gets a reference to the value of the component for the entity at the given <paramref name="index"/>
+    /// </summary>
+    public ref T? GetValueRef<T>(int index, Identifier componentId)
     {
         if (_componentsData[componentId] is not ComponentCollection<T> collection)
         {
-            throw new InvalidOperationException("Given component id was of the wrong datatype");
+            throw new InvalidOperationException($"Type {typeof(T)} not supported by component {componentId}");
         }
 
-        return ref collection.GetRef(index);
+        return ref collection[index];
     }
 
-    public static Archetype Create() => new();
+    internal object? GetDebugValue(int index, Identifier componentId) => _componentsData[componentId].GetDebugValue(index);
 
     /// <summary>
     /// Moves the entity between archetypes without touching component collections
     /// </summary>
-    private (CurrentEntityNewArchetype CurrentEntity, Option<MovedEntity> MovedEntity) MoveEntityToInternal(Archetype targetArchetype, int currentIndex) =>
+    private (ArchetypeEntityEntry CurrentEntity, Option<MovedEntity> MovedEntity) MoveEntityToInternal(Archetype targetArchetype, int currentIndex) =>
         (targetArchetype.AddEntityInternal(_entities[currentIndex]), RemoveEntityInternal(currentIndex));
 
     /// <summary>
@@ -171,15 +183,12 @@ internal partial class Archetype
     /// </summary>
     private Option<MovedEntity> RemoveEntityInternal(int index)
     {
-        var replaceIndex = _entities.Count - 1;
-        if (index == replaceIndex)
+        var movedEntity = _entities.Pop();
+        if (index == _entities.Count)
         {
-            _entities.RemoveAt(replaceIndex);
             return default;
         }
 
-        var movedEntity = _entities[replaceIndex];
-        _entities.RemoveAt(replaceIndex);
         _entities[index] = movedEntity;
 
         return (movedEntity, index);
@@ -188,10 +197,9 @@ internal partial class Archetype
     /// <summary>
     /// Adds the entity to the current archetype without touching the component collections
     /// </summary>
-    private CurrentEntityNewArchetype AddEntityInternal(Identifier entityId)
+    private ArchetypeEntityEntry AddEntityInternal(Identifier entityId)
     {
         _entities.Add(entityId);
-
-        return (this, _entities.Count - 1);
+        return new(this, _entities.Count - 1);
     }
 }

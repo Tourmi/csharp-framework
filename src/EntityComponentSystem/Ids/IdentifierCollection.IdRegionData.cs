@@ -1,6 +1,6 @@
 ﻿namespace Tourmi.EntityComponentSystem;
 
-internal partial class EntityIdentifierCollection
+internal partial class IdentifierCollection
 {
     private struct IdRegionData
     {

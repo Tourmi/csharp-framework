@@ -12,7 +12,8 @@ public class World
 {
     private readonly Archetype _emptyArchetype = Archetype.Create();
     private readonly Dictionary<Type, Identifier> _typesToIdentifier = [];
-    private readonly EntityIdentifierCollection _entities;
+    private readonly IdentifierCollection _entities;
+    private readonly Identifier[] _builtInRelationIdentifiers = new Identifier[255];
 
     /// <summary>
     /// Region reserved for future potential optimizations.
@@ -20,38 +21,51 @@ public class World
     private readonly IdentifierRegion _reservedRegion;
 
     /// <summary>
-    /// Region reserved for built-in components and entities.
+    /// Special region containing identifiers for built-in relation entities.
     /// </summary>
-    private readonly IdentifierRegion _builtInRegion;
+    private readonly IdentifierRegion _builtInRelationsRegion;
 
     /// <summary>
-    /// Creates and initializes a new ECS
+    /// Region reserved for built-in components and entities.
+    /// </summary>
+    private readonly IdentifierRegion _coreRegion;
+
+    /// <summary>
+    /// Collection used for testing or debugging purposes.
+    /// </summary>
+    internal IdentifierCollection Entities => _entities;
+
+    /// <summary>
+    /// Creates and initializes a new ECS world
     /// </summary>
     private World(WorldConfiguration configuration)
     {
         _entities = new(_emptyArchetype);
 
-        _reservedRegion = new IdentifierRegion() { Offset = 0x0001, Amount = 0x0100 - 1, Name = "Reserved" };
-        _builtInRegion = new IdentifierRegion() { Offset = 0x0100, Amount = 0x0400, Name = "BuiltIn" };
+        _reservedRegion = new IdentifierRegion() { Offset = 0x0001, Amount = 0x00FF, Name = "Reserved" };
+        _builtInRelationsRegion = new IdentifierRegion() { Offset = 0x0100, Amount = 0x0100, Name = "Built-in Relations" };
+        _coreRegion = new IdentifierRegion() { Amount = 0x0400, Name = "Core" };
         _entities.Reserve(_reservedRegion);
-        _entities.Reserve(_builtInRegion);
+        _entities.Reserve(_builtInRelationsRegion);
+        _entities.Reserve(_coreRegion);
 
         foreach (var region in configuration.ReservedIdentifierRegions.EmptyIfNull())
         {
             _entities.Reserve(region);
         }
 
-        var component = _entities.Create(_builtInRegion);
+        _entities.DefaultRegionOverride = _coreRegion;
+        var component = _entities.Create();
         _typesToIdentifier[typeof(Component)] = component;
         _entities.AddComponent(component, component, null);
 
-        var data = _entities.Create(_builtInRegion);
+        var data = _entities.Create();
         _typesToIdentifier[typeof(DataComponent)] = data;
         _entities.AddComponent(data, component, null);
         _entities.AddComponent(data, data, typeof(DataComponent));
-        _entities.SetComponent(data, data, new DataComponent() { DataType = typeof(DataComponent) });
+        _entities.SetComponent(data, data, new DataComponent(typeof(DataComponent)));
 
-        var name = _entities.Create(_builtInRegion);
+        var name = _entities.Create();
         _typesToIdentifier[typeof(Name)] = name;
         _entities.AddComponent(name, component, null);
         Set<DataComponent>(name, data, new(typeof(Name)));
@@ -60,18 +74,37 @@ public class World
         Set(component, name, new Name(nameof(Component)));
         Set(data, name, new Name(nameof(DataComponent)));
 
-        // todo: initialize rest of built-in components
+        _entities.DefaultRegionOverride = _builtInRelationsRegion;
+        for (var i = 0; i < _builtInRelationIdentifiers.Length; i++)
+        {
+            if (!Enum.IsDefined((BuiltInRelationType)(i + 1)))
+            {
+                break;
+            }
+
+            var relationDefinition = _entities.Create(IdentifierTypes.Relation);
+            Add(relationDefinition, component);
+            Set<Name>(relationDefinition, name, new(Enum.GetName((BuiltInRelationType)i + 1) ?? $"Relation #{i + 1}"));
+            _builtInRelationIdentifiers[i] = relationDefinition;
+        }
+
+        // For now, configure them manually.
+        _typesToIdentifier[typeof(ChildOf)] = ToId(BuiltInRelationType.ChildOf);
+        _typesToIdentifier[typeof(IsA)] = ToId(BuiltInRelationType.IsA);
+        _typesToIdentifier[typeof(InstanceOf)] = ToId(BuiltInRelationType.InstanceOf);
+        _typesToIdentifier[typeof(DependsOn)] = ToId(BuiltInRelationType.DependsOn);
+        Set(ToId(BuiltInRelationType.DependsOn), data, new DataComponent(typeof(DependsOn)));
+
+        _entities.DefaultRegionOverride = _coreRegion;
+
+        // todo: initialize rest of built-in components here
+
+        _entities.DefaultRegionOverride = null;
     }
 
     /// <summary>
-    /// Collection used for testing or debugging purposes.
+    /// Creates a new ECS <see cref="World"/>, optionally configuring it with <paramref name="configure"/>
     /// </summary>
-    internal EntityIdentifierCollection Entities => _entities;
-
-    /// <summary>
-    /// Creates a new 
-    /// </summary>
-    /// <returns></returns>
     public static World Create(Action<WorldConfiguration>? configure = null)
     {
         var configuration = new WorldConfiguration();
@@ -91,26 +124,66 @@ public class World
     }
 
     /// <summary>
-    /// Returns whether the given entity is alive or not.
+    /// Returns whether the <paramref name="entity"/> is alive or not.
     /// </summary>
     public bool IsAlive(Identifier entity) => _entities.IsAlive(entity);
 
     /// <summary>
-    /// Kills the given entity.
+    /// Returns whether the <paramref name="id"/> is valid or not.
+    /// If the <paramref name="id"/> is an entity, 
+    ///     returns <see langword="true"/> if it is alive.
+    /// If the <paramref name="id"/> is a relation between two entities,
+    ///     returns <see langword="true"/> if the target entity is alive, and the relation exists.
     /// </summary>
-    public void Kill(Identifier entity) => _entities.Kill(entity);
-
-    /// <summary>
-    /// Returns true if the <paramref name="targetEntity"/> has the given <paramref name="component"/>.
-    /// </summary>
-    public bool Has(Identifier targetEntity, Identifier component)
+    public bool IsValid(Identifier id)
     {
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
+        if (!id.Types.HasFlag(IdentifierTypes.Relation))
+        {
+            return _entities.IsAlive(id);
+        }
+
+        var relationId = new RelationComponentIdentifier(id);
+        if (relationId.RelationType == 0)
         {
             return false;
         }
 
-        return _entities.HasComponent(targetEntity, component);
+        Identifier relationEntity = default;
+        var relationIndex = relationId.RelationType - 1;
+        if (relationIndex < _builtInRelationIdentifiers.Length)
+        {
+            relationEntity = _builtInRelationIdentifiers[relationIndex];
+        }
+        else
+        {
+            // TODO: Get non-built-in relations as well
+        }
+
+        return _entities.IsAlive(relationEntity) && _entities.IsAlive(relationId.Target);
+    }
+
+    /// <summary>
+    /// Kills the given entity.
+    /// </summary>
+    public void Kill(Identifier entity)
+    {
+        if (_entities.IsAlive(entity))
+        {
+            _entities.Free(entity);
+        }
+    }
+
+    /// <summary>
+    /// Returns true if the <paramref name="entity"/> has the given <paramref name="componentId"/>.
+    /// </summary>
+    public bool Has(Identifier entity, Identifier componentId)
+    {
+        if (!_entities.IsAlive(entity) || !IsValid(componentId))
+        {
+            return false;
+        }
+
+        return _entities.HasComponent(entity, componentId);
     }
 
     /// <summary>
@@ -118,9 +191,14 @@ public class World
     /// </summary>
     public T? Get<T>(Identifier entity, Identifier component)
     {
-        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !IsValid(component))
         {
-            return default!;
+            return default;
+        }
+
+        if (!_entities.HasComponent(entity, component))
+        {
+            return default;
         }
 
         return _entities.GetComponent<T>(entity, component);
@@ -129,9 +207,17 @@ public class World
     /// <summary>
     /// Returns a mutable reference of the <paramref name="component"/> for the given <paramref name="entity"/>.
     /// </summary>
+    /// <remarks>
+    /// Will throw if the entity or the component are not valid.
+    /// </remarks>
     public ref T? GetMutable<T>(Identifier entity, Identifier component)
     {
-        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !IsValid(component))
+        {
+            return ref StrongBox<T?>.Default.Value;
+        }
+
+        if (!_entities.HasComponent(entity, component))
         {
             return ref StrongBox<T?>.Default.Value;
         }
@@ -140,36 +226,63 @@ public class World
     }
 
     /// <summary>
-    /// Adds the given <paramref name="component"/> to the <paramref name="targetEntity"/>, without any associated data.
+    /// Ensures that the <paramref name="entity"/> has the given <paramref name="component"/>,
+    /// and returns its value.
     /// </summary>
-    public void Add(Identifier targetEntity, Identifier component)
+    public T? Ensure<T>(Identifier entity, Identifier component)
     {
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !IsValid(component))
         {
-            return;
+            return default;
         }
 
-        var dataType = Get<DataComponent>(component, GetComponentForType<DataComponent>());
+        AddComponentIfMissing(entity, component);
 
-        _entities.AddComponent(targetEntity, component, dataType.DataType);
+        return _entities.GetComponent<T>(entity, component);
     }
 
     /// <summary>
-    /// Sets the <paramref name="component"/>'s value for the <paramref name="targetEntity"/> to the given <paramref name="value"/>
+    /// Ensures that the <paramref name="entity"/> has the given <paramref name="component"/>,
+    /// and returns a reference to its value.
     /// </summary>
-    public void Set<T>(Identifier targetEntity, Identifier component, T value)
+    public ref T? EnsureMutable<T>(Identifier entity, Identifier component)
     {
-        if (!_entities.IsAlive(targetEntity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !IsValid(component))
+        {
+            return ref StrongBox<T?>.Default.Value;
+        }
+
+        AddComponentIfMissing(entity, component);
+
+        return ref _entities.GetRefComponent<T>(entity, component);
+    }
+
+    /// <summary>
+    /// Adds the given <paramref name="component"/> to the <paramref name="entity"/>, without any associated data.
+    /// </summary>
+    public void Add(Identifier entity, Identifier component)
+    {
+        if (!_entities.IsAlive(entity) || !IsValid(component))
         {
             return;
         }
 
-        if (!Has(targetEntity, component))
+        AddComponentIfMissing(entity, component);
+    }
+
+    /// <summary>
+    /// Sets the <paramref name="component"/>'s value for the <paramref name="entity"/> to the given <paramref name="value"/>
+    /// </summary>
+    public void Set<T>(Identifier entity, Identifier component, T value)
+    {
+        if (!_entities.IsAlive(entity) || !IsValid(component))
         {
-            Add(targetEntity, component);
+            return;
         }
 
-        _entities.SetComponent(targetEntity, component, value);
+        AddComponentIfMissing(entity, component);
+
+        _entities.SetComponent(entity, component, value);
     }
 
     /// <summary>
@@ -177,12 +290,12 @@ public class World
     /// </summary>
     public void Remove(Identifier entity, Identifier component)
     {
-        if (!_entities.IsAlive(entity) || !_entities.IsAlive(component))
+        if (!_entities.IsAlive(entity) || !IsValid(component))
         {
             return;
         }
 
-        if (!Has(entity, component))
+        if (!_entities.HasComponent(entity, component))
         {
             return;
         }
@@ -201,9 +314,14 @@ public class World
             entity.Add<Component>();
             entity.Set(new Name(typeof(TComponent).Name));
 
-            if (typeof(TComponent).GetCustomAttribute<FlagComponentAttribute>() is null && typeof(TComponent).GetCustomAttribute<RelationFlagAttribute>() is null)
+            if (typeof(TComponent).GetCustomAttribute<ComponentFlagAttribute>() is null)
             {
-                entity.Set(new DataComponent() { DataType = typeof(TComponent) });
+                entity.Set(new DataComponent(typeof(TComponent)));
+            }
+
+            if (typeof(TComponent).GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
+            {
+                entity.Add<RelationDefinition>();
             }
 
             componentId = entity.Id;
@@ -212,4 +330,32 @@ public class World
 
         return new(componentId, this);
     }
+
+    private void AddComponentIfMissing(Identifier entity, Identifier component)
+    {
+        if (_entities.HasComponent(entity, component))
+        {
+            return;
+        }
+
+        var datatypeId = component;
+        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        {
+            var relationId = new RelationComponentIdentifier(component);
+            var builtInRelationType = relationId.BuiltInRelationType;
+            if (builtInRelationType != BuiltInRelationType.None)
+            {
+                datatypeId = ToId(builtInRelationType);
+            }
+            else
+            {
+                // TODO: Also deal with user-created relations.
+            }
+        }
+
+        var dataType = Get<DataComponent>(datatypeId, GetComponentForType<DataComponent>());
+        _entities.AddComponent(entity, component, dataType.DataType);
+    }
+
+    private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIdentifiers[(int)relationType - 1];
 }

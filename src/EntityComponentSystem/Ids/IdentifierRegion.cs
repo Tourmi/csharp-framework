@@ -5,27 +5,34 @@
 /// </summary>
 public class IdentifierRegion
 {
-    private uint _offset;
-    private uint _amount;
-
     /// <summary>
     /// If specified, Minimum Id at which this region of identifiers must start.
-    /// Cannot be 0, and cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>
+    /// If 0, will automatically be set to the first available Id upon reservation, as to avoid leaving gaps in entity Ids.
+    /// Cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>.
     /// </summary>
-    public required uint Offset
+    public uint Offset
     {
-        get => _offset;
-        init => _offset = value.ThrowIfZero().ThrowIfGreaterThan(uint.MaxValue - Amount);
+        get;
+        set
+        {
+            if (field != 0)
+            {
+                throw new InvalidOperationException("Cannot set Offset once it has already been set.");
+            }
+
+            field = value.ThrowIfGreaterThan(uint.MaxValue - Amount);
+        }
     }
 
     /// <summary>
     /// Minimum amount of identifiers that should be included in this region.
-    /// Cannot be 0, and cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>
+    /// If 0, reserving the region will do nothing.
+    /// Cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>
     /// </summary>
     public required uint Amount
     {
-        get => _amount;
-        init => _amount = value.ThrowIfZero().ThrowIfGreaterThan(uint.MaxValue - Offset);
+        get;
+        init => field = value.ThrowIfGreaterThan(uint.MaxValue - Offset);
     }
 
     /// <summary>
@@ -49,5 +56,5 @@ public class IdentifierRegion
     }
 
     /// <inheritdoc/>
-    public override string ToString() => $"IdentifierRegion: {{ Name: '{Name ?? "Unnamed"}', Offset: {Offset}, Amount: {Amount}, EndIdInclusive: {EndIdInclusive} }}";
+    public override string ToString() => $"IdentifierRegion: {{ Name: '{Name ?? "Unnamed"}', Offset: {Offset}, Amount: {Amount} }}";
 }

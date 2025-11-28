@@ -3,18 +3,18 @@ using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Ids;
 
-[TestFixture(TestOf = typeof(EntityIdentifierCollection))]
+[TestFixture(TestOf = typeof(IdentifierCollection))]
 [SuppressMessage("Style", "IDE0022:Use expression body for method", Justification = "Easier to adjust and read tests")]
 internal class EntityIdentifierCollectionTests
 {
-    private EntityIdentifierCollection? _entities;
+    private IdentifierCollection? _entities;
 
-    private EntityIdentifierCollection Entities => _entities.ThrowIfNull();
+    private IdentifierCollection Entities => _entities.ThrowIfNull();
 
     [SetUp]
     public void SetUp()
     {
-        _entities = new EntityIdentifierCollection(Archetype.Create());
+        _entities = new IdentifierCollection(Archetype.Create());
     }
 
     [Test]
@@ -45,7 +45,7 @@ internal class EntityIdentifierCollectionTests
     {
         var id = Entities.Create();
 
-        Entities.Kill(id);
+        Entities.Free(id);
 
         Assert.That(Entities.IsAlive(id), Is.False);
     }
@@ -77,7 +77,7 @@ internal class EntityIdentifierCollectionTests
     public void CreateReusesDeadIds()
     {
         var id = Entities.Create();
-        Entities.Kill(id);
+        Entities.Free(id);
         var newId = Entities.Create();
 
         Assert.Multiple(() =>

@@ -1,5 +1,8 @@
 ﻿using Tourmi.EntityComponentSystem.Components;
+using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
+using Tourmi.EntityComponentSystem.Ids;
+using Tourmi.EntityComponentSystem.Relations;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -14,10 +17,10 @@ internal class GeneralTests
         var ecs = World.Create();
 
         var someEntity = ecs.CreateEntity();
-        Assert.That(ecs.IsAlive(someEntity), Is.True);
+        Assert.That(someEntity.IsAlive());
 
-        ecs.Kill(someEntity);
-        Assert.That(ecs.IsAlive(someEntity), Is.False);
+        someEntity.Kill();
+        Assert.That(someEntity.IsAlive(), Is.False);
 
         var newEntity = ecs.CreateEntity();
         Assert.That(newEntity.Id.ShortId, Is.EqualTo(someEntity.Id.ShortId));
@@ -69,5 +72,55 @@ internal class GeneralTests
         position.Y = 6;
 
         Assert.That(entity.Get<Position>(), Is.EqualTo(new Position(5, 6)));
+    }
+
+    [Test]
+    public void TestEnsure()
+    {
+        var ecs = World.Create();
+
+        var entity = ecs.CreateEntity();
+        ref var name = ref entity.EnsureMutable<Name>();
+
+        Assert.That(entity.Has<Name>());
+
+        name = new Name("SomeName");
+        Assert.That(entity.Get<Name>().Value, Is.EqualTo("SomeName"));
+
+        var position = entity.Ensure<Position>();
+        Assert.That(position, Is.Default);
+    }
+
+    [Test]
+    public void TestRelation()
+    {
+        var ecs = World.Create();
+
+        var parent = ecs.CreateEntity();
+        var child = ecs.CreateEntity();
+        var relationId = new Identifier(new RelationComponentIdentifier(parent.Id.ShortId, BuiltInRelationType.ChildOf));
+        child.Add(relationId);
+
+        Assert.That(child.Has(relationId));
+
+        var dependency1 = ecs.CreateEntity();
+        var dependency2 = ecs.CreateEntity();
+        var dependent = ecs.CreateEntity();
+
+        dependent.Add(dependency1);
+        dependent.Add(dependency2);
+        var relationId1 = new Identifier(new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.DependsOn));
+        var relationId2 = new Identifier(new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.DependsOn));
+        ecs.Set(dependent, relationId1, new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis));
+        ecs.Set(dependent, relationId2, new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic));
+
+        var relationValue1 = dependent.Get<DependsOn>(relationId1);
+        var relationValue2 = dependent.Get<DependsOn>(relationId2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(relationValue1, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
+            Assert.That(relationValue2, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
+        });
     }
 }
