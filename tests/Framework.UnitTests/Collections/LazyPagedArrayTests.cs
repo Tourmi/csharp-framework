@@ -1,12 +1,12 @@
 ﻿namespace Tourmi.Framework.Collections;
 
-[TestFixture(TestOf = typeof(RandomAccessPagedArray<>))]
-internal class RefPagedArrayTests
+[TestFixture(TestOf = typeof(LazyPagedArray<>))]
+internal class LazyPagedArrayTests
 {
     private const byte PageSize = 2;
-    private RandomAccessPagedArray<int>? _collection;
+    private LazyPagedArray<int>? _collection;
 
-    private RandomAccessPagedArray<int> Collection => _collection.ThrowIfNull();
+    private LazyPagedArray<int> Collection => _collection.ThrowIfNull();
 
     [SetUp]
     public void SetUp()

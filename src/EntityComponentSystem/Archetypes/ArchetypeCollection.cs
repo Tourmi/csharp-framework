@@ -9,7 +9,7 @@ namespace Tourmi.EntityComponentSystem.Archetypes;
 /// </remarks>
 internal class ArchetypeCollection
 {
-    private readonly RandomAccessPagedArray<ArchetypeEntityEntry> _entities = new();
+    private readonly LazyPagedArray<ArchetypeEntityEntry> _entities = new();
     private readonly Archetype _emptyArchetype = Archetype.Create();
 
     public ArchetypeCollection(uint initialCapacity = 0x1000)

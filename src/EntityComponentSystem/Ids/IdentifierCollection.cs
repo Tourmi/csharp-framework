@@ -8,8 +8,8 @@ namespace Tourmi.EntityComponentSystem;
 /// </summary>
 internal partial class IdentifierCollection
 {
-    private readonly RandomAccessPagedArray<Identifier> _indexToId = new();
-    private readonly RandomAccessPagedArray<uint> _idToIndex = new();
+    private readonly LazyPagedArray<Identifier> _indexToId = new();
+    private readonly LazyPagedArray<uint> _idToIndex = new();
     private readonly Dictionary<IdentifierRegion, int> _reservedRegionsToCurrentDataIndex = [];
 
     private int _currentDefaultRegionIndex; // index into the _defaultRegionDataIndexes array

@@ -3,10 +3,10 @@
 /// <summary>
 /// A paged array which instantiates full pages of data at once,
 /// initialized at their default values.
-/// Can be indexed and inserted into at any locations.
+/// Can be indexed by and inserted into at any locations.
 /// Does not keep track of whether or not an index has been inserted into.
 /// </summary>
-public sealed class RandomAccessPagedArray<T>
+public sealed class LazyPagedArray<T>
 {
     private const byte MaximumPageSize = 32;
 
@@ -23,7 +23,7 @@ public sealed class RandomAccessPagedArray<T>
     ///     The power of two to use for each page of the paged array. 
     ///     Cannot be greater than 32, since the array is indexed with a <see cref="uint"/>.
     /// </param>
-    public RandomAccessPagedArray(byte pageSizePowerOf2 = 12)
+    public LazyPagedArray(byte pageSizePowerOf2 = 12)
     {
         _ = pageSizePowerOf2.ThrowIfGreaterThan(MaximumPageSize);
 
