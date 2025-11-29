@@ -4,23 +4,13 @@ using Tourmi.Framework.Collections;
 namespace Tourmi.EntityComponentSystem;
 
 /// <summary>
-/// Collection that contains a world's entitity IDs, as well as links to the archetypes of an entity.
+/// Collection that contains a world's entitity IDs.
 /// </summary>
-/// <remarks>
-/// No validation is done at any point for any component operations within this class.
-/// Make sure to always pass-in proper information
-/// </remarks>
 internal partial class IdentifierCollection
 {
-    /// <param name="Archetype"> Archetype of the entity. </param>
-    /// <param name="IdentifierIndex"> Index into the <see cref="_entityIdentifiers"/> array. </param>
-    /// <param name="ArchetypeIndex"> Index of the entity within the archetype </param>
-    private record struct IdentifierToArchetype(Archetype Archetype, uint IdentifierIndex, int ArchetypeIndex);
-
-    private readonly RandomAccessPagedArray<Identifier> _entityIdentifiers = new();
-    private readonly RandomAccessPagedArray<IdentifierToArchetype> _entities = new();
+    private readonly RandomAccessPagedArray<Identifier> _indexToId = new();
+    private readonly RandomAccessPagedArray<uint> _idToIndex = new();
     private readonly Dictionary<IdentifierRegion, int> _reservedRegionsToCurrentDataIndex = [];
-    private readonly Archetype _emptyArchetype;
 
     private int _currentDefaultRegionIndex; // index into the _defaultRegionDataIndexes array
     private int[] _defaultRegionDataIndexes; // indexes for the default regions into the _regionsData array
@@ -44,11 +34,10 @@ internal partial class IdentifierCollection
         }
     }
 
-    public IdentifierCollection(Archetype emptyArchetype, uint initialCapacity = 0x1000)
+    public IdentifierCollection(uint initialCapacity = 0x1000)
     {
-        _emptyArchetype = emptyArchetype.ThrowIfNull();
-        _entityIdentifiers.EnsureCapacity(initialCapacity);
-        _entities.EnsureCapacity(initialCapacity);
+        _indexToId.EnsureCapacity(initialCapacity);
+        _idToIndex.EnsureCapacity(initialCapacity);
 
         var unreservedRegionData = new IdRegionData() { Offset = 1, Capacity = uint.MaxValue - 1, };
         _regionsData = [unreservedRegionData];
@@ -138,7 +127,7 @@ internal partial class IdentifierCollection
     }
 
     /// <summary>
-    /// Creates a new entity in the given <paramref name="idRegion"/>, (or the default id space when <see langword="null"/>), and returns its identifier.
+    /// Creates a new id in the given <paramref name="idRegion"/>, (or the default id space when <see langword="null"/>), and returns its identifier.
     /// </summary>
     public Identifier Create(IdentifierTypes entityTypes = IdentifierTypes.None, IdentifierRegion? idRegion = null)
     {
@@ -188,7 +177,7 @@ internal partial class IdentifierCollection
     }
 
     /// <summary>
-    /// Returns true if the given entity identifier points to an entity that is alive.
+    /// Returns true if the given id points to an entity that is alive.
     /// </summary>
     public bool IsAlive(Identifier entityId)
     {
@@ -197,13 +186,7 @@ internal partial class IdentifierCollection
             return false;
         }
 
-        var entity = _entities[entityId.ShortId];
-        if (entity.IdentifierIndex is 0)
-        {
-            return false;
-        }
-
-        return _entityIdentifiers[entity.IdentifierIndex] == entityId;
+        return _indexToId[_idToIndex[entityId.ShortId]] == entityId;
     }
 
     /// <summary>
@@ -211,21 +194,11 @@ internal partial class IdentifierCollection
     /// </summary>
     public void Free(Identifier entityId)
     {
-        ref var oldEntity = ref _entities[entityId.ShortId];
-        var oldIndex = oldEntity.IdentifierIndex;
-        ref var oldId = ref _entityIdentifiers[oldIndex];
         ref var region = ref GetIdRegionData(entityId);
+        var oldIndex = _idToIndex[entityId.ShortId];
 
-        oldId = oldId.IncrementVersion();
-        var toUpdate = oldEntity.Archetype.RemoveEntity(oldEntity.ArchetypeIndex);
-        oldEntity = default;
-
-        if (toUpdate.HasValue)
-        {
-            var (entityToUpdate, entityNewIndex) = toUpdate.Get();
-            ref var toUpdateIdToArchetype = ref _entities[entityToUpdate.ShortId];
-            toUpdateIdToArchetype.ArchetypeIndex = entityNewIndex;
-        }
+        _indexToId[oldIndex] = entityId.IncrementVersion();
+        _idToIndex[entityId.ShortId] = default;
 
         checked
         {
@@ -233,110 +206,9 @@ internal partial class IdentifierCollection
         }
 
         var lastAliveIndex = region.NextAliveIndex;
-
-        if (lastAliveIndex == oldIndex)
-        {
-            // The entity being killed was the last alive entity for the id region, we don't need to swap.
-            return;
-        }
-
-        ref var lastAliveId = ref _entityIdentifiers[lastAliveIndex];
-        ref var lastAliveEntity = ref _entities[lastAliveId.ShortId];
-
-        (lastAliveId, oldId) = (oldId, lastAliveId);
-        lastAliveEntity.IdentifierIndex = oldIndex;
-    }
-
-    /// <summary>
-    /// Adds the component to the entity.
-    /// Note that this does not check if the entity already has the component.
-    /// </summary>
-    public void AddComponent(Identifier entityId, Identifier componentId, Type? dataType)
-    {
-        ref var entity = ref _entities[entityId.ShortId];
-        var (updatedEntity, toUpdate) = entity.Archetype.AddComponent(entity.ArchetypeIndex, componentId, dataType);
-        if (toUpdate.HasValue)
-        {
-            var (entityToUpdate, entityNewIndex) = toUpdate.Get();
-            ref var toUpdateIdToArchetype = ref _entities[entityToUpdate.ShortId];
-            toUpdateIdToArchetype.ArchetypeIndex = entityNewIndex;
-        }
-
-        entity.Archetype = updatedEntity.Archetype;
-        entity.ArchetypeIndex = updatedEntity.Index;
-    }
-
-    /// <summary>
-    /// Adds the component to the entity.
-    /// Note that this does not check if the entity has the component.
-    /// </summary>
-    public void RemoveComponent(Identifier entityId, Identifier componentId)
-    {
-        ref var entity = ref _entities[entityId.ShortId];
-        var (updatedEntity, toUpdate) = entity.Archetype.RemoveComponent(entity.ArchetypeIndex, componentId);
-        if (toUpdate.HasValue)
-        {
-            var (entityToUpdate, entityNewIndex) = toUpdate.Get();
-            ref var toUpdateIdToArchetype = ref _entities[entityToUpdate.ShortId];
-            toUpdateIdToArchetype.ArchetypeIndex = entityNewIndex;
-        }
-
-        entity.Archetype = updatedEntity.Archetype;
-        entity.ArchetypeIndex = updatedEntity.Index;
-    }
-
-    /// <summary>
-    /// Checks whether or not the entity has the given component
-    /// </summary>
-    public bool HasComponent(Identifier entityId, Identifier componentId)
-    {
-        var entity = _entities[entityId.ShortId];
-        return entity.Archetype.HasComponent(componentId);
-    }
-
-    public T? GetComponent<T>(Identifier entityId, Identifier componentId)
-    {
-        var entity = _entities[entityId.ShortId];
-        return entity.Archetype.GetValue<T>(entity.ArchetypeIndex, componentId);
-    }
-
-    public ref T? GetRefComponent<T>(Identifier entityId, Identifier componentId)
-    {
-        var entity = _entities[entityId.ShortId];
-        return ref entity.Archetype.GetValueRef<T>(entity.ArchetypeIndex, componentId);
-    }
-
-    public void SetComponent<T>(Identifier entityId, Identifier componentId, T value)
-    {
-        var entity = _entities[entityId.ShortId];
-        entity.Archetype.SetValue(entity.ArchetypeIndex, componentId, value);
-    }
-
-    /// <summary>
-    /// Used for debugging purposes
-    /// </summary>
-    internal Archetype? GetArchetype(Identifier entityId)
-    {
-        if (!IsAlive(entityId))
-        {
-            return null;
-        }
-
-        return _entities[entityId.ShortId].Archetype;
-    }
-
-    /// <summary>
-    /// Used for debugging purposes
-    /// </summary>
-    internal ArchetypeEntityEntry? GetArchetypeEntry(Identifier entityId)
-    {
-        if (!IsAlive(entityId))
-        {
-            return null;
-        }
-
-        var entity = _entities[entityId.ShortId];
-        return new(entity.Archetype, entity.ArchetypeIndex);
+        var lastAliveId = _indexToId[lastAliveIndex];
+        _indexToId[oldIndex] = _indexToId[lastAliveIndex];
+        _idToIndex[lastAliveId.ShortId] = oldIndex;
     }
 
     private Identifier Create(ref IdRegionData regionData, IdentifierTypes types)
@@ -346,11 +218,10 @@ internal partial class IdentifierCollection
         if (regionData.AliveCount < regionData.InitializedCount)
         {
             // Reuse dead identifiers
-            ref var id = ref _entityIdentifiers[regionData.NextAliveIndex];
+            ref var id = ref _indexToId[regionData.NextAliveIndex];
             id = (id & ~Identifier.TypesBitMask) | typeBits;
 
-            var entry = _emptyArchetype.AddEntity(id);
-            _entities[id.ShortId] = new(_emptyArchetype, regionData.NextAliveIndex, entry.Index);
+            _idToIndex[id.ShortId] = regionData.NextAliveIndex;
 
             checked
             {
@@ -364,10 +235,8 @@ internal partial class IdentifierCollection
             // New identifier needed
             var id = new Identifier(regionData.NextInitializedIndex);
             id |= typeBits;
-            _entityIdentifiers.Insert(id.ShortId, id);
-
-            var entry = _emptyArchetype.AddEntity(id);
-            _entities[id.ShortId] = new(_emptyArchetype, id.ShortId, entry.Index);
+            _indexToId.Insert(id.ShortId, id);
+            _idToIndex[id.ShortId] = id.ShortId;
 
             checked
             {

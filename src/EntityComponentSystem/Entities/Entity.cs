@@ -64,6 +64,6 @@ public readonly struct Entity : IEquatable<Entity>
             .Select(c => (ArchetypeEntry!.Value.GetDebugValue(c), new ComponentEntity(c, _entity.World)))
             .ToArray();
 
-        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Entities.GetArchetypeEntry(_entity);
+        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Archetypes.GetArchetypeEntry(_entity);
     }
 }

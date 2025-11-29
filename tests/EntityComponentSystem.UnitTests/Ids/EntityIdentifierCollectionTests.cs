@@ -14,7 +14,7 @@ internal class EntityIdentifierCollectionTests
     [SetUp]
     public void SetUp()
     {
-        _entities = new IdentifierCollection(Archetype.Create());
+        _entities = new IdentifierCollection();
     }
 
     [Test]

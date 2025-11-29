@@ -63,6 +63,11 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
     public IdentifierTypes Types { get; }
 
     /// <summary>
+    /// Whether or not this Id is a <see cref="RelationComponentIdentifier"/>
+    /// </summary>
+    public bool IsRelationId => Types.HasFlag(IdentifierTypes.Relation);
+
+    /// <summary>
     /// Implicitely converts the identifier to a ulong.
     /// </summary>
     public static implicit operator ulong(Identifier identifier) => identifier.Value;
@@ -92,6 +97,11 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
 
         return Value & ~VersionBitMask | (ulong)version << VersionBitOffset;
     }
+
+    /// <summary>
+    /// Converts this id into a <see cref="RelationComponentIdentifier"/>
+    /// </summary>
+    public RelationComponentIdentifier ToRelationId() => new(this);
 
     /// <inheritdoc/>
     public bool Equals(Identifier other) => Value == other.Value;

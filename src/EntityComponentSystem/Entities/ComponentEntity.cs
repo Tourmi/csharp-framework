@@ -57,6 +57,6 @@ public readonly struct ComponentEntity(Identifier id, World? world)
             .Select(t => $"Component: {t.Component}, Value: {t.Value ?? "NULL"}")
             .ToArray();
 
-        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Entities.GetArchetypeEntry(_entity);
+        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Archetypes.GetArchetypeEntry(_entity);
     }
 }

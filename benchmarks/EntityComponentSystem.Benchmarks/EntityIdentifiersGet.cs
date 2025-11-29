@@ -16,7 +16,8 @@ public class EntityIdentifiersGet<T>
 {
     public readonly record struct StructComponent(T Value);
 
-    private readonly IdentifierCollection _entityCollection = new(Archetype.Create());
+    private readonly IdentifierCollection _idCollection = new();
+    private readonly ArchetypeCollection _entityCollection = new();
     private Identifier[]? _components;
     private Identifier[]? _entities;
     private Identifier _component;
@@ -37,14 +38,14 @@ public class EntityIdentifiersGet<T>
 
         for (var i = 0; i < ComponentCount; i++)
         {
-            _components[i] = _entityCollection.Create();
+            _components[i] = Create();
         }
 
         _component = _components[random.Next(ComponentCount)];
 
         for (var i = 0; i < EntityCount; i++)
         {
-            var entity = _entityCollection.Create();
+            var entity = Create();
             _entities[i] = entity;
             while (random.NextDouble() > 0.25)
             {
@@ -74,5 +75,12 @@ public class EntityIdentifiersGet<T>
     public string? GetRef()
     {
         return _entityCollection.GetRefComponent<StructComponent>(_entity, _component).Value?.ToString();
+    }
+
+    private Identifier Create()
+    {
+        var id = _idCollection.Create();
+        _entityCollection.Create(id);
+        return id;
     }
 }
