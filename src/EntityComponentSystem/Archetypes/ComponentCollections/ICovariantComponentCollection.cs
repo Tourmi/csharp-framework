@@ -1,6 +1,6 @@
 ﻿namespace Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
-internal interface ICovariantComponentCollection<out T> : IReadOnlyCollection<T>, IComponentCollection
+internal interface ICovariantComponentCollection<out T> : IComponentCollection
 {
     /// <summary>
     /// Gets the value at the given <paramref name="index"/>

@@ -37,6 +37,11 @@ internal partial class Archetype
     public IEnumerable<Identifier> Components => _componentsData.Keys;
 
     /// <summary>
+    /// The amount of entities present in this archetype
+    /// </summary>
+    public int EntityCount => _entities.Count;
+
+    /// <summary>
     /// Creates a new Empty Archetype.
     /// </summary>
     public static Archetype Create() => new();

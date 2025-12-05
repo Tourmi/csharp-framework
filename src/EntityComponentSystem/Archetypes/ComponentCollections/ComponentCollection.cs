@@ -3,7 +3,7 @@
 namespace Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
 /// <inheritdoc/>
-internal class ComponentCollection<T> : IComponentCollection<T>
+internal class ComponentCollection<T> : IComponentCollection<T>, IReadOnlyCollection<T>
 {
     private readonly List<T?> _values = [];
 

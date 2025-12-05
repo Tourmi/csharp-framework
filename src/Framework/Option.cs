@@ -27,7 +27,7 @@ public readonly partial struct Option<T>() : IEquatable<Option<T>>, IEnumerable<
     /// <summary>
     /// Get the option's value, throwing a <see cref="InvalidCastException"/> if the option does not have a value.
     /// </summary>
-    public static explicit operator T(Option<T> option) => option.HasValue ? option._value : throw new InvalidCastException("Maybe did not have a value.");
+    public static explicit operator T(Option<T> option) => option.HasValue ? option._value : throw new InvalidCastException("Option did not have a value.");
 
     /// <inheritdoc/>
     public static bool operator ==(Option<T> left, Option<T> right) => left.Equals(right);
