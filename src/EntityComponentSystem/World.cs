@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Attributes;
+using Tourmi.EntityComponentSystem.Components.Metacomponents;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -317,7 +318,7 @@ public class World
             entity.Add<Component>();
             entity.Set(new Name(typeof(TComponent).Name));
 
-            if (typeof(TComponent).GetCustomAttribute<ComponentFlagAttribute>() is null)
+            if (typeof(TComponent).GetCustomAttribute<TagComponentAttribute>() is null)
             {
                 entity.Set(new DataComponent(typeof(TComponent)));
             }

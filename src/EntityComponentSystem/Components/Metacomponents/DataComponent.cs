@@ -1,7 +1,7 @@
-﻿namespace Tourmi.EntityComponentSystem.Components;
+﻿namespace Tourmi.EntityComponentSystem.Components.Metacomponents;
 
 /// <summary>
-/// Component that marks an entity as a component which stores data.
+/// Meta-component that marks an entity as a component which stores data.
 /// </summary>
 /// <param name="DataType">
 /// The datatype associated with the component.

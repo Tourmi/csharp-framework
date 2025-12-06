@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Tourmi.EntityComponentSystem.Archetypes;
+using Tourmi.EntityComponentSystem.Components.Metacomponents;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 

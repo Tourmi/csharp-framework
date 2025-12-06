@@ -5,6 +5,6 @@ namespace Tourmi.EntityComponentSystem.Components.Relations;
 /// <summary>
 /// <see cref="BuiltInRelationType.ChildOf"/>
 /// </summary>
-[ComponentFlag]
+[TagComponent]
 [ComponentRelationType(Unique = true)]
 public readonly struct ChildOf;
