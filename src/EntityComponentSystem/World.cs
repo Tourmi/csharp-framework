@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Attributes;
 using Tourmi.EntityComponentSystem.Components.Metacomponents;
+using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -15,6 +16,9 @@ public class World
     private readonly IdentifierCollection _ids = new();
     private readonly Identifier[] _builtInRelationIdentifiers = new Identifier[255];
     private readonly ArchetypeCollection _archetypes = new();
+
+    private readonly Dictionary<Delegate, Query> _delegateToQueryCache = [];
+    private readonly Dictionary<Type, Query> _queryTypeToQueryCache = [];
 
     /// <summary>
     /// Region reserved for future potential optimizations.
@@ -125,6 +129,29 @@ public class World
         var entity = new Entity(CreateEntityInternal(), this);
 
         return entity;
+    }
+
+    /// <summary>
+    /// Adds a system to the world
+    /// </summary>
+    public void AddSystem(Delegate system)
+    {
+        _ = system.ThrowIfNull();
+
+        if (!_delegateToQueryCache.TryGetValue(system, out var query))
+        {
+            var queryType = Query.GetQueryTypeFromDelegate(system);
+            if (!_queryTypeToQueryCache.TryGetValue(queryType, out query))
+            {
+                // TODO: create query properly
+                query = new();
+                _queryTypeToQueryCache[queryType] = query;
+            }
+
+            _delegateToQueryCache[system] = query;
+        }
+
+        query.AddSystem(system);
     }
 
     /// <summary>

@@ -2,6 +2,7 @@
 using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
 using Tourmi.EntityComponentSystem.Ids;
+using Tourmi.EntityComponentSystem.Queries;
 using Tourmi.EntityComponentSystem.Relations;
 
 namespace Tourmi.EntityComponentSystem;
@@ -9,7 +10,9 @@ namespace Tourmi.EntityComponentSystem;
 [TestFixture]
 internal class GeneralTests
 {
+    private record struct StringId(string Id);
     private record struct Position(int X, int Y);
+    private record struct Speed(int X, int Y);
 
     [Test]
     public void Test1()
@@ -122,5 +125,40 @@ internal class GeneralTests
             Assert.That(relationValue1, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
             Assert.That(relationValue2, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
         });
+    }
+
+    [Test]
+    public void TestSystems()
+    {
+        var ecs = World.Create();
+        ecs.AddSystem(System1);
+        var someName1 = ecs.CreateEntity();
+        someName1.Set<Name>(new("SomeName1"));
+        someName1.Set<StringId>(new("1"));
+        someName1.Set<Position>(new(1, 1));
+
+        var someName2 = ecs.CreateEntity();
+        someName2.Set<Name>(new("SomeName2"));
+        someName2.Set<StringId>(new("2"));
+        someName2.Set<Position>(new(2, 2));
+
+        var ignored = ecs.CreateEntity();
+        ignored.Set<Name>(new("WrongName"));
+        someName2.Set<StringId>(new("3"));
+        ignored.Set<Position>(new(3, 3));
+
+        static float System1(Identifier id, in StringId stringId, ref readonly Name name, ref Position position, Ref<Speed> speed)
+        {
+            if (name.Value.Contains("SomeName", StringComparison.InvariantCultureIgnoreCase))
+            {
+                position.X += 1;
+                position.Y += 1;
+                speed.Reference = new Speed(1, 1);
+                return 1;
+            }
+
+            speed.Reference = default;
+            return 2;
+        }
     }
 }
