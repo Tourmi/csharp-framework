@@ -10,7 +10,7 @@ public class EntityIdentifiersSet
     public record struct Position(int X, int Y);
 
     private readonly IdentifierCollection _idCollection = new();
-    private readonly ArchetypeCollection _entityCollection = new();
+    private readonly EntityArchetypeCollection _entityCollection = new();
     private Identifier[]? _components;
     private Identifier[]? _entities;
     private Identifier _component;

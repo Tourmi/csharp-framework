@@ -1,4 +1,5 @@
-﻿using Tourmi.EntityComponentSystem.Components;
+﻿using Microsoft.Win32;
+using Tourmi.EntityComponentSystem.Components;
 using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
 using Tourmi.EntityComponentSystem.Ids;
@@ -43,18 +44,13 @@ internal class GeneralTests
         Assert.That(entity.Get<Name>().Value, Is.EqualTo("SomeName"));
 
         entity.Set(4);
-        Assert.Multiple(() =>
-        {
-            Assert.That(entity.Get<int>(), Is.EqualTo(4));
-            Assert.That(entity.Get<Name>().Value, Is.EqualTo("SomeName"));
-        });
+
+        Assert.That(entity.Get<int>(), Is.EqualTo(4));
+        Assert.That(entity.Get<Name>().Value, Is.EqualTo("SomeName"));
 
         entity.Remove<Name>();
-        Assert.Multiple(() =>
-        {
-            Assert.That(entity.Get<Name>(), Is.Default);
-            Assert.That(entity.Get<int>(), Is.EqualTo(4));
-        });
+        Assert.That(entity.Get<Name>(), Is.Default);
+        Assert.That(entity.Get<int>(), Is.EqualTo(4));
     }
 
     [Test]
@@ -125,6 +121,29 @@ internal class GeneralTests
             Assert.That(relationValue1, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
             Assert.That(relationValue2, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
         });
+    }
+
+    [Test]
+    public void TestQueries()
+    {
+        var ecs = World.Create();
+
+        var entity = ecs.CreateEntity();
+        ref var name = ref entity.EnsureMutable<Name>();
+        name = new("SomeName");
+
+        using var query = new Query(ecs, ecs.GetComponentForType<Name>());
+
+        Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));
+
+        ref var position = ref entity.EnsureMutable<Position>();
+        position = new Position(1,2);
+
+        Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));
+
+        entity.Remove<Name>();
+
+        Assert.That(query.GetEntityIds(), Has.None.EqualTo(entity.Id));
     }
 
     [Test]

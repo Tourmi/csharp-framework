@@ -9,7 +9,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(ComponentDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly struct ComponentEntity(Identifier id, World? world)
+public readonly ref struct ComponentEntity(Identifier id, World? world)
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
@@ -43,21 +43,26 @@ public readonly struct ComponentEntity(Identifier id, World? world)
     [DebuggerDisplay("Id = { Id.Value }, Name = { Name }, DataType = { DataType }")]
     internal class ComponentDebugView(ComponentEntity entity)
     {
-        private readonly Entity _entity = entity;
+        private readonly Identifier _id = entity.Id;
+        private readonly World? _world = entity.World;
 
-        public Identifier Id => _entity.Id;
+        private Entity Entity => new(_id, _world);
 
-        public string Name => _entity.Get<Name>().Value;
+        public Identifier Id => _id;
 
-        public Type? DataType => _entity.Get<DataComponent>().DataType;
+        public string Name => Entity.Get<Name>().Value;
 
-        public ComponentEntity[]? Components => ArchetypeEntry?.Archetype?.Components.Select(c => new ComponentEntity(c, _entity.World)).ToArray();
+        public Type? DataType => Entity.Get<DataComponent>().DataType;
+
+        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype?.Components
+            .Select(c => new ComponentDebugView(new(c, Entity.World)))
+            .ToArray();
 
         public string[]? ComponentValues => ArchetypeEntry?.Archetype.Components
-            .Select(c => (Component: new ComponentEntity(c, _entity.World), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
+            .Select(c => (Component: new ComponentDebugView(new(c, Entity.World)), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
             .Select(t => $"Component: {t.Component}, Value: {t.Value ?? "NULL"}")
             .ToArray();
 
-        private ArchetypeEntityEntry? ArchetypeEntry => _entity.World?.Archetypes.GetArchetypeEntry(_entity);
+        private ArchetypeEntityEntry? ArchetypeEntry => Entity.World?.Archetypes.GetArchetypeEntry(Entity);
     }
 }

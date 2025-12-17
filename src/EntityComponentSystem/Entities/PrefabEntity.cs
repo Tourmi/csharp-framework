@@ -3,7 +3,7 @@
 /// <summary>
 /// Hinted entity representing a prefab that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
-public readonly struct PrefabEntity(Identifier id, World? world)
+public readonly ref struct PrefabEntity(Identifier id, World? world)
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;

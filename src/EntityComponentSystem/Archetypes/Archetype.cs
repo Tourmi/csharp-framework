@@ -13,20 +13,20 @@ internal partial class Archetype
     private readonly Dictionary<Identifier, Archetype> _childArchetypes = [];
     private readonly List<Identifier> _entities = [];
 
-    private readonly SharedData _sharedData;
+    private readonly ArchetypeSharedData _sharedData;
     private readonly ImmutableSortedDictionary<Identifier, Type?> _componentsDataType;
     private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
 
-    private Archetype(SharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
+    internal Archetype(ArchetypeSharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
     {
         _sharedData = sharedData;
         _componentsDataType = componentTypes.ToImmutableSortedDictionary();
         _componentsData = _componentsDataType.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
     }
 
-    private Archetype()
+    internal Archetype(ArchetypeSharedData sharedData)
     {
-        _sharedData = new(this);
+        _sharedData = sharedData;
         _componentsDataType = Enumerable.Empty<KeyValuePair<Identifier, Type?>>().ToImmutableSortedDictionary();
         _componentsData = Enumerable.Empty<KeyValuePair<Identifier, IComponentCollection>>().ToImmutableSortedDictionary();
     }
@@ -37,14 +37,14 @@ internal partial class Archetype
     public IEnumerable<Identifier> Components => _componentsData.Keys;
 
     /// <summary>
+    /// All of the entities contained by this archetype.
+    /// </summary>
+    public IReadOnlyList<Identifier> Entities => _entities;
+
+    /// <summary>
     /// The amount of entities present in this archetype
     /// </summary>
     public int EntityCount => _entities.Count;
-
-    /// <summary>
-    /// Creates a new Empty Archetype.
-    /// </summary>
-    public static Archetype Create() => new();
 
     /// <summary>
     /// Returns whether or not the archetype contains the given component

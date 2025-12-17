@@ -15,7 +15,7 @@ public class World
     private readonly Dictionary<Type, Identifier> _typesToIdentifier = [];
     private readonly IdentifierCollection _ids = new();
     private readonly Identifier[] _builtInRelationIdentifiers = new Identifier[255];
-    private readonly ArchetypeCollection _archetypes = new();
+    private readonly EntityArchetypeCollection _archetypes = new();
 
     private readonly Dictionary<Delegate, Query> _delegateToQueryCache = [];
     private readonly Dictionary<Type, Query> _queryTypeToQueryCache = [];
@@ -43,7 +43,7 @@ public class World
     /// <summary>
     /// Collection exposed for testing or debugging purposes.
     /// </summary>
-    internal ArchetypeCollection Archetypes => _archetypes;
+    internal EntityArchetypeCollection Archetypes => _archetypes;
 
     /// <summary>
     /// Creates and initializes a new ECS world
@@ -144,7 +144,7 @@ public class World
             if (!_queryTypeToQueryCache.TryGetValue(queryType, out query))
             {
                 // TODO: create query properly
-                query = new();
+                query = new(this);
                 _queryTypeToQueryCache[queryType] = query;
             }
 
