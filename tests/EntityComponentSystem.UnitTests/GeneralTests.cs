@@ -14,6 +14,7 @@ internal class GeneralTests
     private record struct StringId(string Id);
     private record struct Position(int X, int Y);
     private record struct Speed(int X, int Y);
+    private record struct SomeComponent(float SomeValue);
 
     [Test]
     public void Test1()
@@ -118,8 +119,10 @@ internal class GeneralTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(relationValue1, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
-            Assert.That(relationValue2, Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
+            Assert.That(relationValue1, 
+                Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
+            Assert.That(relationValue2, 
+                Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
         });
     }
 
@@ -137,7 +140,7 @@ internal class GeneralTests
         Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));
 
         ref var position = ref entity.EnsureMutable<Position>();
-        position = new Position(1,2);
+        position = new Position(1, 2);
 
         Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));
 
@@ -151,6 +154,8 @@ internal class GeneralTests
     {
         var ecs = World.Create();
         ecs.AddSystem(System1);
+        ecs.AddSystem(System2);
+        ecs.AddSystem(System3);
         var someName1 = ecs.CreateEntity();
         someName1.Set<Name>(new("SomeName1"));
         someName1.Set<StringId>(new("1"));
@@ -166,18 +171,28 @@ internal class GeneralTests
         someName2.Set<StringId>(new("3"));
         ignored.Set<Position>(new(3, 3));
 
-        static float System1(Identifier id, in StringId stringId, ref readonly Name name, ref Position position, Ref<Speed> speed)
+        static SomeComponent System1(Identifier id, in StringId stringId, ref readonly Name name, ref Position position, Ref<Speed> speed)
         {
             if (name.Value.Contains("SomeName", StringComparison.InvariantCultureIgnoreCase))
             {
                 position.X += 1;
                 position.Y += 1;
                 speed.Reference = new Speed(1, 1);
-                return 1;
+                return new(1);
             }
 
             speed.Reference = default;
-            return 2;
+            return new(2);
+        }
+
+        static void System2(Identifier id, Name name, StringId stringId, Ref<Speed> speed, SomeComponent someValue, Position position)
+        {
+            return;
+        }
+
+        static void System3(Identifier id, Name name, StringId stringId, SomeComponent someValue, Position position)
+        {
+            return;
         }
     }
 }

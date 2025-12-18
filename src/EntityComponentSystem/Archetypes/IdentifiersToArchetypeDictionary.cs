@@ -10,29 +10,11 @@ internal class IdentifiersToArchetypeDictionary
     /// <summary>
     /// Raised when an archetype is deleted. (Usually when reclaiming free space)
     /// </summary>
+#pragma warning disable CS0067 // Event will be used in the future
     public event Action<Archetype>? ArchetypeRemoved;
+#pragma warning restore CS0067
 
-    private static readonly IComparer<Identifier[]> IdentifierCollectionComparer = Comparer.FromFunc((Identifier[] c1, Identifier[] c2) =>
-    {
-        var compare = c1.Length.CompareTo(c2.Length);
-        if (compare != 0)
-        {
-            return compare;
-        }
-
-        for (var i = 0; i < c1.Length; i++)
-        {
-            compare = c1[i].CompareTo(c2[i]);
-            if (compare != 0)
-            {
-                return compare;
-            }
-        }
-
-        return 0;
-    });
-
-    private readonly SortedDictionary<Identifier[], Archetype> _archetypes = new(IdentifierCollectionComparer);
+    private readonly SortedDictionary<Identifier[], Archetype> _archetypes = new(Identifier.IdentifierCollectionComparer);
     private readonly Dictionary<Identifier, List<Archetype>> _archetypeGroups = [];
     private readonly ArchetypeSharedData _sharedData;
     private readonly Archetype _emptyArchetype;

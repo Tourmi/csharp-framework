@@ -15,5 +15,5 @@ public readonly ref struct ThreadSafe<T>(T instance)
     /// <summary>
     /// Instance that is either thread safe, or only read from.
     /// </summary>
-    public T Instance { get; } = instance;
+    public readonly T Instance { get; } = instance;
 }

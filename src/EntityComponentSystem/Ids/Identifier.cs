@@ -14,6 +14,29 @@ namespace Tourmi.EntityComponentSystem.Ids;
 public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>
 {
     /// <summary>
+    /// Comparer that allows the comparison of two collections of identifiers
+    /// </summary>
+    public static readonly IComparer<Identifier[]> IdentifierCollectionComparer = Comparer.FromFunc((Identifier[] c1, Identifier[] c2) =>
+    {
+        var compare = c1.Length.CompareTo(c2.Length);
+        if (compare != 0)
+        {
+            return compare;
+        }
+
+        for (var i = 0; i < c1.Length; i++)
+        {
+            compare = c1[i].CompareTo(c2[i]);
+            if (compare != 0)
+            {
+                return compare;
+            }
+        }
+
+        return 0;
+    });
+
+    /// <summary>
     /// Mask for the short form of the identifier.
     /// </summary>
     public const ulong IdBitMask = 0x0000_0000_FFFF_FFFF;

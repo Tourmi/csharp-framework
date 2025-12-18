@@ -12,13 +12,37 @@ namespace Tourmi.EntityComponentSystem;
 /// </summary>
 public class World
 {
+    private static readonly IComparer<SortedSet<Identifier>> IdSetComparer = Comparer.FromFunc<SortedSet<Identifier>>((c1, c2) =>
+    {
+        var compare = c1.Count.CompareTo(c2.Count);
+        if (compare != 0)
+        {
+            return compare;
+        }
+
+        using var c1Enumerator = c1.GetEnumerator();
+        using var c2Enumerator = c2.GetEnumerator();
+
+        while (c1Enumerator.MoveNext() && c2Enumerator.MoveNext())
+        {
+            compare = c1Enumerator.Current.CompareTo(c2Enumerator.Current);
+
+            if (compare != 0)
+            {
+                return compare;
+            }
+        }
+
+        return 0;
+    });
+
     private readonly Dictionary<Type, Identifier> _typesToIdentifier = [];
     private readonly IdentifierCollection _ids = new();
     private readonly Identifier[] _builtInRelationIdentifiers = new Identifier[255];
     private readonly EntityArchetypeCollection _archetypes = new();
 
-    private readonly Dictionary<Delegate, Query> _delegateToQueryCache = [];
-    private readonly Dictionary<Type, Query> _queryTypeToQueryCache = [];
+    private readonly SortedDictionary<SortedSet<Identifier>, Query> _componentIdsToQuery = new(IdSetComparer);
+    private readonly Dictionary<Delegate, Query> _systemsToQuery = [];
 
     /// <summary>
     /// Region reserved for future potential optimizations.
@@ -133,25 +157,19 @@ public class World
 
     /// <summary>
     /// Adds a system to the world
-    /// </summary>
-    public void AddSystem(Delegate system)
+    /// </summary>[
+    [OverloadResolutionPriority(-1)]
+    public void AddSystem<T>(T system) where T : Delegate
     {
         _ = system.ThrowIfNull();
 
-        if (!_delegateToQueryCache.TryGetValue(system, out var query))
+        if (!_systemsToQuery.TryGetValue(system, out var query))
         {
-            var queryType = Query.GetQueryTypeFromDelegate(system);
-            if (!_queryTypeToQueryCache.TryGetValue(queryType, out query))
-            {
-                // TODO: create query properly
-                query = new(this);
-                _queryTypeToQueryCache[queryType] = query;
-            }
-
-            _delegateToQueryCache[system] = query;
+            query = GetQueryForDelegate(system);
+            _systemsToQuery[system] = query;
         }
 
-        query.AddSystem(system);
+        // TODO: Add system with query
     }
 
     /// <summary>
@@ -337,27 +355,34 @@ public class World
     /// <summary>
     /// Returns the entity representing the component of the given <typeparamref name="TComponent"/> type.
     /// </summary>
-    public ComponentEntity GetComponentForType<TComponent>()
+    public ComponentEntity GetComponentForType<TComponent>() => GetComponentForType(typeof(TComponent));
+
+    /// <summary>
+    /// Returns the entity representing the component of the given <paramref name="type"/>.
+    /// </summary>
+    public ComponentEntity GetComponentForType(Type type)
     {
-        if (!_typesToIdentifier.TryGetValue(typeof(TComponent), out var componentId) || !IsAlive(componentId))
+        if (!_typesToIdentifier.TryGetValue(type, out var componentId) || !IsAlive(componentId))
         {
             var entity = CreateEntity();
             entity.Add<Component>();
-            entity.Set(new Name(typeof(TComponent).Name));
+            entity.Set(new Name(type.Name));
 
-            if (typeof(TComponent).GetCustomAttribute<TagComponentAttribute>() is null)
+            if (type.GetCustomAttribute<TagComponentAttribute>() is null)
             {
-                entity.Set(new DataComponent(typeof(TComponent)));
+                entity.Set(new DataComponent(type));
             }
 
-            if (typeof(TComponent).GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
+            if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
             {
                 entity.Add<RelationDefinition>();
             }
 
             componentId = entity.Id;
-            _typesToIdentifier[typeof(TComponent)] = componentId;
+            _typesToIdentifier[type] = componentId;
         }
+
+        ComponentEntity result = new(componentId, this);
 
         return new(componentId, this);
     }
@@ -402,4 +427,57 @@ public class World
     }
 
     private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIdentifiers[(int)relationType - 1];
+
+    private Query GetQueryForDelegate<T>(T del) where T : Delegate
+    {
+        var ids = DelegateToComponentTypes(del);
+
+        if (_componentIdsToQuery.TryGetValue(ids, out var query))
+        {
+            return query;
+        }
+
+        query = new Query(this, ids);
+        _componentIdsToQuery[ids] = query;
+        return query;
+    }
+
+    private SortedSet<Identifier> DelegateToComponentTypes<T>(T del) where T : Delegate
+    {
+        var components = new SortedSet<Identifier>();
+        var parameters = del.Method.GetParameters();
+        foreach (var param in parameters)
+        {
+            ParseTypeInto(components, param.ParameterType);
+        }
+
+        if (del.Method.ReturnType != typeof(void))
+        {
+            if (del.Method.ReturnType.IsByRef || del.Method.ReturnType.IsByRefLike)
+            {
+                throw new NotSupportedException("Cannot create a query from a delegate that returns a ref, or refstruct value.");
+            }
+
+            ParseTypeInto(components, del.Method.ReturnType);
+        }
+
+        return components;
+
+        void ParseTypeInto(SortedSet<Identifier> components, Type type)
+        {
+            if (type.HasElementType)
+            {
+                type = type.GetElementType()!;
+            }
+
+            if (type.IsByRefLike)
+            {
+                // TODO: Unwrap ParamGroup, OutRef, Ref, RefReadonly, etc. recursively
+            }
+
+            // TODO: Process special types, Query, etc.
+
+            _ = components.Add(GetComponentForType(type));
+        }
+    }
 }

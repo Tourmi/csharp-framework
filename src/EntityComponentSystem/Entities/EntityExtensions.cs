@@ -8,7 +8,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 public static class EntityExtensions
 {
     /// <param name="entity">The entity that will be acted on</param>
-    extension(in Entity entity)
+    extension(Entity entity)
     {
         /// <summary>
         /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.

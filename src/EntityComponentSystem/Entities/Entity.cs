@@ -9,26 +9,19 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(EntityDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct Entity : IEquatable<Entity>
+public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>, IEquatable<Entity>
 {
-    /// <summary>
-    /// Identifier of the entity
-    /// </summary>
-    public Identifier Id { get; }
+    /// <inheritdoc/>
+    public Identifier Id { get; } = id;
 
-    internal World? World { get; }
+    internal World? World { get; } = world;
+
+    /// <inheritdoc/>
+    World? IEntity.World => World;
 
     private EntityDebugView DebugView => new(this);
 
-    internal Entity(Identifier id, World? world)
-    {
-        Id = id;
-        World = world;
-    }
-
-    /// <summary>
-    /// Returns the identifier of the entity implicitely
-    /// </summary>
+    /// <inheritdoc/>
     public static implicit operator Identifier(Entity entity) => entity.Id;
 
     /// <inheritdoc/>

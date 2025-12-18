@@ -16,5 +16,5 @@ internal interface IComponentCollection<T> :
     Span<T?> AsSpan();
 
     /// <inheritdoc cref="GetEnumerator"/>
-    new ComponentCollectionEnumerator<T> GetEnumerator();
+    ComponentCollectionEnumerator<T> GetEnumerator();
 }

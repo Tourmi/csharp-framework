@@ -9,12 +9,16 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(ComponentDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct ComponentEntity(Identifier id, World? world)
+public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntity<ComponentEntity>
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
+    /// <inheritdoc/>
     internal World? World { get; } = world;
+
+    /// <inheritdoc/>
+    World? IEntity.World => World;
 
     private ComponentDebugView DebugView => new(this);
 
@@ -25,20 +29,18 @@ public readonly ref struct ComponentEntity(Identifier id, World? world)
 
     internal ComponentEntity(Entity entity) : this(entity.Id, entity.World) { }
 
+    /// <inheritdoc/>
+    public static implicit operator Identifier(ComponentEntity entity) => entity.Id;
+
     /// <summary>
     /// Returns the non-hinted entity implicitely
     /// </summary>
     public static implicit operator Entity(ComponentEntity entity) => new(entity.Id, entity.World);
 
     /// <summary>
-    /// Returns the identifier of the entity implicitely
-    /// </summary>
-    public static implicit operator Identifier(ComponentEntity entity) => entity.Id;
-
-    /// <summary>
     /// Explicitely casts the entity to a component entity.
     /// </summary>
-    public static explicit operator ComponentEntity(Entity entity) => new(entity);
+    public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.World);
 
     [DebuggerDisplay("Id = { Id.Value }, Name = { Name }, DataType = { DataType }")]
     internal class ComponentDebugView(ComponentEntity entity)

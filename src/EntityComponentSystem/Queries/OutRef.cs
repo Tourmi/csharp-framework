@@ -4,9 +4,9 @@
 /// Query parameter that provides a write-only reference to a value of type <typeparamref name="T"/>.
 /// Equivalent to the <see langword="out"/> keyword.
 /// </summary>
-public ref struct OutRef<T>(ref T reference)
+public readonly ref struct OutRef<T>(ref T reference)
 {
-    private ref T _reference = ref reference;
+    private readonly ref T _reference = ref reference;
 
     /// <summary>
     /// Sets the value of the reference.

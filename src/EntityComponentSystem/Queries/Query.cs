@@ -66,7 +66,7 @@ public sealed class Query : IDisposable
     {
         EnsureCache();
 
-        // TODO: Invalidate per-entity caches before uncommenting the next line.
+        // TODO: Figure out per-entity caches before uncommenting the next line.
         // return _cachedEntityEntries;
 
         foreach (var archetype in _cachedArchetypes)
@@ -86,7 +86,7 @@ public sealed class Query : IDisposable
     {
         EnsureCache();
 
-        // TODO: Invalidate per-entity caches before uncommenting the next line.
+        // TODO: Figure out per-entity caches before uncommenting the next line.
         // return _cachedEntityIds;
 
         foreach (var archetype in _cachedArchetypes)
@@ -98,16 +98,15 @@ public sealed class Query : IDisposable
         }
     }
 
-
-    internal static Type GetQueryTypeFromDelegate(Delegate del)
+    internal static Type GetQueryTypeFromDelegate<T>(T del) where T : Delegate
     {
         // TODO: instead of returning a type, it should probably be a list of identifiers, similar to Archetypes
         // TODO: use some form of cache to avoid GCing the list on each call
-        var queryParams = new List<QueryParamInfo>();
+        var paramGroup = new List<QueryParamInfo>();
         var parameters = del.Method.GetParameters();
         foreach (var param in parameters)
         {
-            ParseTypeInto(queryParams, ParamToType(param));
+            ParseTypeInto(paramGroup, param.ToType());
         }
 
         if (del.Method.ReturnType != typeof(void))
@@ -117,31 +116,31 @@ public sealed class Query : IDisposable
                 throw new NotSupportedException("Cannot create a query from a delegate that returns a ref, or refstruct value.");
             }
 
-            ParseTypeInto(queryParams, typeof(OutRef<>).MakeGenericType(del.Method.ReturnType));
+            ParseTypeInto(paramGroup, typeof(OutRef<>).MakeGenericType(del.Method.ReturnType));
         }
 
-        if (queryParams.Count == 0)
+        if (paramGroup.Count == 0)
         {
             return typeof(Query);
         }
 
-        if (queryParams.Count == 1)
+        if (paramGroup.Count == 1)
         {
-            return typeof(Query<>).MakeGenericType(queryParams[0].ParamType);
+            return typeof(Query<>).MakeGenericType(paramGroup[0].ParamType);
         }
 
-        var recursiveDepth = (queryParams.Count - 2) / 7 + 1;
-        var lastDepthCount = queryParams.Count - (recursiveDepth - 1) * 7;
+        var recursiveDepth = (paramGroup.Count - 2) / 7 + 1;
+        var lastDepthCount = paramGroup.Count - (recursiveDepth - 1) * 7;
 
         var previousQueryParamType = lastDepthCount switch
         {
-            2 => typeof(QueryParams<,>).MakeGenericType(queryParams[^2].ParamType, queryParams[^1].ParamType),
-            3 => typeof(QueryParams<,,>).MakeGenericType(queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
-            4 => typeof(QueryParams<,,,>).MakeGenericType(queryParams[^4].ParamType, queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
-            5 => typeof(QueryParams<,,,,>).MakeGenericType(queryParams[^5].ParamType, queryParams[^4].ParamType, queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
-            6 => typeof(QueryParams<,,,,,>).MakeGenericType(queryParams[^6].ParamType, queryParams[^5].ParamType, queryParams[^4].ParamType, queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
-            7 => typeof(QueryParams<,,,,,,>).MakeGenericType(queryParams[^7].ParamType, queryParams[^6].ParamType, queryParams[^5].ParamType, queryParams[^4].ParamType, queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
-            8 => typeof(QueryParams<,,,,,,,>).MakeGenericType(queryParams[^8].ParamType, queryParams[^7].ParamType, queryParams[^6].ParamType, queryParams[^5].ParamType, queryParams[^4].ParamType, queryParams[^3].ParamType, queryParams[^2].ParamType, queryParams[^1].ParamType),
+            2 => typeof(ParamGroup<,>).MakeGenericType(paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            3 => typeof(ParamGroup<,,>).MakeGenericType(paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            4 => typeof(ParamGroup<,,,>).MakeGenericType(paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            5 => typeof(ParamGroup<,,,,>).MakeGenericType(paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            6 => typeof(ParamGroup<,,,,,>).MakeGenericType(paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            7 => typeof(ParamGroup<,,,,,,>).MakeGenericType(paramGroup[^7].ParamType, paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
+            8 => typeof(ParamGroup<,,,,,,,>).MakeGenericType(paramGroup[^8].ParamType, paramGroup[^7].ParamType, paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
             _ => null!,
         };
 
@@ -149,76 +148,25 @@ public sealed class Query : IDisposable
         while (recursiveDepth > 0)
         {
             var offset = recursiveDepth * 7;
-            previousQueryParamType = typeof(QueryParams<,,,,,,,>).MakeGenericType(
-                queryParams[offset + 0].ParamType,
-                queryParams[offset + 1].ParamType,
-                queryParams[offset + 2].ParamType,
-                queryParams[offset + 3].ParamType,
-                queryParams[offset + 4].ParamType,
-                queryParams[offset + 5].ParamType,
-                queryParams[offset + 6].ParamType,
+            previousQueryParamType = typeof(ParamGroup<,,,,,,,>).MakeGenericType(
+                paramGroup[offset + 0].ParamType,
+                paramGroup[offset + 1].ParamType,
+                paramGroup[offset + 2].ParamType,
+                paramGroup[offset + 3].ParamType,
+                paramGroup[offset + 4].ParamType,
+                paramGroup[offset + 5].ParamType,
+                paramGroup[offset + 6].ParamType,
                 previousQueryParamType);
 
             recursiveDepth--;
         }
 
         return typeof(Query<>).MakeGenericType(previousQueryParamType);
-    }
 
-    internal void AddSystem(Delegate system)
-    {
-
-    }
-
-    private static Type ParamToType(ParameterInfo param)
-    {
-        var elementType = param.ParameterType;
-        if (elementType.IsByRef)
+        static void ParseTypeInto(List<QueryParamInfo> paramGroup, Type param)
         {
-            elementType = elementType.GetElementType()!;
+            paramGroup.Add(new(param));
         }
-
-        if (!elementType.IsValueType)
-        {
-            if ((!param.ParameterType.IsByRef || param.IsIn) && param.GetCustomAttribute<ThreadSafeAttribute>() is not null)
-            {
-                return typeof(ThreadSafe<>).MakeGenericType(elementType);
-            }
-
-            return elementType;
-        }
-
-        if (elementType.IsByRefLike)
-        {
-            if (param.ParameterType.IsByRef)
-            {
-                throw new NotSupportedException("Cannot build query with a ref struct parameter passed via ref/out/in");
-            }
-
-            return elementType;
-        }
-
-        if (!param.ParameterType.IsByRef)
-        {
-            return elementType;
-        }
-
-        if (param.IsIn)
-        {
-            return typeof(RefReadonly<>).MakeGenericType(elementType);
-        }
-
-        if (param.IsOut)
-        {
-            return typeof(OutRef<>).MakeGenericType(elementType);
-        }
-
-        return typeof(Ref<>).MakeGenericType(elementType);
-    }
-
-    private static void ParseTypeInto(List<QueryParamInfo> queryParams, Type param)
-    {
-        queryParams.Add(new(param));
     }
 
     private void OnArchetypeAdded(Archetype archetype)
@@ -257,11 +205,11 @@ public sealed class Query : IDisposable
         _cachedEntityEntries.Clear();
         _cachedEntityIds.Clear();
 
-        // TODO: Invalidate per-entity caches before uncommenting the next line.
-        // _isEntityCacheDirty = false;
+        // TODO: Invalidate per-entity caches (or figure out if they're needed) 
+        // before uncommenting next lines.
 
-        return;
-
+        /* 
+        _isEntityCacheDirty = false;
         foreach (var archetype in _cachedArchetypes)
         {
             for (var i = 0; i < archetype.EntityCount; i++)
@@ -270,6 +218,9 @@ public sealed class Query : IDisposable
                 _cachedEntityIds.Add(archetype.Entities[i]);
             }
         }
+        */
+
+        return;
 
         void EnsureArchetypeCache()
         {
