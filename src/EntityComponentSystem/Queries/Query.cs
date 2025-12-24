@@ -1,19 +1,17 @@
-﻿using System;
-using System.Reflection;
-using Tourmi.EntityComponentSystem.Archetypes;
+﻿using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>
-/// Queries the <see cref="World"/> for entities filtered by the type parameters of the <see cref="Query"/>.
+/// Queries the <see cref="World"/> for entities filtered by the components of the <see cref="Query"/>.
 /// </summary>
 public sealed class Query : IDisposable
 {
     private readonly World _world;
     private readonly Identifier[] _componentIds;
     private readonly HashSet<Archetype> _cachedArchetypes = [];
-    private readonly HashSet<ArchetypeEntityEntry> _cachedEntityEntries = [];
-    private readonly HashSet<Identifier> _cachedEntityIds = [];
+    private readonly List<ArchetypeEntityEntry> _cachedEntityEntries = [];
+    private readonly List<Identifier> _cachedEntityIds = [];
 
     private bool _isArchetypeCacheDirty = true;
     private bool _isEntityCacheDirty = true;
@@ -60,9 +58,9 @@ public sealed class Query : IDisposable
     }
 
     /// <summary>
-    /// Returns all entity entries for the archetype.
+    /// Returns all entity entries with their archetype that are targeted by the query.
     /// </summary>
-    internal IEnumerable<ArchetypeEntityEntry> GetEntities()
+    internal IEnumerable<ArchetypeEntityEntry> GetEntityEntries()
     {
         EnsureCache();
 
@@ -79,8 +77,8 @@ public sealed class Query : IDisposable
     }
 
     /// <summary>
-    /// Returns all entity Ids for the archetype. 
-    /// Useful when generic operations on the entity are needed.
+    /// Returns all entity Ids for the query. 
+    /// Useful when general operations on the entity are needed.
     /// </summary>
     internal IEnumerable<Identifier> GetEntityIds()
     {
@@ -98,100 +96,20 @@ public sealed class Query : IDisposable
         }
     }
 
-    internal static Type GetQueryTypeFromDelegate<T>(T del) where T : Delegate
-    {
-        // TODO: instead of returning a type, it should probably be a list of identifiers, similar to Archetypes
-        // TODO: use some form of cache to avoid GCing the list on each call
-        var paramGroup = new List<QueryParamInfo>();
-        var parameters = del.Method.GetParameters();
-        foreach (var param in parameters)
-        {
-            ParseTypeInto(paramGroup, param.ToType());
-        }
-
-        if (del.Method.ReturnType != typeof(void))
-        {
-            if (del.Method.ReturnType.IsByRef || del.Method.ReturnType.IsByRefLike)
-            {
-                throw new NotSupportedException("Cannot create a query from a delegate that returns a ref, or refstruct value.");
-            }
-
-            ParseTypeInto(paramGroup, typeof(OutRef<>).MakeGenericType(del.Method.ReturnType));
-        }
-
-        if (paramGroup.Count == 0)
-        {
-            return typeof(Query);
-        }
-
-        if (paramGroup.Count == 1)
-        {
-            return typeof(Query<>).MakeGenericType(paramGroup[0].ParamType);
-        }
-
-        var recursiveDepth = (paramGroup.Count - 2) / 7 + 1;
-        var lastDepthCount = paramGroup.Count - (recursiveDepth - 1) * 7;
-
-        var previousQueryParamType = lastDepthCount switch
-        {
-            2 => typeof(ParamGroup<,>).MakeGenericType(paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            3 => typeof(ParamGroup<,,>).MakeGenericType(paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            4 => typeof(ParamGroup<,,,>).MakeGenericType(paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            5 => typeof(ParamGroup<,,,,>).MakeGenericType(paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            6 => typeof(ParamGroup<,,,,,>).MakeGenericType(paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            7 => typeof(ParamGroup<,,,,,,>).MakeGenericType(paramGroup[^7].ParamType, paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            8 => typeof(ParamGroup<,,,,,,,>).MakeGenericType(paramGroup[^8].ParamType, paramGroup[^7].ParamType, paramGroup[^6].ParamType, paramGroup[^5].ParamType, paramGroup[^4].ParamType, paramGroup[^3].ParamType, paramGroup[^2].ParamType, paramGroup[^1].ParamType),
-            _ => null!,
-        };
-
-        recursiveDepth--;
-        while (recursiveDepth > 0)
-        {
-            var offset = recursiveDepth * 7;
-            previousQueryParamType = typeof(ParamGroup<,,,,,,,>).MakeGenericType(
-                paramGroup[offset + 0].ParamType,
-                paramGroup[offset + 1].ParamType,
-                paramGroup[offset + 2].ParamType,
-                paramGroup[offset + 3].ParamType,
-                paramGroup[offset + 4].ParamType,
-                paramGroup[offset + 5].ParamType,
-                paramGroup[offset + 6].ParamType,
-                previousQueryParamType);
-
-            recursiveDepth--;
-        }
-
-        return typeof(Query<>).MakeGenericType(previousQueryParamType);
-
-        static void ParseTypeInto(List<QueryParamInfo> paramGroup, Type param)
-        {
-            paramGroup.Add(new(param));
-        }
-    }
-
     private void OnArchetypeAdded(Archetype archetype)
     {
         for (var i = 0; i < _componentIds.Length; i++)
         {
-            if (archetype.Components.Contains(_componentIds[i]))
+            if (!archetype.Components.Contains(_componentIds[i]))
             {
-                _cachedArchetypes.Add(archetype);
                 return;
             }
         }
+
+        _cachedArchetypes.Add(archetype);
     }
 
-    private void OnArchetypeRemoved(Archetype archetype)
-    {
-        for (var i = 0; i < _componentIds.Length; i++)
-        {
-            if (archetype.Components.Contains(_componentIds[i]))
-            {
-                _cachedArchetypes.Remove(archetype);
-                return;
-            }
-        }
-    }
+    private void OnArchetypeRemoved(Archetype archetype) => _cachedArchetypes.Remove(archetype);
 
     private void EnsureCache()
     {
@@ -232,10 +150,10 @@ public sealed class Query : IDisposable
             _cachedArchetypes.Clear();
             _isArchetypeCacheDirty = false;
 
-            // TODO: Support empty query returning all entities
             if (_componentIds.Length == 0)
             {
-                throw new NotImplementedException("Queries with no component ids are not supported yet.");
+                _cachedArchetypes.UnionWith(_world.Archetypes.GetArchetypes());
+                return;
             }
 
             _cachedArchetypes.UnionWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[0]));
@@ -246,7 +164,7 @@ public sealed class Query : IDisposable
                     return;
                 }
 
-                _cachedArchetypes.IntersectWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[0]));
+                _cachedArchetypes.IntersectWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[i]));
             }
         }
     }

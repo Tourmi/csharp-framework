@@ -9,7 +9,7 @@ internal static class ReflectionExtensions
 {
     extension(ParameterInfo paramInfo)
     {
-        public Type ToType()
+        public Type ToQueryType()
         {
             var elementType = paramInfo.ParameterType;
             if (elementType.IsByRef)

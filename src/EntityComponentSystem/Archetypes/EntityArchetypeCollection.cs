@@ -84,6 +84,11 @@ internal class EntityArchetypeCollection
         => _entities[entityId.ShortId].SetValue(componentId, value);
 
     /// <summary>
+    /// Returns all archetypes
+    /// </summary>
+    internal IEnumerable<Archetype> GetArchetypes() => _archetypes.Values;
+
+    /// <summary>
     /// Returns all existing archetypes that contain the 
     /// given component represented by <paramref name="componentId"/>
     /// </summary>

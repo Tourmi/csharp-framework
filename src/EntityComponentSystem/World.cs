@@ -38,7 +38,7 @@ public class World
 
     private readonly Dictionary<Type, Identifier> _typesToIdentifier = [];
     private readonly IdentifierCollection _ids = new();
-    private readonly Identifier[] _builtInRelationIdentifiers = new Identifier[255];
+    private readonly Identifier[] _builtInRelationIds = new Identifier[255];
     private readonly EntityArchetypeCollection _archetypes = new();
 
     private readonly SortedDictionary<SortedSet<Identifier>, Query> _componentIdsToQuery = new(IdSetComparer);
@@ -107,17 +107,17 @@ public class World
         Set(data, name, new Name(nameof(DataComponent)));
 
         _ids.DefaultRegionOverride = _builtInRelationsRegion;
-        for (var i = 0; i < _builtInRelationIdentifiers.Length; i++)
+        for (var i = 0; i < _builtInRelationIds.Length; i++)
         {
             if (!Enum.IsDefined((BuiltInRelationType)(i + 1)))
             {
-                break;
+                continue;
             }
 
             var relationDefinition = CreateEntityInternal(IdentifierTypes.Relation);
             Add(relationDefinition, component);
             Set<Name>(relationDefinition, name, new(Enum.GetName((BuiltInRelationType)i + 1) ?? $"Relation #{i + 1}"));
-            _builtInRelationIdentifiers[i] = relationDefinition;
+            _builtInRelationIds[i] = relationDefinition;
         }
 
         // For now, configure them manually.
@@ -199,9 +199,9 @@ public class World
 
         Identifier relationEntity = default;
         var relationIndex = relationId.RelationType - 1;
-        if (relationIndex < _builtInRelationIdentifiers.Length)
+        if (relationIndex < _builtInRelationIds.Length)
         {
-            relationEntity = _builtInRelationIdentifiers[relationIndex];
+            relationEntity = _builtInRelationIds[relationIndex];
         }
         else
         {
@@ -382,8 +382,6 @@ public class World
             _typesToIdentifier[type] = componentId;
         }
 
-        ComponentEntity result = new(componentId, this);
-
         return new(componentId, this);
     }
 
@@ -398,14 +396,13 @@ public class World
         if (component.Types.HasFlag(IdentifierTypes.Relation))
         {
             var relationId = new RelationComponentIdentifier(component);
-            var builtInRelationType = relationId.BuiltInRelationType;
-            if (builtInRelationType != BuiltInRelationType.None)
+            if (relationId.BuiltInRelationType != BuiltInRelationType.None)
             {
-                datatypeId = ToId(component.ToRelationId().BuiltInRelationType);
+                datatypeId = ToId(relationId.BuiltInRelationType);
             }
             else
             {
-                // TODO: Also deal with user-created relations.
+                // TODO: Also process user-created relations.
             }
         }
 
@@ -426,7 +423,7 @@ public class World
         _ids.Free(id);
     }
 
-    private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIdentifiers[(int)relationType - 1];
+    private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIds[(int)relationType - 1];
 
     private Query GetQueryForDelegate<T>(T del) where T : Delegate
     {

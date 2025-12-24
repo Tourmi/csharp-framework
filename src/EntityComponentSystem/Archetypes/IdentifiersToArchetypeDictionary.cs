@@ -23,6 +23,7 @@ internal class IdentifiersToArchetypeDictionary
     {
         _sharedData = new(this);
         _emptyArchetype = new(_sharedData);
+        _archetypes[[]] = _emptyArchetype;
     }
 
     /// <summary>
@@ -66,4 +67,9 @@ internal class IdentifiersToArchetypeDictionary
             return archetype;
         }
     }
+
+    /// <summary>
+    /// Returns all the archetypes contained by the dictionary.
+    /// </summary>
+    public IReadOnlyCollection<Archetype> Values => _archetypes.Values;
 }

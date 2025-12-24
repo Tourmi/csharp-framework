@@ -135,9 +135,9 @@ internal class GeneralTests
         ref var name = ref entity.EnsureMutable<Name>();
         name = new("SomeName");
 
-        using var query = new Query(ecs, ecs.GetComponentForType<Name>());
+        using var query = new Query(ecs, ecs.GetComponentForType<Name>(), ecs.GetComponentForType<Position>());
 
-        Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));
+        Assert.That(query.GetEntityIds(), Has.None.EqualTo(entity.Id));
 
         ref var position = ref entity.EnsureMutable<Position>();
         position = new Position(1, 2);
@@ -147,6 +147,27 @@ internal class GeneralTests
         entity.Remove<Name>();
 
         Assert.That(query.GetEntityIds(), Has.None.EqualTo(entity.Id));
+    }
+
+    [Test]
+    public void TestEmptyQuery()
+    {
+        var ecs = World.Create();
+
+        using var query = new Query(ecs);
+
+        var entity1 = ecs.CreateEntity();
+        var entity2 = ecs.CreateEntity();
+        entity2.Set<Name>(new("SomeName2"));
+        var entity3 = ecs.CreateEntity();
+        entity3.Set<Name>(new("SomeName3"));
+        entity3.Set<Position>(new(1, 2));
+
+        var entityIds = query.GetEntityIds().ToArray();
+
+        Assert.That(entityIds, Has.One.EqualTo(entity1.Id));
+        Assert.That(entityIds, Has.One.EqualTo(entity2.Id));
+        Assert.That(entityIds, Has.One.EqualTo(entity3.Id));
     }
 
     [Test]
