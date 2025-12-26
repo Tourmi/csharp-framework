@@ -175,6 +175,9 @@ internal partial class Archetype
         return ref collection[index];
     }
 
+    /// <summary>
+    /// Returns a boxed value of the component.
+    /// </summary>
     internal object? GetDebugValue(int index, Identifier componentId) => _componentsData[componentId].GetDebugValue(index);
 
     /// <summary>

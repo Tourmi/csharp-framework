@@ -8,7 +8,7 @@ public static class ListExtensions
     extension<T>(IList<T> list)
     {
         /// <summary>
-        /// Pops the last element of the list and returns it.
+        /// Removes the last element of the list and returns it.
         /// </summary>
         public T Pop()
         {
