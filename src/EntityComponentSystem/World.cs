@@ -60,12 +60,12 @@ public class World
     private readonly IdentifierRegion _coreRegion;
 
     /// <summary>
-    /// Collection exposed for testing or debugging purposes.
+    /// The world's entity identifier collection.
     /// </summary>
     internal IdentifierCollection Ids => _ids;
 
     /// <summary>
-    /// Collection exposed for testing or debugging purposes.
+    /// The world's archetype collection.
     /// </summary>
     internal EntityArchetypeCollection Archetypes => _archetypes;
 
@@ -434,7 +434,7 @@ public class World
             return query;
         }
 
-        query = new Query(this, ids);
+        query = new Query(this, [..ids]);
         _componentIdsToQuery[ids] = query;
         return query;
     }

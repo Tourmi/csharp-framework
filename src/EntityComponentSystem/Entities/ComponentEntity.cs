@@ -56,11 +56,11 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
 
         public Type? DataType => Entity.Get<DataComponent>().DataType;
 
-        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype?.Components
+        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype?.Components.ToArray()
             .Select(c => new ComponentDebugView(new(c, Entity.World)))
             .ToArray();
 
-        public string[]? ComponentValues => ArchetypeEntry?.Archetype.Components
+        public string[]? ComponentValues => ArchetypeEntry?.Archetype.Components.ToArray()
             .Select(c => (Component: new ComponentDebugView(new(c, Entity.World)), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
             .Select(t => $"Component: {t.Component}, Value: {t.Value ?? "NULL"}")
             .ToArray();

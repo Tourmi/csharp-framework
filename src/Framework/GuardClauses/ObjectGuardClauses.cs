@@ -9,7 +9,7 @@ namespace Tourmi.Framework.GuardClauses;
 public static class ObjectGuardClauses
 {
     extension<T>([NotNull] T? value)
-#if NET10_0_OR_GREATER
+#if NET9_0_OR_GREATER
         where T : allows ref struct
 #endif
     {

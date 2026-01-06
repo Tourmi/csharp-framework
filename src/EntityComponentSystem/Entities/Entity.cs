@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using Tourmi.EntityComponentSystem.Archetypes;
+using Tourmi.EntityComponentSystem.Queries;
+using System.Linq;
 using static Tourmi.EntityComponentSystem.Entities.ComponentEntity;
 
 namespace Tourmi.EntityComponentSystem.Entities;
@@ -9,7 +11,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(EntityDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>, IEquatable<Entity>
+public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>, IEquatable<Entity>, IQueryParam<Entity>
 {
     /// <inheritdoc/>
     public Identifier Id { get; } = id;
@@ -39,6 +41,9 @@ public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>
     /// <inheritdoc/>
     public override bool Equals(object? obj) => false;
 
+    static Entity IQueryParam<Entity>.CreateFrom(QueryParamEntityInfo info)
+        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+
     [DebuggerDisplay("Id = { Id.Value }, IsAlive {IsAlive}, Name = { Name }")]
     internal class EntityDebugView(Entity entity)
     {
@@ -53,10 +58,11 @@ public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>
 
         public string Name => Entity.Get<Name>().Value;
 
-        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype.Components.Select(c => new ComponentDebugView(new(c, Entity.World))).ToArray();
+        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype.Components.ToArray().Select(c => new ComponentDebugView(new(c, Entity.World))).ToArray();
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public (object? Value, ComponentDebugView Component)[]? ComponentValues => ArchetypeEntry?.Archetype.Components
+            .ToArray()
             .Select(c => (ArchetypeEntry!.Value.GetDebugValue(c), new ComponentDebugView(new(c, Entity.World))))
             .ToArray();
 

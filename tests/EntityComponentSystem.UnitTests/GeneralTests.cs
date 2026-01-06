@@ -119,9 +119,9 @@ internal class GeneralTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(relationValue1, 
+            Assert.That(relationValue1,
                 Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
-            Assert.That(relationValue2, 
+            Assert.That(relationValue2,
                 Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
         });
     }
@@ -168,6 +168,51 @@ internal class GeneralTests
         Assert.That(entityIds, Has.One.EqualTo(entity1.Id));
         Assert.That(entityIds, Has.One.EqualTo(entity2.Id));
         Assert.That(entityIds, Has.One.EqualTo(entity3.Id));
+    }
+
+    [Test]
+    public void TestQueryForeach()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+        someEntity1.Set<Position>(new(1, 1));
+        someEntity1.Set<Speed>(new(10, 20));
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.Set<Position>(new(2, 2));
+        someEntity2.Set<Speed>(new(10, 20));
+
+        var otherEntity = ecs.CreateEntity();
+        otherEntity.Set<Name>(new("WrongName"));
+        otherEntity.Set<Position>(new(3, 3));
+        otherEntity.Set<Speed>(new(10, 20));
+
+        using var query = new Query(ecs, ecs.GetComponentForType<Name>().Id, ecs.GetComponentForType<Position>().Id, ecs.GetComponentForType<Speed>().Id);
+
+        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(2, 2)));
+        Assert.That(otherEntity.Get<Position>(), Is.EqualTo(new Position(3, 3)));
+
+        query.ForEach((ParamGroup<Identifier, RefReadonly<Name>, Ref<Position>, Speed> param) =>
+        {
+            (var id, var name, var position, var speed) = param;
+            if (!name.Reference.Value.Contains("SomeName", StringComparison.InvariantCultureIgnoreCase))
+            {
+                position.Reference = new(-10, -20);
+                return;
+            }
+
+            position.Reference.X += speed.X;
+            position.Reference.Y += speed.Y;
+            return;
+        });
+
+        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(11, 21)));
+        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(12, 22)));
+        Assert.That(otherEntity.Get<Position>(), Is.EqualTo(new Position(-10, -20)));
     }
 
     [Test]

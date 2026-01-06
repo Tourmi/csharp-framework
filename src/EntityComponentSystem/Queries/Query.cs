@@ -1,4 +1,6 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
@@ -14,15 +16,39 @@ public sealed class Query : IDisposable
     private readonly List<Identifier> _cachedEntityIds = [];
 
     private bool _isArchetypeCacheDirty = true;
-    private bool _isEntityCacheDirty = true;
+    private bool _isEntityCacheDirty; // TODO: Set to true by default once entity cache invalidation is done.
 
-    internal Query(World world, params IEnumerable<Identifier> componentIds)
+    internal Query(World world, params ReadOnlySpan<Identifier> componentIds)
     {
         _world = world.ThrowIfNull();
-        _componentIds = [.. componentIds.ThrowIfNull()];
+        _componentIds = [.. componentIds];
 
         _world.Archetypes.ComponentsToArchetypes.ArchetypeAdded += OnArchetypeAdded;
         _world.Archetypes.ComponentsToArchetypes.ArchetypeRemoved += OnArchetypeRemoved;
+    }
+
+    /// <summary>
+    /// Executes the given <paramref name="action"/> for all entities returned by the query.
+    /// </summary>
+    public void ForEach<T>(Action<T> action)
+        where T : IQueryParam<T>, allows ref struct
+    {
+        EnsureCache();
+
+        var globalCache = T.GetGlobalCache(_world);
+
+        foreach (var archetype in _cachedArchetypes)
+        {
+            var archetypeCache = T.GetArchetypeCache(_world, archetype, globalCache);
+            for (var i = 0; i < archetype.EntityCount; i++)
+            {
+                action(T.CreateFrom(new( _world, archetype, i, globalCache, archetypeCache)));
+            }
+
+            T.FreeArchetypeCache(archetypeCache, globalCache, _world, archetype);
+        }
+
+        T.FreeGlobalCache(globalCache, _world);
     }
 
     /// <summary>
@@ -52,7 +78,8 @@ public sealed class Query : IDisposable
     /// </summary>
     internal void InvalidateEntityCache()
     {
-        _isEntityCacheDirty = true;
+        // TODO: Set to true once entity cache invalidation is done.
+        _isEntityCacheDirty = false;
         _cachedEntityEntries.Clear();
         _cachedEntityIds.Clear();
     }
@@ -64,7 +91,7 @@ public sealed class Query : IDisposable
     {
         EnsureCache();
 
-        // TODO: Figure out per-entity caches before uncommenting the next line.
+        // TODO: Figure out per-entity cache invalidation before uncommenting the next line.
         // return _cachedEntityEntries;
 
         foreach (var archetype in _cachedArchetypes)
@@ -114,29 +141,7 @@ public sealed class Query : IDisposable
     private void EnsureCache()
     {
         EnsureArchetypeCache();
-
-        if (!_isEntityCacheDirty)
-        {
-            return;
-        }
-
-        _cachedEntityEntries.Clear();
-        _cachedEntityIds.Clear();
-
-        // TODO: Invalidate per-entity caches (or figure out if they're needed) 
-        // before uncommenting next lines.
-
-        /* 
-        _isEntityCacheDirty = false;
-        foreach (var archetype in _cachedArchetypes)
-        {
-            for (var i = 0; i < archetype.EntityCount; i++)
-            {
-                _cachedEntityEntries.Add(new(archetype, i));
-                _cachedEntityIds.Add(archetype.Entities[i]);
-            }
-        }
-        */
+        EnsureEntityCache();
 
         return;
 
@@ -167,67 +172,26 @@ public sealed class Query : IDisposable
                 _cachedArchetypes.IntersectWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[i]));
             }
         }
+
+        void EnsureEntityCache()
+        {
+            if (!_isEntityCacheDirty)
+            {
+                return;
+            }
+
+            _cachedEntityEntries.Clear();
+            _cachedEntityIds.Clear();
+
+            _isEntityCacheDirty = false;
+            foreach (var archetype in _cachedArchetypes)
+            {
+                for (var i = 0; i < archetype.EntityCount; i++)
+                {
+                    _cachedEntityEntries.Add(new(archetype, i));
+                    _cachedEntityIds.Add(archetype.Entities[i]);
+                }
+            }
+        }
     }
-
-    private readonly record struct QueryParamInfo(Type ParamType);
 }
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1>
-    where T1 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2>
-    where T1 : allows ref struct
-    where T2 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2, T3>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2, T3, T4>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct
-    where T4 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public class Query<T1, T2, T3, T4, T5>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct
-    where T4 : allows ref struct
-    where T5 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2, T3, T4, T5, T6>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct
-    where T4 : allows ref struct
-    where T5 : allows ref struct
-    where T6 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2, T3, T4, T5, T6, T7>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct
-    where T4 : allows ref struct
-    where T5 : allows ref struct
-    where T6 : allows ref struct
-    where T7 : allows ref struct;
-
-/// <inheritdoc cref="Query"/>
-public sealed class Query<T1, T2, T3, T4, T5, T6, T7, T8>
-    where T1 : allows ref struct
-    where T2 : allows ref struct
-    where T3 : allows ref struct
-    where T4 : allows ref struct
-    where T5 : allows ref struct
-    where T6 : allows ref struct
-    where T7 : allows ref struct
-    where T8 : allows ref struct;

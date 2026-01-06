@@ -14,27 +14,36 @@ internal partial class Archetype
     private readonly List<Identifier> _entities = [];
 
     private readonly ArchetypeSharedData _sharedData;
-    private readonly ImmutableSortedDictionary<Identifier, Type?> _componentsDataType;
+    private readonly ImmutableSortedDictionary<Identifier, Type?> _componentDataTypes;
     private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
+    private readonly Identifier[] _components;
+    private readonly Type?[] _dataTypes;
+    private readonly IComponentCollection[] _data;
 
     internal Archetype(ArchetypeSharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
     {
         _sharedData = sharedData;
-        _componentsDataType = componentTypes.ToImmutableSortedDictionary();
-        _componentsData = _componentsDataType.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
+        _componentDataTypes = componentTypes.ToImmutableSortedDictionary();
+        _componentsData = _componentDataTypes.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
+        _components = [.._componentDataTypes.Keys];
+        _dataTypes = [.._componentDataTypes.Values];
+        _data = [.._componentsData.Values];
     }
 
     internal Archetype(ArchetypeSharedData sharedData)
     {
         _sharedData = sharedData;
-        _componentsDataType = Enumerable.Empty<KeyValuePair<Identifier, Type?>>().ToImmutableSortedDictionary();
-        _componentsData = Enumerable.Empty<KeyValuePair<Identifier, IComponentCollection>>().ToImmutableSortedDictionary();
+        _componentDataTypes = ImmutableSortedDictionary<Identifier, Type?>.Empty;
+        _componentsData = ImmutableSortedDictionary<Identifier, IComponentCollection>.Empty;
+        _components = [];
+        _dataTypes = [];
+        _data = [];
     }
 
     /// <summary>
     /// All the components represented by this archetype
     /// </summary>
-    public IEnumerable<Identifier> Components => _componentsData.Keys;
+    public ReadOnlySpan<Identifier> Components => _components;
 
     /// <summary>
     /// All of the entities contained by this archetype.
@@ -47,16 +56,22 @@ internal partial class Archetype
     public int EntityCount => _entities.Count;
 
     /// <summary>
+    /// Returns the collection of components for the given <paramref name="componentId"/>
+    /// </summary>
+    public IComponentCollection<T> GetComponentCollection<T>(Identifier componentId)
+        => (IComponentCollection<T>)_data[_components.IndexOf(componentId)];
+
+    /// <summary>
     /// Returns whether or not the archetype contains the given component
     /// </summary>
-    public bool HasComponent(Identifier componentId) => _componentsData.ContainsKey(componentId);
+    public bool HasComponent(Identifier componentId) => _components.Contains(componentId);
 
     /// <summary>
     /// Adds the entity to the archetype and returns the index it has in the archetype
     /// </summary>
     public ArchetypeEntityEntry AddEntity(Identifier entityId)
     {
-        foreach (var componentCollection in _componentsData.Values)
+        foreach (var componentCollection in _data)
         {
             componentCollection.AddEntry();
         }
@@ -70,7 +85,7 @@ internal partial class Archetype
     /// </summary>
     public Option<MovedEntity> RemoveEntity(int index)
     {
-        foreach (var componentCollection in _componentsData.Values)
+        foreach (var componentCollection in _data)
         {
             componentCollection.RemoveEntry(index);
         }
@@ -92,7 +107,7 @@ internal partial class Archetype
     {
         if (!_parentArchetypes.TryGetValue(componentIdentifier, out var targetArchetype))
         {
-            targetArchetype = _sharedData.GetArchetype([.. _componentsDataType, new(componentIdentifier, componentDataType)]);
+            targetArchetype = _sharedData.GetArchetype([.. _componentDataTypes, new(componentIdentifier, componentDataType)]);
             _parentArchetypes[componentIdentifier] = targetArchetype;
         }
 
@@ -119,7 +134,7 @@ internal partial class Archetype
     {
         if (!_childArchetypes.TryGetValue(componentId, out var targetArchetype))
         {
-            targetArchetype = _sharedData.GetArchetype(_componentsDataType.Where(k => k.Key != componentId));
+            targetArchetype = _sharedData.GetArchetype(_componentDataTypes.Where(k => k.Key != componentId));
             _childArchetypes[componentId] = targetArchetype;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem.Ids;
 
@@ -11,7 +12,7 @@ namespace Tourmi.EntityComponentSystem.Ids;
 [StructLayout(LayoutKind.Explicit, Size = 8)]
 [SuppressMessage("Design", "CA1036:Override methods on comparable types", Justification = "Comparison operators do not make sense")]
 [DebuggerDisplay("{ShortId}, Types = {Types}, Version = {Version}")]
-public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>
+public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>, IQueryParam<Identifier>
 {
     /// <summary>
     /// Comparer that allows the comparison of two collections of identifiers
@@ -139,5 +140,8 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
     public int CompareTo(Identifier other) => Value.CompareTo(other.Value);
 
     /// <inheritdoc/>
-    public override string ToString() => $"{{ShortId = {ShortId}, Version = {Version}, Types = {Types}}}";
+    public override string ToString() => $"{{ShortId = {ShortId:x}, Version = {Version}, Types = {Types}}}";
+
+    static Identifier IQueryParam<Identifier>.CreateFrom(QueryParamEntityInfo entry)
+        => new(entry.Archetype.Entities[entry.EntityIndex]);
 }
