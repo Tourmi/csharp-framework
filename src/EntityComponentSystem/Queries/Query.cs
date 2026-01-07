@@ -64,6 +64,15 @@ public sealed class Query : IDisposable
     }
 
     /// <summary>
+    /// For debugging/benchmarking use only
+    /// </summary>
+    internal IReadOnlyCollection<Archetype> GetArchetypes()
+    {
+        EnsureCache();
+        return _cachedArchetypes;
+    }
+
+    /// <summary>
     /// Invalidates the cached archetypes in this query.
     /// </summary>
     internal void InvalidateArchetypeCache()

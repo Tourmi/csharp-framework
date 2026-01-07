@@ -41,14 +41,14 @@ public readonly ref struct ThreadSafe<T>(T instance) : IQueryParam<ThreadSafe<T>
         Debug.Assert(existingCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
 
         var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        pool.Return((StrongBox<Identifier>)existingCache.Value);
+        pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
     }
 
     static QueryParamArchetypeCache IQueryParam<ThreadSafe<T>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
         Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
 
-        var componentId = ((StrongBox<Identifier>)globalCache.Value).Value;
+        var componentId = Unsafe.As<StrongBox<Identifier>>(globalCache.Value).Value;
 
         return new(archetype.GetComponentCollection<T>(componentId));
     }
@@ -56,7 +56,7 @@ public readonly ref struct ThreadSafe<T>(T instance) : IQueryParam<ThreadSafe<T>
     static ThreadSafe<T> IQueryParam<ThreadSafe<T>>.CreateFrom(QueryParamEntityInfo entry)
     {
         Debug.Assert(entry.ArchetypeCache.Value is IComponentCollection<T>, "Given cache was of the wrong type.");
-        var collection = (IComponentCollection<T>)entry.ArchetypeCache.Value!;
+        var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
         return new(collection[entry.EntityIndex]!);
     }
 }

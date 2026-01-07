@@ -37,7 +37,7 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
         Debug.Assert(existingCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
 
         var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        pool.Return((StrongBox<Identifier>)existingCache.Value!);
+        pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
     }
 
 
@@ -45,7 +45,7 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
     {
         Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
 
-        var componentId = ((StrongBox<Identifier>)globalCache.Value)!.Value;
+        var componentId = Unsafe.As<StrongBox<Identifier>>(globalCache.Value).Value;
 
         return new(archetype.GetComponentCollection<T>(componentId));
     }
@@ -53,7 +53,7 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
     static Ref<T> IQueryParam<Ref<T>>.CreateFrom(QueryParamEntityInfo entry)
     {
         Debug.Assert(entry.ArchetypeCache.Value is IComponentCollection<T>, "Given cache was of the wrong type.");
-        var collection = (IComponentCollection<T>)entry.ArchetypeCache.Value!;
+        var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
         return new(ref collection[entry.EntityIndex]!);
     }
 }
