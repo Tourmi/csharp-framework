@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 using MovedEntity = (Tourmi.EntityComponentSystem.Ids.Identifier Id, int NewIndex);
 
@@ -48,7 +49,7 @@ internal partial class Archetype
     /// <summary>
     /// All of the entities contained by this archetype.
     /// </summary>
-    public IReadOnlyList<Identifier> Entities => _entities;
+    public ReadOnlySpan<Identifier> Entities => CollectionsMarshal.AsSpan(_entities);
 
     /// <summary>
     /// The amount of entities present in this archetype

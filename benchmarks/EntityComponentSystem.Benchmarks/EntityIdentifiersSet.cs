@@ -1,10 +1,7 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Ids;
+﻿namespace Tourmi.EntityComponentSystem;
 
-namespace Tourmi.EntityComponentSystem;
-
-[MValueColumn]
 [InProcess]
+[HideColumns("StdDev", "RatioSD")]
 public class EntityIdentifiersSet
 {
     public record struct Position(int X, int Y);

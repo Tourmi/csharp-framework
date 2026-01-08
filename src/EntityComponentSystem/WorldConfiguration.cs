@@ -3,7 +3,7 @@
 /// <summary>
 /// Configuration used to instantiate an ecs <see cref="World"/>.
 /// </summary>
-public class WorldConfiguration
+public sealed class WorldConfiguration
 {
     /// <summary>
     /// Regions of identifiers that are reserved for special purposes.

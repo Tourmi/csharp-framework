@@ -59,4 +59,6 @@ public readonly ref struct ThreadSafe<T>(T instance) : IQueryParam<ThreadSafe<T>
         var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
         return new(collection[entry.EntityIndex]!);
     }
+
+    static void IQueryParam<ThreadSafe<T>>.UpdateFilter(EntityFilter filter) => filter.Requires<T>();
 }

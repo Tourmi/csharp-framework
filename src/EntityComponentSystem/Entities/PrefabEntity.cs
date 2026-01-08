@@ -1,9 +1,11 @@
-﻿namespace Tourmi.EntityComponentSystem.Entities;
+﻿using Tourmi.EntityComponentSystem.Queries;
+
+namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Hinted entity representing a prefab that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
-public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<PrefabEntity>
+public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<PrefabEntity>, IQueryParam<PrefabEntity>
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
@@ -32,4 +34,9 @@ public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<P
     /// Explicitely casts the entity to a prefab entity.
     /// </summary>
     public static explicit operator PrefabEntity(Entity entity) => new(entity);
+
+    static PrefabEntity IQueryParam<PrefabEntity>.CreateFrom(QueryParamEntityInfo info)
+        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+
+    static void IQueryParam<PrefabEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Prefab>();
 }

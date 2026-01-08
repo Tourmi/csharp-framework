@@ -1,7 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Ids;
-
-namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem;
 
 [GenericTypeArguments(typeof(EmptyStruct))]
 [GenericTypeArguments(typeof(byte))]
@@ -9,9 +6,9 @@ namespace Tourmi.EntityComponentSystem;
 [GenericTypeArguments(typeof(int))]
 [GenericTypeArguments(typeof(long))]
 [GenericTypeArguments(typeof((long, long, long, long, long, long, long, long)))]
-[MValueColumn]
 [InProcess]
 [ShortRunJob]
+[HideColumns("StdDev", "RatioSD")]
 public class EntityIdentifiersGet<T>
 {
     public readonly record struct StructComponent(T Value);

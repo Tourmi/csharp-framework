@@ -10,7 +10,7 @@ namespace Tourmi.EntityComponentSystem;
 /// <summary>
 /// Entity Component System, stores, updates, and allows for creating or querying entities.
 /// </summary>
-public class World
+public sealed class World
 {
     private static readonly IComparer<SortedSet<Identifier>> IdSetComparer = Comparer.FromFunc<SortedSet<Identifier>>((c1, c2) =>
     {
@@ -427,19 +427,20 @@ public class World
 
     private Query GetQueryForDelegate<T>(T del) where T : Delegate
     {
-        var ids = DelegateToComponentTypes(del);
+        var ids = DelegateToComponentIds(del);
 
         if (_componentIdsToQuery.TryGetValue(ids, out var query))
         {
             return query;
         }
 
-        query = new Query(this, [..ids]);
+        // TODO: Use QueryFilter instead
+        query = new Query(this, new EntityFilter(this, ids));
         _componentIdsToQuery[ids] = query;
         return query;
     }
 
-    private SortedSet<Identifier> DelegateToComponentTypes<T>(T del) where T : Delegate
+    private SortedSet<Identifier> DelegateToComponentIds<T>(T del) where T : Delegate
     {
         var components = new SortedSet<Identifier>();
         var parameters = del.Method.GetParameters();

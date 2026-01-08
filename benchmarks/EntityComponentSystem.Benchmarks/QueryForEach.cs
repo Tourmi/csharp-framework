@@ -4,13 +4,15 @@ using Tourmi.EntityComponentSystem.Components;
 namespace Tourmi.EntityComponentSystem;
 
 [InProcess]
+[HideColumns("StdDev", "RatioSD")]
+[MemoryDiagnoser]
 public class QueryForEach
 {
     public record struct Position(float X, float Y);
     public record struct Speed(float X, float Y);
 
     private static readonly Action<ParamGroup<Ref<Position>, RefReadonly<Speed>>>[] Systems = [
-        NoOpSystem, SimpleSystem, AdvancedSystem,
+        SimpleSystem, AdvancedSystem,
     ];
 
     private World? _ecs;
@@ -23,6 +25,8 @@ public class QueryForEach
     private Position[]? _dumbPositions;
     private Speed[]? _dumbSpeeds;
 
+    private (Position, Speed)[]? _result;
+
     private Identifier _positionId;
     private Identifier _speedId;
 
@@ -31,7 +35,7 @@ public class QueryForEach
     [Params(100, 100_000, Priority = 1)]
     public int EntityCount { get; set; } = 1;
 
-    [Params(0, 1, 2, Priority = 0)]
+    [Params(0, 1, Priority = 0)]
     public int SystemComplexity {get; set;} = 0;
 
     [GlobalSetup]
@@ -76,7 +80,7 @@ public class QueryForEach
             }
         }
 
-        _query = new Query(_ecs, _positionId, _speedId);
+        _query = Query.FromQueryParam<ParamGroup<Position, Speed>>(_ecs);
 
         _entityEntries = _query.GetEntityEntries().ToArray();
         _entityIds = _entityEntries.Select(e => e.Archetype.Entities[e.Index]).ToArray();
@@ -84,6 +88,8 @@ public class QueryForEach
 
         _dumbPositions = _entityEntries.Select(e => e.GetValue<Position>(_positionId)).ToArray();
         _dumbSpeeds = _entityEntries.Select(e => e.GetValue<Speed>(_speedId)).ToArray();
+
+        _result = new (Position, Speed)[_entityIds.Length];
     }
 
     [Benchmark]
@@ -94,7 +100,7 @@ public class QueryForEach
             ManualSystem(ref _dumbPositions[i], ref _dumbSpeeds![i]);
         }
 
-        return _dumbPositions.Zip(_dumbSpeeds!).ToArray();
+        return CollectResults();
     }
 
     [Benchmark]
@@ -102,8 +108,8 @@ public class QueryForEach
     {
         foreach (var archetype in _archetypes!)
         {
-            var positionCollection = archetype.GetComponentCollection<Position>(_positionId);
-            var speedCollection = archetype.GetComponentCollection<Speed>(_speedId);
+            var positionCollection = archetype.GetComponentCollection<Position>(_positionId).AsSpan();
+            var speedCollection = archetype.GetComponentCollection<Speed>(_speedId).AsSpan();
 
             for (var i = 0; i < archetype.EntityCount; i++)
             {
@@ -111,7 +117,7 @@ public class QueryForEach
             }
         }
 
-        return _entityEntries!.Select(e => (e.GetValue<Position>(_positionId), e.GetValue<Speed>(_speedId))).ToArray();
+        return CollectResults();
     }
 
     [Benchmark]
@@ -122,7 +128,14 @@ public class QueryForEach
             ManualSystem(ref entry.GetValueRef<Position>(_positionId), in entry.GetValueRef<Speed>(_speedId));
         }
 
-        return _entityEntries!.Select(e => (e.GetValue<Position>(_positionId), e.GetValue<Speed>(_speedId))).ToArray();
+        return CollectResults();
+    }
+
+    [Benchmark(Baseline = true)]
+    public (Position, Speed)[] ParamGroupForEach()
+    {
+        _query!.ForEach(Systems[SystemComplexity]);
+        return CollectResults();
     }
 
     [Benchmark]
@@ -134,18 +147,18 @@ public class QueryForEach
             ManualSystem(ref entity.GetMutable<Position>(_positionId), in entity.GetMutable<Speed>(_speedId));
         }
         
-        return _entityEntries!.Select(e => (e.GetValue<Position>(_positionId), e.GetValue<Speed>(_speedId))).ToArray();
+        return CollectResults();
     }
 
-    [Benchmark(Baseline = true)]
-    public (Position, Speed)[] ParamGroupForEach()
+    private (Position, Speed)[] CollectResults()
     {
-        _query!.ForEach(Systems[SystemComplexity]);
-        return _entityEntries!.Select(e => (e.GetValue<Position>(_positionId), e.GetValue<Speed>(_speedId))).ToArray();
-    }
-
-    private static void NoOpSystem(ParamGroup<Ref<Position>, RefReadonly<Speed>> param)
-    {
+        for (var i = 0; i < _entityEntries!.Length; i++)
+        {
+            var entry = _entityEntries[i];
+            _result![i] = (entry.GetValue<Position>(_positionId), entry.GetValue<Speed>(_speedId));
+        }
+        
+        return _result!;
     }
 
     private static void SimpleSystem(ParamGroup<Ref<Position>, RefReadonly<Speed>> param)

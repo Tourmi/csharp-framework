@@ -16,4 +16,6 @@ internal readonly struct DummyQueryParam : IQueryParam<DummyQueryParam>
     static void IQueryParam<DummyQueryParam>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype) { }
 
     static DummyQueryParam IQueryParam<DummyQueryParam>.CreateFrom(QueryParamEntityInfo entry) => default;
+
+    static void IQueryParam<DummyQueryParam>.UpdateFilter(EntityFilter filter) { }
 }

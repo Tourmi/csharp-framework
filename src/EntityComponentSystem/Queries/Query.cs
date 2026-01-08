@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.InteropServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
@@ -10,21 +9,29 @@ namespace Tourmi.EntityComponentSystem.Queries;
 public sealed class Query : IDisposable
 {
     private readonly World _world;
-    private readonly Identifier[] _componentIds;
-    private readonly HashSet<Archetype> _cachedArchetypes = [];
-    private readonly List<ArchetypeEntityEntry> _cachedEntityEntries = [];
-    private readonly List<Identifier> _cachedEntityIds = [];
+    private readonly EntityFilter _filter;
+    private readonly List<Archetype> _cachedArchetypes = [];
 
     private bool _isArchetypeCacheDirty = true;
-    private bool _isEntityCacheDirty; // TODO: Set to true by default once entity cache invalidation is done.
 
-    internal Query(World world, params ReadOnlySpan<Identifier> componentIds)
+    internal Query(World world, EntityFilter filter)
     {
         _world = world.ThrowIfNull();
-        _componentIds = [.. componentIds];
+        _filter = filter;
 
         _world.Archetypes.ComponentsToArchetypes.ArchetypeAdded += OnArchetypeAdded;
         _world.Archetypes.ComponentsToArchetypes.ArchetypeRemoved += OnArchetypeRemoved;
+    }
+
+    /// <summary>
+    /// Generates a new query from the given query param <typeparamref name="T"/>
+    /// </summary>
+    public static Query FromQueryParam<T>(World world)
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var filter = new EntityFilter(world);
+        T.UpdateFilter(filter);
+        return new Query(world, filter);
     }
 
     /// <summary>
@@ -33,16 +40,14 @@ public sealed class Query : IDisposable
     public void ForEach<T>(Action<T> action)
         where T : IQueryParam<T>, allows ref struct
     {
-        EnsureCache();
-
         var globalCache = T.GetGlobalCache(_world);
 
-        foreach (var archetype in _cachedArchetypes)
+        foreach (var archetype in GetArchetypes())
         {
             var archetypeCache = T.GetArchetypeCache(_world, archetype, globalCache);
             for (var i = 0; i < archetype.EntityCount; i++)
             {
-                action(T.CreateFrom(new( _world, archetype, i, globalCache, archetypeCache)));
+                action(T.CreateFrom(new(_world, archetype, i, globalCache, archetypeCache)));
             }
 
             T.FreeArchetypeCache(archetypeCache, globalCache, _world, archetype);
@@ -57,53 +62,21 @@ public sealed class Query : IDisposable
     public void Dispose()
     {
         _cachedArchetypes.Clear();
-        _cachedEntityEntries.Clear();
-        _cachedEntityIds.Clear();
         _world.Archetypes.ComponentsToArchetypes.ArchetypeAdded -= OnArchetypeAdded;
         _world.Archetypes.ComponentsToArchetypes.ArchetypeRemoved -= OnArchetypeRemoved;
     }
 
     /// <summary>
-    /// For debugging/benchmarking use only
+    /// Returns the query's matching archetypes
     /// </summary>
-    internal IReadOnlyCollection<Archetype> GetArchetypes()
-    {
-        EnsureCache();
-        return _cachedArchetypes;
-    }
-
-    /// <summary>
-    /// Invalidates the cached archetypes in this query.
-    /// </summary>
-    internal void InvalidateArchetypeCache()
-    {
-        InvalidateEntityCache();
-        _isArchetypeCacheDirty = true;
-        _cachedArchetypes.Clear();
-    }
-
-    /// <summary>
-    /// Invalidates the cached entitities in this query.
-    /// </summary>
-    internal void InvalidateEntityCache()
-    {
-        // TODO: Set to true once entity cache invalidation is done.
-        _isEntityCacheDirty = false;
-        _cachedEntityEntries.Clear();
-        _cachedEntityIds.Clear();
-    }
+    internal ReadOnlySpan<Archetype> GetArchetypes() => CollectionsMarshal.AsSpan(GetArchetypesInternal());
 
     /// <summary>
     /// Returns all entity entries with their archetype that are targeted by the query.
     /// </summary>
     internal IEnumerable<ArchetypeEntityEntry> GetEntityEntries()
     {
-        EnsureCache();
-
-        // TODO: Figure out per-entity cache invalidation before uncommenting the next line.
-        // return _cachedEntityEntries;
-
-        foreach (var archetype in _cachedArchetypes)
+        foreach (var archetype in GetArchetypesInternal())
         {
             for (var i = 0; i < archetype.EntityCount; i++)
             {
@@ -118,12 +91,7 @@ public sealed class Query : IDisposable
     /// </summary>
     internal IEnumerable<Identifier> GetEntityIds()
     {
-        EnsureCache();
-
-        // TODO: Figure out per-entity caches before uncommenting the next line.
-        // return _cachedEntityIds;
-
-        foreach (var archetype in _cachedArchetypes)
+        foreach (var archetype in GetArchetypesInternal())
         {
             for (var i = 0; i < archetype.EntityCount; i++)
             {
@@ -132,75 +100,34 @@ public sealed class Query : IDisposable
         }
     }
 
-    private void OnArchetypeAdded(Archetype archetype)
+    private List<Archetype> GetArchetypesInternal()
     {
-        for (var i = 0; i < _componentIds.Length; i++)
+        if (!_isArchetypeCacheDirty)
         {
-            if (!archetype.Components.Contains(_componentIds[i]))
+            return _cachedArchetypes;
+        }
+
+        _cachedArchetypes.Clear();
+        _isArchetypeCacheDirty = false;
+
+        foreach (var archetype in _world.Archetypes.GetArchetypes())
+        {
+            if (_filter.ArchetypeMatches(archetype))
             {
-                return;
+                _cachedArchetypes.Add(archetype);
             }
         }
 
-        _cachedArchetypes.Add(archetype);
+        return _cachedArchetypes;
+    }
+
+    private void OnArchetypeAdded(Archetype archetype)
+    {
+        if (_filter.ArchetypeMatches(archetype))
+        {
+            _cachedArchetypes.Add(archetype);
+        }
     }
 
     private void OnArchetypeRemoved(Archetype archetype) => _cachedArchetypes.Remove(archetype);
-
-    private void EnsureCache()
-    {
-        EnsureArchetypeCache();
-        EnsureEntityCache();
-
-        return;
-
-        void EnsureArchetypeCache()
-        {
-            if (!_isArchetypeCacheDirty)
-            {
-                return;
-            }
-
-            _cachedArchetypes.Clear();
-            _isArchetypeCacheDirty = false;
-
-            if (_componentIds.Length == 0)
-            {
-                _cachedArchetypes.UnionWith(_world.Archetypes.GetArchetypes());
-                return;
-            }
-
-            _cachedArchetypes.UnionWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[0]));
-            for (var i = 1; i < _componentIds.Length; i++)
-            {
-                if (_cachedArchetypes.Count == 0)
-                {
-                    return;
-                }
-
-                _cachedArchetypes.IntersectWith(_world.Archetypes.GetArchetypesContainingComponent(_componentIds[i]));
-            }
-        }
-
-        void EnsureEntityCache()
-        {
-            if (!_isEntityCacheDirty)
-            {
-                return;
-            }
-
-            _cachedEntityEntries.Clear();
-            _cachedEntityIds.Clear();
-
-            _isEntityCacheDirty = false;
-            foreach (var archetype in _cachedArchetypes)
-            {
-                for (var i = 0; i < archetype.EntityCount; i++)
-                {
-                    _cachedEntityEntries.Add(new(archetype, i));
-                    _cachedEntityIds.Add(archetype.Entities[i]);
-                }
-            }
-        }
-    }
 }

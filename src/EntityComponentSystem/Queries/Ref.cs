@@ -40,7 +40,6 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
         pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
     }
 
-
     static QueryParamArchetypeCache IQueryParam<Ref<T>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
         Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
@@ -56,4 +55,6 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
         var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
         return new(ref collection[entry.EntityIndex]!);
     }
+
+    static void IQueryParam<Ref<T>>.UpdateFilter(EntityFilter filter) => filter.Requires<T>();
 }

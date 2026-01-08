@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System.ComponentModel;
 using Tourmi.EntityComponentSystem.Components;
 using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
@@ -127,7 +128,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestQueries()
+    public void QueryArchetypeCaching()
     {
         var ecs = World.Create();
 
@@ -135,7 +136,7 @@ internal class GeneralTests
         ref var name = ref entity.EnsureMutable<Name>();
         name = new("SomeName");
 
-        using var query = new Query(ecs, ecs.GetComponentForType<Name>(), ecs.GetComponentForType<Position>());
+        using var query = Query.FromQueryParam<ParamGroup<Name, Position>>(ecs);
 
         Assert.That(query.GetEntityIds(), Has.None.EqualTo(entity.Id));
 
@@ -150,11 +151,32 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestEmptyQuery()
+    public void QueryWithWithout()
     {
         var ecs = World.Create();
 
-        using var query = new Query(ecs);
+        using var query = Query.FromQueryParam<ParamGroup<With<Name>, Without<Position>>>(ecs);
+
+        var entity1 = ecs.CreateEntity();
+        var entity2 = ecs.CreateEntity();
+        entity2.Set<Name>(new("SomeName2"));
+        var entity3 = ecs.CreateEntity();
+        entity3.Set<Name>(new("SomeName3"));
+        entity3.Set<Position>(new(1, 2));
+
+        var entityIds = query.GetEntityIds().ToArray();
+
+        Assert.That(entityIds, Has.None.EqualTo(entity1.Id));
+        Assert.That(entityIds, Has.One.EqualTo(entity2.Id));
+        Assert.That(entityIds, Has.None.EqualTo(entity3.Id));
+    }
+
+    [Test]
+    public void EmptyQuery()
+    {
+        var ecs = World.Create();
+
+        using var query = Query.FromQueryParam<Identifier>(ecs);
 
         var entity1 = ecs.CreateEntity();
         var entity2 = ecs.CreateEntity();
@@ -171,32 +193,37 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestQueryForeach()
+    public void QueryForeach()
     {
         var ecs = World.Create();
 
-        var someEntity1 = ecs.CreateEntity();
-        someEntity1.Set<Name>(new("SomeName1"));
-        someEntity1.Set<Position>(new(1, 1));
-        someEntity1.Set<Speed>(new(10, 20));
+        var entity1 = ecs.CreateEntity();
+        entity1.Set<Name>(new("SomeName1"));
+        entity1.Set<Position>(new(1, 1));
+        entity1.Set<Speed>(new(10, 20));
 
-        var someEntity2 = ecs.CreateEntity();
-        someEntity2.Set<Name>(new("SomeName2"));
-        someEntity2.Set<Position>(new(2, 2));
-        someEntity2.Set<Speed>(new(10, 20));
+        var entity2 = ecs.CreateEntity();
+        entity2.Set<Name>(new("SomeName2"));
+        entity2.Set<Position>(new(2, 2));
+        entity2.Set<Speed>(new(10, 20));
 
-        var otherEntity = ecs.CreateEntity();
-        otherEntity.Set<Name>(new("WrongName"));
-        otherEntity.Set<Position>(new(3, 3));
-        otherEntity.Set<Speed>(new(10, 20));
+        var entity3 = ecs.CreateEntity();
+        entity3.Set<Name>(new("WrongName"));
+        entity3.Set<Position>(new(3, 3));
+        entity3.Set<Speed>(new(10, 20));
 
-        using var query = new Query(ecs, ecs.GetComponentForType<Name>().Id, ecs.GetComponentForType<Position>().Id, ecs.GetComponentForType<Speed>().Id);
+        var entity4 = ecs.CreateEntity();
+        entity4.Set<Name>(new("SomeName4"));
+        entity4.Set<Position>(new(4, 4));
 
-        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(1, 1)));
-        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(2, 2)));
-        Assert.That(otherEntity.Get<Position>(), Is.EqualTo(new Position(3, 3)));
+        using var query = Query.FromQueryParam<ParamGroup<Identifier, RefReadonly<Name>, Ref<Position>, Optional<Speed>>>(ecs);
 
-        query.ForEach((ParamGroup<Identifier, RefReadonly<Name>, Ref<Position>, Speed> param) =>
+        Assert.That(entity1.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+        Assert.That(entity2.Get<Position>(), Is.EqualTo(new Position(2, 2)));
+        Assert.That(entity3.Get<Position>(), Is.EqualTo(new Position(3, 3)));
+        Assert.That(entity4.Get<Position>(), Is.EqualTo(new Position(4, 4)));
+
+        query.ForEach((ParamGroup<Identifier, RefReadonly<Name>, Ref<Position>, Optional<Speed>> param) =>
         {
             (var id, var name, var position, var speed) = param;
             if (!name.Reference.Value.Contains("SomeName", StringComparison.InvariantCultureIgnoreCase))
@@ -205,14 +232,69 @@ internal class GeneralTests
                 return;
             }
 
-            position.Reference.X += speed.X;
-            position.Reference.Y += speed.Y;
+            position.Reference.X += speed.ValueOrDefault.X;
+            position.Reference.Y += speed.ValueOrDefault.Y;
             return;
         });
 
-        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(11, 21)));
-        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(12, 22)));
-        Assert.That(otherEntity.Get<Position>(), Is.EqualTo(new Position(-10, -20)));
+        Assert.That(entity1.Get<Position>(), Is.EqualTo(new Position(11, 21)));
+        Assert.That(entity2.Get<Position>(), Is.EqualTo(new Position(12, 22)));
+        Assert.That(entity3.Get<Position>(), Is.EqualTo(new Position(-10, -20)));
+        Assert.That(entity4.Get<Position>(), Is.EqualTo(new Position(4, 4)));
+    }
+
+    [Test]
+    public void QueryEntities()
+    {
+        var ecs = World.Create();
+
+        using var query = Query.FromQueryParam<Entity>(ecs);
+
+        var entity = ecs.CreateEntity();
+        var component = ecs.CreateComponent();
+        var prefab = ecs.CreatePrefab();
+
+        var entityIds = query.GetEntityIds().ToArray();
+
+        Assert.That(entityIds, Has.One.EqualTo(entity.Id));
+        Assert.That(entityIds, Has.One.EqualTo(component.Id));
+        Assert.That(entityIds, Has.One.EqualTo(prefab.Id));
+    }
+
+    [Test]
+    public void QueryComponents()
+    {
+        var ecs = World.Create();
+
+        using var query = Query.FromQueryParam<ComponentEntity>(ecs);
+
+        var entity = ecs.CreateEntity();
+        var component = ecs.CreateComponent();
+        var prefab = ecs.CreatePrefab();
+
+        var entityIds = query.GetEntityIds().ToArray();
+
+        Assert.That(entityIds, Has.None.EqualTo(entity.Id));
+        Assert.That(entityIds, Has.One.EqualTo(component.Id));
+        Assert.That(entityIds, Has.None.EqualTo(prefab.Id));
+    }
+
+    [Test]
+    public void QueryPrefabs()
+    {
+        var ecs = World.Create();
+
+        using var query = Query.FromQueryParam<PrefabEntity>(ecs);
+
+        var entity = ecs.CreateEntity();
+        var component = ecs.CreateComponent();
+        var prefab = ecs.CreatePrefab();
+
+        var entityIds = query.GetEntityIds().ToArray();
+
+        Assert.That(entityIds, Has.None.EqualTo(entity.Id));
+        Assert.That(entityIds, Has.None.EqualTo(component.Id));
+        Assert.That(entityIds, Has.One.EqualTo(prefab.Id));
     }
 
     [Test]

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Queries;
-using System.Linq;
 using static Tourmi.EntityComponentSystem.Entities.ComponentEntity;
 
 namespace Tourmi.EntityComponentSystem.Entities;

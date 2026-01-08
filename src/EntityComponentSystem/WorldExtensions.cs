@@ -1,4 +1,6 @@
-﻿namespace Tourmi.EntityComponentSystem;
+﻿using Tourmi.EntityComponentSystem.Components.Metacomponents;
+
+namespace Tourmi.EntityComponentSystem;
 
 /// <summary>
 /// Extension methods for <see cref="World"/>
@@ -18,14 +20,37 @@ public static class WorldExtensions
         }
 
         /// <summary>
+        /// Creates and returns a new component with no data.
+        /// </summary>
+        public ComponentEntity CreateComponent()
+        {
+            var entity = world.ThrowIfNull().CreateEntity();
+            entity.Add<Component>();
+
+            return new ComponentEntity(entity);
+        }
+
+        /// <summary>
+        /// Creates and returns a new component with data of type <typeparamref name="T"/>.
+        /// </summary>
+        public ComponentEntity CreateComponent<T>()
+        {
+            var entity = world.ThrowIfNull().CreateEntity();
+            entity.Add<Component>();
+            entity.Set<DataComponent>(new(typeof(T)));
+
+            return new ComponentEntity(entity);
+        }
+
+        /// <summary>
         /// Creates and returns a new prefab
         /// </summary>
-        public Entity CreatePrefab()
+        public PrefabEntity CreatePrefab()
         {
             var entity = world.ThrowIfNull().CreateEntity();
             entity.Add<Prefab>();
 
-            return entity;
+            return new PrefabEntity(entity);
         }
 
         /// <summary>

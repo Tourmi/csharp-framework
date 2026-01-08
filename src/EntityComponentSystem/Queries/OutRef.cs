@@ -56,4 +56,6 @@ public readonly ref struct OutRef<T>(ref T reference) : IQueryParam<OutRef<T>>
         var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
         return new(ref collection[entry.EntityIndex]!);
     }
+
+    static void IQueryParam<OutRef<T>>.UpdateFilter(EntityFilter filter) => filter.Requires<T>();
 }

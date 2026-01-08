@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Components.Metacomponents;
+using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
@@ -9,7 +10,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(ComponentDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntity<ComponentEntity>
+public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntity<ComponentEntity>, IQueryParam<ComponentEntity>
 {
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
@@ -41,6 +42,11 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
     /// Explicitely casts the entity to a component entity.
     /// </summary>
     public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.World);
+
+    static ComponentEntity IQueryParam<ComponentEntity>.CreateFrom(QueryParamEntityInfo info)
+        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+
+    static void IQueryParam<ComponentEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Component>();
 
     [DebuggerDisplay("Id = { Id.Value }, Name = { Name }, DataType = { DataType }")]
     internal class ComponentDebugView(ComponentEntity entity)

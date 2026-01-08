@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a reserved identifier region for an ecs <see cref="World"/>.
 /// </summary>
-public class IdentifierRegion
+public sealed class IdentifierRegion
 {
     /// <summary>
     /// If specified, Minimum Id at which this region of identifiers must start.
