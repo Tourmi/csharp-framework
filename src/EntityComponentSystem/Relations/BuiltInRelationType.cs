@@ -24,13 +24,14 @@ public enum BuiltInRelationType : byte
 
     /// <summary>
     /// Defines that X is an instance of Y. If a component does not exist in the entity, Y will be queried for the component.
-    /// Usually used for instances of <see cref="Prefab"/>
+    /// Usually used for instances of <see cref="Prefab"/>.
     /// <para />ie: PlayerCar entity is an instance of CarPrefab
     /// </summary>
     InstanceOf = 3,
 
     /// <summary>
-    /// Defines that X depends on Y. Has configurable behavior (<see cref="Components.Relations.DependsOn"/>) if Y is missing or removed from the entity.
+    /// Defines that X depends on Y. 
+    /// Has configurable behavior (<see cref="Components.Relations.DependsOn"/>) if Y is missing or removed from the entity.
     /// <para />ie: Speed component depends on Position component.
     /// </summary>
     DependsOn = 4,
