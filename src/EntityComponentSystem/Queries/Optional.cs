@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
-using Tourmi.Framework.Collections;
-using Tourmi.Framework.Runtime;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
@@ -28,7 +26,7 @@ public readonly ref struct Optional<T>() : IQueryParam<Optional<T>>
     }
 
     /// <summary>
-    /// Returns <see langword="true"/> if the optional has a value.
+    /// Returns <see langword="true"/> if the parameter exists in the entity.
     /// </summary>
     [MemberNotNullWhen(true, nameof(ValueOrDefault))]
     public bool HasValue => _hasValue;
@@ -45,29 +43,17 @@ public readonly ref struct Optional<T>() : IQueryParam<Optional<T>>
 
     static QueryParamGlobalCache IQueryParam<Optional<T>>.GetGlobalCache(World world)
     {
-        var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        if (!pool.TryTake(out var idCache))
-        {
-            idCache = new();
-        }
-
+        var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
         idCache.Value = world.GetComponentForType<T>().Id;
         return new(idCache);
     }
 
     static void IQueryParam<Optional<T>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
-    {
-        Debug.Assert(existingCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-        var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
-    }
+        => QueryParam.FreeCache(QueryParam.CastCache<StrongBox<Identifier>>(existingCache));
 
     static QueryParamArchetypeCache IQueryParam<Optional<T>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-        var componentId = Unsafe.As<StrongBox<Identifier>>(globalCache.Value).Value;
+        var componentId = QueryParam.CastCache<StrongBox<Identifier>>(globalCache).Value;
 
         if (!archetype.HasComponent(componentId))
         {

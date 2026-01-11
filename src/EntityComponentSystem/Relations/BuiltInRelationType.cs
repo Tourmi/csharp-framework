@@ -30,9 +30,15 @@ public enum BuiltInRelationType : byte
     InstanceOf = 3,
 
     /// <summary>
-    /// Defines that X depends on Y. 
-    /// Has configurable behavior (<see cref="Components.Relations.DependsOn"/>) if Y is missing or removed from the entity.
+    /// Defines that X requires the component Y. 
+    /// Has configurable behavior (<see cref="Components.Relations.Requires"/>) if Y is missing or removed from the entity.
     /// <para />ie: Speed component depends on Position component.
     /// </summary>
-    DependsOn = 4,
+    Requires = 4,
+
+    /// <summary>
+    /// Defines that X depends on entity Y.
+    /// May be used in different ways, but mainly used to declare systems that require other systems to have been run first.
+    /// </summary>
+    DependsOn = 5,
 }

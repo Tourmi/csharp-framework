@@ -1,6 +1,4 @@
-﻿using Microsoft.Win32;
-using System.ComponentModel;
-using Tourmi.EntityComponentSystem.Components;
+﻿using Tourmi.EntityComponentSystem.Components;
 using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
 using Tourmi.EntityComponentSystem.Ids;
@@ -110,20 +108,20 @@ internal class GeneralTests
 
         dependent.Add(dependency1);
         dependent.Add(dependency2);
-        var relationId1 = new Identifier(new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.DependsOn));
-        var relationId2 = new Identifier(new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.DependsOn));
-        ecs.Set(dependent, relationId1, new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis));
-        ecs.Set(dependent, relationId2, new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic));
+        var relationId1 = new Identifier(new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.Requires));
+        var relationId2 = new Identifier(new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.Requires));
+        ecs.Set(dependent, relationId1, new Requires(Requires.DependencyMissingBehavior.Add, Requires.DependencyRemovedBehavior.RemoveThis));
+        ecs.Set(dependent, relationId2, new Requires(Requires.DependencyMissingBehavior.Panic, Requires.DependencyRemovedBehavior.Panic));
 
-        var relationValue1 = dependent.Get<DependsOn>(relationId1);
-        var relationValue2 = dependent.Get<DependsOn>(relationId2);
+        var relationValue1 = dependent.Get<Requires>(relationId1);
+        var relationValue2 = dependent.Get<Requires>(relationId2);
 
         Assert.Multiple(() =>
         {
             Assert.That(relationValue1,
-                Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Add, DependsOn.DependencyRemovedBehavior.RemoveThis)));
+                Is.EqualTo(new Requires(Requires.DependencyMissingBehavior.Add, Requires.DependencyRemovedBehavior.RemoveThis)));
             Assert.That(relationValue2,
-                Is.EqualTo(new DependsOn(DependsOn.DependencyMissingBehavior.Panic, DependsOn.DependencyRemovedBehavior.Panic)));
+                Is.EqualTo(new Requires(Requires.DependencyMissingBehavior.Panic, Requires.DependencyRemovedBehavior.Panic)));
         });
     }
 

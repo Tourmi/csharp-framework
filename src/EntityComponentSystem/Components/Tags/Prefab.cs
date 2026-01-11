@@ -6,4 +6,4 @@ namespace Tourmi.EntityComponentSystem.Components.Tags;
 /// Tag that marks an entity as a prefab.
 /// </summary>
 [TagComponent]
-public readonly struct Prefab;
+public readonly record struct Prefab;

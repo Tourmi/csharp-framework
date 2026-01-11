@@ -124,8 +124,9 @@ public sealed class World
         _typesToIdentifier[typeof(ChildOf)] = ToId(BuiltInRelationType.ChildOf);
         _typesToIdentifier[typeof(IsA)] = ToId(BuiltInRelationType.IsA);
         _typesToIdentifier[typeof(InstanceOf)] = ToId(BuiltInRelationType.InstanceOf);
+        _typesToIdentifier[typeof(Requires)] = ToId(BuiltInRelationType.Requires);
+        Set(ToId(BuiltInRelationType.Requires), data, new DataComponent(typeof(Requires)));
         _typesToIdentifier[typeof(DependsOn)] = ToId(BuiltInRelationType.DependsOn);
-        Set(ToId(BuiltInRelationType.DependsOn), data, new DataComponent(typeof(DependsOn)));
 
         _ids.DefaultRegionOverride = _coreRegion;
 
