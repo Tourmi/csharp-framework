@@ -1,5 +1,3 @@
-using Tourmi.EntityComponentSystem.Archetypes;
-
 namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>
@@ -50,18 +48,13 @@ public sealed class EntityFilter
     internal bool ArchetypeMatches(Archetype archetype)
     {
         _ = archetype.ThrowIfNull();
-        
+
         foreach (var componentId in archetype.Components)
         {
             if (_excludedComponentIds.Contains(componentId))
             {
                 return false;
             }
-        }
-
-        if (_requiredComponentIds.Count == 0)
-        {
-            return true;
         }
 
         foreach (var requiredComponentId in _requiredComponentIds)

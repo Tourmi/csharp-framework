@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
@@ -49,11 +48,11 @@ public readonly ref struct Optional<T>() : IQueryParam<Optional<T>>
     }
 
     static void IQueryParam<Optional<T>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
-        => QueryParam.FreeCache(QueryParam.CastCache<StrongBox<Identifier>>(existingCache));
+        => QueryParam.FreeCache(QueryParam.UnsafeCastCache<StrongBox<Identifier>>(existingCache));
 
     static QueryParamArchetypeCache IQueryParam<Optional<T>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        var componentId = QueryParam.CastCache<StrongBox<Identifier>>(globalCache).Value;
+        var componentId = QueryParam.UnsafeCastCache<StrongBox<Identifier>>(globalCache).Value;
 
         if (!archetype.HasComponent(componentId))
         {
@@ -71,8 +70,7 @@ public readonly ref struct Optional<T>() : IQueryParam<Optional<T>>
             return default;
         }
 
-        Debug.Assert(entry.ArchetypeCache.Value is IComponentCollection<T>, "Given cache was of the wrong type.");
-        var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
+        var collection = QueryParam.UnsafeCastCache<IComponentCollection<T>>(entry.ArchetypeCache);
         return new(collection[entry.EntityIndex]!);
     }
 }

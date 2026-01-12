@@ -1,28 +1,28 @@
-Ran In-Process, the allocations might be a false positive
+Ran In-Process, the allocations might be a false positive due to that
 
 | Method                     | SystemComplexity | EntityCount | Mean            | Error         | Ratio | Allocated | Alloc Ratio |
 |--------------------------- |----------------- |------------ |----------------:|--------------:|------:|----------:|------------:|
-| DumbFlatArrays             | 0                | 100         |        536.5 ns |       7.64 ns |  0.35 |         - |          NA |
-| ManualComponentCollections | 0                | 100         |        650.1 ns |       4.35 ns |  0.42 |         - |          NA |
-| ManualArchetypeEntry       | 0                | 100         |        899.5 ns |       6.69 ns |  0.58 |         - |          NA |
-| ParamGroupForEach          | 0                | 100         |      1,540.3 ns |       4.31 ns |  1.00 |         - |          NA |
-| ManualEntities             | 0                | 100         |      4,456.8 ns |      21.58 ns |  2.89 |         - |          NA |
+| DumbFlatArrays             | 0                | 100         |        140.7 ns |       0.40 ns |  0.16 |         - |          NA |
+| ManualComponentCollections | 0                | 100         |        424.8 ns |       1.76 ns |  0.48 |         - |          NA |
+| ForEach                    | 0                | 100         |        884.5 ns |       8.34 ns |  1.00 |         - |          NA |
+| ManualArchetypeEntry       | 0                | 100         |        459.8 ns |       3.76 ns |  0.52 |         - |          NA |
+| ManualEntities             | 0                | 100         |      3,018.8 ns |       5.41 ns |  3.41 |         - |          NA |
 |                            |                  |             |                 |               |       |           |             |
-| DumbFlatArrays             | 1                | 100         |     27,734.3 ns |      61.80 ns |  0.95 |         - |          NA |
-| ManualComponentCollections | 1                | 100         |     27,979.7 ns |     120.18 ns |  0.96 |         - |          NA |
-| ManualArchetypeEntry       | 1                | 100         |     28,179.0 ns |      57.17 ns |  0.97 |         - |          NA |
-| ParamGroupForEach          | 1                | 100         |     29,043.4 ns |      73.79 ns |  1.00 |         - |          NA |
-| ManualEntities             | 1                | 100         |     31,900.6 ns |      92.76 ns |  1.10 |         - |          NA |
+| DumbFlatArrays             | 1                | 100         |     25,458.8 ns |      44.69 ns |  0.96 |         - |          NA |
+| ManualComponentCollections | 1                | 100         |     25,781.1 ns |       6.81 ns |  0.97 |         - |          NA |
+| ForEach                    | 1                | 100         |     26,607.9 ns |     133.26 ns |  1.00 |         - |          NA |
+| ManualArchetypeEntry       | 1                | 100         |     25,819.8 ns |      26.99 ns |  0.97 |         - |          NA |
+| ManualEntities             | 1                | 100         |     28,340.5 ns |      40.62 ns |  1.07 |         - |          NA |
 |                            |                  |             |                 |               |       |           |             |
-| DumbFlatArrays             | 0                | 100000      |    598,174.4 ns |   7,580.24 ns |  0.55 |       6 B |        0.55 |
-| ManualComponentCollections | 0                | 100000      |    671,933.9 ns |  13,139.76 ns |  0.62 |       6 B |        0.55 |
-| ManualArchetypeEntry       | 0                | 100000      |  1,006,836.2 ns |  10,146.54 ns |  0.92 |      11 B |        1.00 |
-| ParamGroupForEach          | 0                | 100000      |  1,092,450.2 ns |  13,835.08 ns |  1.00 |      11 B |        1.00 |
-| ManualEntities             | 0                | 100000      |  5,731,453.5 ns |  83,044.33 ns |  5.25 |      44 B |        4.00 |
+| DumbFlatArrays             | 0                | 100000      |    113,388.1 ns |     441.76 ns |  0.36 |       1 B |        0.20 |
+| ManualComponentCollections | 0                | 100000      |    162,756.5 ns |     540.13 ns |  0.52 |       3 B |        0.60 |
+| ForEach                    | 0                | 100000      |    313,599.4 ns |   1,506.00 ns |  1.00 |       5 B |        1.00 |
+| ManualArchetypeEntry       | 0                | 100000      |    453,494.0 ns |   3,952.16 ns |  1.45 |       2 B |        0.40 |
+| ManualEntities             | 0                | 100000      |  2,984,879.9 ns |  27,286.28 ns |  9.52 |      20 B |        4.00 |
 |                            |                  |             |                 |               |       |           |             |
-| DumbFlatArrays             | 1                | 100000      | 28,097,326.1 ns |  51,650.05 ns |  0.97 |     177 B |        1.00 |
-| ManualComponentCollections | 1                | 100000      | 28,267,062.2 ns |  75,828.74 ns |  0.97 |     177 B |        1.00 |
-| ManualArchetypeEntry       | 1                | 100000      | 28,717,181.5 ns | 101,713.29 ns |  0.99 |     177 B |        1.00 |
-| ParamGroupForEach          | 1                | 100000      | 29,023,692.1 ns |  85,321.44 ns |  1.00 |     177 B |        1.00 |
-| ManualEntities             | 1                | 100000      | 33,968,888.9 ns | 190,987.19 ns |  1.17 |     378 B |        2.14 |
+| DumbFlatArrays             | 1                | 100000      | 22,717,839.0 ns |  61,976.92 ns |  0.98 |     325 B |        1.04 |
+| ManualComponentCollections | 1                | 100000      | 23,376,731.0 ns | 301,448.69 ns |  1.00 |     147 B |        0.47 |
+| ForEach                    | 1                | 100000      | 23,262,610.9 ns |  53,141.57 ns |  1.00 |     314 B |        1.00 |
+| ManualArchetypeEntry       | 1                | 100000      | 23,418,230.3 ns |  43,098.22 ns |  1.01 |     325 B |        1.04 |
+| ManualEntities             | 1                | 100000      | 26,873,851.3 ns | 296,198.81 ns |  1.16 |     336 B |        1.07 |
 

@@ -1,9 +1,6 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
-using Tourmi.Framework.Collections;
-using Tourmi.Framework.Runtime;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
@@ -22,37 +19,24 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
 
     static QueryParamGlobalCache IQueryParam<Ref<T>>.GetGlobalCache(World world)
     {
-        var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        if (!pool.TryTake(out var idCache))
-        {
-            idCache = new();
-        }
-
+        var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
         idCache.Value = world.GetComponentForType<T>().Id;
         return new(idCache);
     }
 
     static void IQueryParam<Ref<T>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
-    {
-        Debug.Assert(existingCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-        var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-        pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
-    }
+        => QueryParam.FreeCache(QueryParam.UnsafeCastCache<StrongBox<Identifier>>(existingCache));
 
     static QueryParamArchetypeCache IQueryParam<Ref<T>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-        var componentId = Unsafe.As<StrongBox<Identifier>>(globalCache.Value).Value;
+        var componentId = QueryParam.UnsafeCastCache<StrongBox<Identifier>>(globalCache).Value;
 
         return new(archetype.GetComponentCollection<T>(componentId));
     }
 
     static Ref<T> IQueryParam<Ref<T>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is IComponentCollection<T>, "Given cache was of the wrong type.");
-        var collection = Unsafe.As<IComponentCollection<T>>(entry.ArchetypeCache.Value);
+        var collection = QueryParam.UnsafeCastCache<IComponentCollection<T>>(entry.ArchetypeCache);
         return new(ref collection[entry.EntityIndex]!);
     }
 

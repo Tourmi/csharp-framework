@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
 using Tourmi.EntityComponentSystem.Archetypes;
 
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
@@ -189,9 +187,8 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache8, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<GlobalCache8>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache8>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -206,8 +203,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache8, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache8>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache8>(globalCache);
 
         var cache = GetCache<ArchetypeCache8>();
 
@@ -226,11 +222,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache8, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache8, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache8>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache8>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache8>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache8>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -245,11 +239,9 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8> IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache8, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache8, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache8>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache8>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache8>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache8>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -342,9 +334,7 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache7, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<GlobalCache7>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache7>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -358,8 +348,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache7, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache7>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache7>(globalCache);
 
         var cache = GetCache<ArchetypeCache7>();
 
@@ -377,11 +366,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache7, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache7, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache7>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache7>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache7>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache7>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -395,11 +382,8 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3, T4, T5, T6, T7> IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache7, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache7, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<ArchetypeCache7>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache7>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache7>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache7>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -483,9 +467,7 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache6, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<GlobalCache6>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache6>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -498,9 +480,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache6, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache6>(globalCache.Value);
-
+        var globalCaches = UnsafeCastCache<GlobalCache6>(globalCache);
         var cache = GetCache<ArchetypeCache6>();
 
         cache.Value = (
@@ -516,11 +496,8 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache6, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache6, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<ArchetypeCache6>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache6>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache6>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache6>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -533,11 +510,8 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3, T4, T5, T6> IQueryParam<ParamGroup<T1, T2, T3, T4, T5, T6>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache6, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache6, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<ArchetypeCache6>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache6>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache6>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache6>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -612,9 +586,7 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache5, "Cache didn't have expected type.");
-
-        var caches = Unsafe.As<GlobalCache5>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache5>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -626,8 +598,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3, T4, T5>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache5, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache5>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache5>(globalCache);
 
         var cache = GetCache<ArchetypeCache5>();
 
@@ -643,11 +614,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4, T5>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache5, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache5, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache5>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache5>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache5>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache5>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -659,11 +628,9 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3, T4, T5> IQueryParam<ParamGroup<T1, T2, T3, T4, T5>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache5, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache5, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache5>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache5>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache5>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache5>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -729,9 +696,8 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache4, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<GlobalCache4>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache4>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -742,8 +708,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3, T4>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache4, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache4>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache4>(globalCache);
 
         var cache = GetCache<ArchetypeCache4>();
 
@@ -758,11 +723,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3, T4>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache4, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache4, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache4>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache4>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache4>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache4>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -773,11 +736,9 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3, T4> IQueryParam<ParamGroup<T1, T2, T3, T4>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache4, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache4, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache4>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache4>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache4>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache4>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -834,9 +795,8 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache3, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<GlobalCache3>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache3>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
         ParamCallbacks.For<T3>().FreeGlobalCache(caches.Value.Item3, world);
@@ -846,8 +806,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2, T3>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache3, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache3>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache3>(globalCache);
 
         var cache = GetCache<ArchetypeCache3>();
 
@@ -861,11 +820,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2, T3>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache3, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache3, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache3>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache3>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache3>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache3>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
         ParamCallbacks.For<T3>().FreeArchetypeCache(caches.Value.Item3, globalCaches.Value.Item3, world, archetype);
@@ -875,11 +832,9 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2, T3> IQueryParam<ParamGroup<T1, T2, T3>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache3, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache3, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache3>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache3>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache3>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache3>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -927,9 +882,8 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        Debug.Assert(existingCache.Value is GlobalCache2, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<GlobalCache2>(existingCache.Value);
+        var caches = UnsafeCastCache<GlobalCache2>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(caches.Value.Item1, world);
         ParamCallbacks.For<T2>().FreeGlobalCache(caches.Value.Item2, world);
 
@@ -938,8 +892,7 @@ public readonly ref struct ParamGroup<
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1, T2>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        Debug.Assert(globalCache.Value is GlobalCache2, "Cache didn't have expected type.");
-        var globalCaches = Unsafe.As<GlobalCache2>(globalCache.Value);
+        var globalCaches = UnsafeCastCache<GlobalCache2>(globalCache);
 
         var cache = GetCache<ArchetypeCache2>();
 
@@ -952,11 +905,9 @@ public readonly ref struct ParamGroup<
 
     static void IQueryParam<ParamGroup<T1, T2>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        Debug.Assert(existingCache.Value is ArchetypeCache2, "Cache didn't have expected type.");
-        Debug.Assert(globalCache.Value is GlobalCache2, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache2>(existingCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache2>(globalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache2>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache2>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value.Item1, globalCaches.Value.Item1, world, archetype);
         ParamCallbacks.For<T2>().FreeArchetypeCache(caches.Value.Item2, globalCaches.Value.Item2, world, archetype);
 
@@ -965,11 +916,9 @@ public readonly ref struct ParamGroup<
 
     static ParamGroup<T1, T2> IQueryParam<ParamGroup<T1, T2>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        Debug.Assert(entry.ArchetypeCache.Value is ArchetypeCache2, "Cache didn't have expected type.");
-        Debug.Assert(entry.GlobalCache.Value is GlobalCache2, "Cache didn't have expected type.");
 
-        var caches = Unsafe.As<ArchetypeCache2>(entry.ArchetypeCache.Value);
-        var globalCaches = Unsafe.As<GlobalCache2>(entry.GlobalCache.Value);
+        var caches = UnsafeCastCache<ArchetypeCache2>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache2>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item1, ArchetypeCache = caches.Value.Item1 });
         var val2 = ParamCallbacks.For<T2>().CreateFrom(entry with { GlobalCache = globalCaches.Value.Item2, ArchetypeCache = caches.Value.Item2 });
@@ -1008,7 +957,7 @@ public readonly ref struct ParamGroup<[DynamicallyAccessedMembers(Interfaces | P
 
     static void IQueryParam<ParamGroup<T1>>.FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
     {
-        var cacheValue = CastCache<GlobalCache1>(existingCache);
+        var cacheValue = UnsafeCastCache<GlobalCache1>(existingCache);
         ParamCallbacks.For<T1>().FreeGlobalCache(cacheValue.Value, world);
 
         FreeCache(cacheValue);
@@ -1016,7 +965,7 @@ public readonly ref struct ParamGroup<[DynamicallyAccessedMembers(Interfaces | P
 
     static QueryParamArchetypeCache IQueryParam<ParamGroup<T1>>.GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
     {
-        var globalCaches = CastCache<GlobalCache1>(globalCache);
+        var globalCaches = UnsafeCastCache<GlobalCache1>(globalCache);
         var cache = GetCache<ArchetypeCache1>();
 
         cache.Value = ParamCallbacks.For<T1>().GetArchetypeCache(world, archetype, globalCaches.Value);
@@ -1026,8 +975,8 @@ public readonly ref struct ParamGroup<[DynamicallyAccessedMembers(Interfaces | P
 
     static void IQueryParam<ParamGroup<T1>>.FreeArchetypeCache(QueryParamArchetypeCache existingCache, QueryParamGlobalCache globalCache, World world, Archetype archetype)
     {
-        var caches = CastCache<ArchetypeCache1>(existingCache);
-        var globalCaches = CastCache<GlobalCache1>(globalCache);
+        var caches = UnsafeCastCache<ArchetypeCache1>(existingCache);
+        var globalCaches = UnsafeCastCache<GlobalCache1>(globalCache);
         ParamCallbacks.For<T1>().FreeArchetypeCache(caches.Value, globalCaches.Value, world, archetype);
 
         FreeCache(caches);
@@ -1035,8 +984,8 @@ public readonly ref struct ParamGroup<[DynamicallyAccessedMembers(Interfaces | P
 
     static ParamGroup<T1> IQueryParam<ParamGroup<T1>>.CreateFrom(QueryParamEntityInfo entry)
     {
-        var caches = CastCache<ArchetypeCache1>(entry.ArchetypeCache);
-        var globalCaches = CastCache<GlobalCache1>(entry.GlobalCache);
+        var caches = UnsafeCastCache<ArchetypeCache1>(entry.ArchetypeCache);
+        var globalCaches = UnsafeCastCache<GlobalCache1>(entry.GlobalCache);
 
         var val1 = ParamCallbacks.For<T1>().CreateFrom(entry with { GlobalCache = globalCaches.Value, ArchetypeCache = caches.Value });
 

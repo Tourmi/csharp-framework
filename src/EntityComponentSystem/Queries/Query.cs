@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using Tourmi.EntityComponentSystem.Archetypes;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
@@ -23,6 +24,8 @@ public sealed class Query : IDisposable
         _world.Archetypes.ComponentsToArchetypes.ArchetypeRemoved += OnArchetypeRemoved;
     }
 
+    internal World World => _world;
+
     /// <summary>
     /// Generates a new query from the given query param <typeparamref name="T"/>
     /// </summary>
@@ -35,25 +38,15 @@ public sealed class Query : IDisposable
     }
 
     /// <summary>
-    /// Executes the given <paramref name="action"/> for all entities returned by the query.
+    /// Generates a new query from the given query param <typeparamref name="T"/>
     /// </summary>
-    public void ForEach<T>(Action<T> action)
-        where T : IQueryParam<T>, allows ref struct
+    public static Query FromDynamicParam<[DynamicallyAccessedMembers(Interfaces | PublicMethods | NonPublicMethods)] T>(World world)
+        where T : allows ref struct
     {
-        var globalCache = T.GetGlobalCache(_world);
-
-        foreach (var archetype in GetArchetypes())
-        {
-            var archetypeCache = T.GetArchetypeCache(_world, archetype, globalCache);
-            for (var i = 0; i < archetype.EntityCount; i++)
-            {
-                action(T.CreateFrom(new(_world, archetype, i, globalCache, archetypeCache)));
-            }
-
-            T.FreeArchetypeCache(archetypeCache, globalCache, _world, archetype);
-        }
-
-        T.FreeGlobalCache(globalCache, _world);
+        var callbacks = ParamCallbacks.For<T>();
+        var filter = new EntityFilter(world);
+        callbacks.UpdateFilter(filter);
+        return new Query(world, filter);
     }
 
     /// <summary>

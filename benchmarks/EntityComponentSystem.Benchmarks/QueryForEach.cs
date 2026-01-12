@@ -1,97 +1,11 @@
-﻿using System.ComponentModel;
-using Tourmi.EntityComponentSystem.Components;
+﻿namespace Tourmi.EntityComponentSystem;
 
-namespace Tourmi.EntityComponentSystem;
-
-[InProcess]
-[HideColumns("StdDev", "RatioSD")]
-[MemoryDiagnoser]
-public class QueryForEach
+public class QueryForEach : QueryBase
 {
-    public record struct Position(float X, float Y);
-    public record struct Speed(float X, float Y);
-
-    private static readonly Action<ParamGroup<Ref<Position>, RefReadonly<Speed>>>[] Systems = [
-        SimpleSystem, AdvancedSystem,
-    ];
-
-    private World? _ecs;
-    private Query? _query;
-
-    private ArchetypeEntityEntry[]? _entityEntries;
-    private Identifier[]? _entityIds;
-    private Archetype[]? _archetypes;
-
-    private Position[]? _dumbPositions;
-    private Speed[]? _dumbSpeeds;
-
-    private (Position, Speed)[]? _result;
-
-    private Identifier _positionId;
-    private Identifier _speedId;
-
-    public int AdditionalComponentCount { get; set; } = 10;
-
-    [Params(100, 100_000, Priority = 1)]
-    public int EntityCount { get; set; } = 1;
-
-    [Params(0, 1, Priority = 0)]
-    public int SystemComplexity {get; set;} = 0;
-
-    [GlobalSetup]
-    public void Setup()
-    {
-        _ecs = World.Create();
-        var random = new Random(0);
-
-        var additionalComponents = new Identifier[AdditionalComponentCount];
-        for (var i = 0; i < AdditionalComponentCount; i++)
-        {
-            var entity = _ecs.CreateEntity();
-            entity.Add<Component>();
-            entity.Set<Name>(new($"Additional Component {i}"));
-            additionalComponents[i] = entity;
-        }
-
-        _positionId = _ecs.GetComponentForType<Position>();
-        _speedId = _ecs.GetComponentForType<Speed>();
-
-        for (var i = 0; i < EntityCount; i++)
-        {
-            var entity = _ecs.CreateEntity();
-
-            while (random.NextSingle() > 0.5)
-            {
-                var componentId = additionalComponents[random.Next(AdditionalComponentCount)];
-                if (!_ecs.Has(entity, componentId))
-                {
-                    _ecs.Add(entity, componentId);
-                }
-            }
-
-            if ((i % 4) is 0 or 1)
-            {
-                entity.Set<Position>(new(random.Next(-1000, 1000), random.Next(-1000, 1000)));
-            }
-
-            if ((i % 4) is 1 or 3)
-            {
-                entity.Set<Speed>(new(random.Next(-1000, 1000), random.Next(-1000, 1000)));
-            }
-        }
-
-        _query = Query.FromQueryParam<ParamGroup<Position, Speed>>(_ecs);
-
-        _entityEntries = _query.GetEntityEntries().ToArray();
-        _entityIds = _entityEntries.Select(e => e.Archetype.Entities[e.Index]).ToArray();
-        _archetypes = _query.GetArchetypes().ToArray();
-
-        _dumbPositions = _entityEntries.Select(e => e.GetValue<Position>(_positionId)).ToArray();
-        _dumbSpeeds = _entityEntries.Select(e => e.GetValue<Speed>(_speedId)).ToArray();
-
-        _result = new (Position, Speed)[_entityIds.Length];
-    }
-
+    /// <summary>
+    /// Best case benchmark. 
+    /// Shows the unbeatable perf score, where we just have flat arrays for components.
+    /// </summary>
     [Benchmark]
     public (Position, Speed)[] DumbFlatArrays()
     {
@@ -100,16 +14,27 @@ public class QueryForEach
             ManualSystem(ref _dumbPositions[i], ref _dumbSpeeds![i]);
         }
 
-        return CollectResults();
+        for (var i = 0; i < _entityEntries!.Length; i++)
+        {
+            _result![i] = (_dumbPositions[i], _dumbSpeeds![i]);
+        }
+
+        return _result!;
     }
 
+    /// <summary>
+    /// Benchmark that basically does what <see cref="Query.ForEach{T}(Action{T})"/> does,
+    /// without the ParamGroup overhead.
+    /// </summary>
     [Benchmark]
     public (Position, Speed)[] ManualComponentCollections()
     {
+        var positionId = _ecs!.GetComponentForType<Position>();
+        var speedId = _ecs!.GetComponentForType<Speed>();
         foreach (var archetype in _archetypes!)
         {
-            var positionCollection = archetype.GetComponentCollection<Position>(_positionId).AsSpan();
-            var speedCollection = archetype.GetComponentCollection<Speed>(_speedId).AsSpan();
+            var positionCollection = archetype.GetComponentCollection<Position>(positionId).AsSpan();
+            var speedCollection = archetype.GetComponentCollection<Speed>(speedId).AsSpan();
 
             for (var i = 0; i < archetype.EntityCount; i++)
             {
@@ -120,6 +45,21 @@ public class QueryForEach
         return CollectResults();
     }
 
+    /// <summary>
+    /// Baseline, represents the current performance of using <see cref="Query.ForEach{T}(Action{T})"/>
+    /// </summary>
+    [Benchmark(Baseline = true)]
+    public (Position, Speed)[] ForEach()
+    {
+        _query!.ForEach(ParamGroupSystems[SystemComplexity]);
+        return CollectResults();
+    }
+
+    /// <summary>
+    /// Benchmark where we iterate the entities, but fetch their data directly from the archetype for each entity.
+    /// Should be slightly slower than <see cref="Query.ForEach{T}(Action{T})"/>,
+    /// assuming that per-archetype cache (ie: caching the collection to iterate over) DOES improve performance.
+    /// </summary>
     [Benchmark]
     public (Position, Speed)[] ManualArchetypeEntry()
     {
@@ -131,13 +71,9 @@ public class QueryForEach
         return CollectResults();
     }
 
-    [Benchmark(Baseline = true)]
-    public (Position, Speed)[] ParamGroupForEach()
-    {
-        _query!.ForEach(Systems[SystemComplexity]);
-        return CollectResults();
-    }
-
+    /// <summary>
+    /// Worst case benchmark, where we naively do all operations through an entity.
+    /// </summary>
     [Benchmark]
     public (Position, Speed)[] ManualEntities()
     {
@@ -146,70 +82,7 @@ public class QueryForEach
             var entity = new Entity(id, _ecs);
             ManualSystem(ref entity.GetMutable<Position>(_positionId), in entity.GetMutable<Speed>(_speedId));
         }
-        
+
         return CollectResults();
-    }
-
-    private (Position, Speed)[] CollectResults()
-    {
-        for (var i = 0; i < _entityEntries!.Length; i++)
-        {
-            var entry = _entityEntries[i];
-            _result![i] = (entry.GetValue<Position>(_positionId), entry.GetValue<Speed>(_speedId));
-        }
-        
-        return _result!;
-    }
-
-    private static void SimpleSystem(ParamGroup<Ref<Position>, RefReadonly<Speed>> param)
-    {
-        (var positionRef, var speedRef) = param;
-        ref var position = ref positionRef.Reference;
-        ref readonly var speed = ref speedRef.Reference;
-
-        position.X += speed.X;
-        position.Y += speed.Y;
-    }
-
-    private static void AdvancedSystem(ParamGroup<Ref<Position>, RefReadonly<Speed>> param)
-    {
-        (var position, var speed) = param;
-
-        if (position.Reference.X < 0)
-        {
-            position.Reference.X *= -1;
-        }
-
-        if (position.Reference.Y < 0)
-        {
-            position.Reference.Y *= -1;
-        }
-
-        if (speed.Reference.X > 0)
-        {
-            position.Reference.X += 1;
-            position.Reference.Y += 1;
-        }
-
-        if (speed.Reference.Y < 0)
-        {
-            position.Reference.X -= 1;
-            position.Reference.Y -= 1;
-        }
-
-        var inc = 1;
-        for(var i = 0; i < 100; i++)
-        {
-            inc += (int)position.Reference.X ^ (int)position.Reference.Y;
-            position.Reference.X += 1 - inc % 3;
-        }
-
-        position.Reference.X += speed.Reference.X;
-        position.Reference.Y += speed.Reference.Y;
-    }
-
-    private void ManualSystem(ref Position position, ref readonly Speed speed)
-    {
-        Systems[SystemComplexity](new(new(ref position), new(in speed)));
     }
 }

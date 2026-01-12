@@ -6,7 +6,12 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage(
-    "Design", 
-    "CA1001:Types that own disposable fields should be disposable", 
-    Justification = "No need for benchmarks", 
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "No need for benchmarks",
+    Scope = "module")]
+[assembly: SuppressMessage(
+    "Design",
+    "CA1051:Do not declare visible instance fields",
+    Justification = "Benchmarking",
     Scope = "module")]

@@ -31,15 +31,15 @@ internal static class QueryParam
     /// <remarks>
     /// This function does an unsafe cast for better performance.
     /// </remarks>
-    internal static T CastCache<T>(QueryParamGlobalCache cache)
+    internal static T UnsafeCastCache<T>(QueryParamGlobalCache cache)
         where T : class
     {
         Debug.Assert(cache.Value is T, "Cache didn't have expected type.");
         return Unsafe.As<T>(cache.Value);
     }
 
-    /// <inheritdoc cref="CastCache{T}(QueryParamGlobalCache)"/>
-    internal static T CastCache<T>(QueryParamArchetypeCache cache)
+    /// <inheritdoc cref="UnsafeCastCache{T}(QueryParamGlobalCache)"/>
+    internal static T UnsafeCastCache<T>(QueryParamArchetypeCache cache)
         where T : class
     {
         Debug.Assert(cache.Value is T, "Cache didn't have expected type.");

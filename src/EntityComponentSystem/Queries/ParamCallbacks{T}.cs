@@ -1,11 +1,7 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
-using Tourmi.Framework.Collections;
-using Tourmi.Framework.Runtime;
 
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
@@ -117,29 +113,17 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
 
         static QueryParamGlobalCache GetGlobalCache(World world)
         {
-            var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-            if (!pool.TryTake(out var idCache))
-            {
-                idCache = new();
-            }
-
+            var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
             idCache.Value = world.GetComponentForType<TOther>().Id;
             return new(idCache);
         }
 
         static void FreeGlobalCache(QueryParamGlobalCache existingCache, World world)
-        {
-            Debug.Assert(existingCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-            var pool = ThreadStaticProvider<Pool<StrongBox<Identifier>>>.Value;
-            pool.Return(Unsafe.As<StrongBox<Identifier>>(existingCache.Value));
-        }
+            => QueryParam.FreeCache(QueryParam.UnsafeCastCache<StrongBox<Identifier>>(existingCache));
 
         static QueryParamArchetypeCache GetArchetypeCache(World world, Archetype archetype, QueryParamGlobalCache globalCache)
         {
-            Debug.Assert(globalCache.Value is StrongBox<Identifier>, "Given cache was of the wrong type.");
-
-            var componentId = Unsafe.As<StrongBox<Identifier>>(globalCache.Value).Value;
+            var componentId = QueryParam.UnsafeCastCache<StrongBox<Identifier>>(globalCache).Value;
 
             return new(archetype.GetComponentCollection<TOther>(componentId));
         }
@@ -151,8 +135,7 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
 
         static TOther CreateFrom(QueryParamEntityInfo entry)
         {
-            Debug.Assert(entry.ArchetypeCache.Value is IComponentCollection<TOther>, "Given cache was of the wrong type.");
-            var collection = Unsafe.As<IComponentCollection<TOther>>(entry.ArchetypeCache.Value);
+            var collection = QueryParam.UnsafeCastCache<IComponentCollection<TOther>>(entry.ArchetypeCache);
             return collection[entry.EntityIndex]!;
         }
 

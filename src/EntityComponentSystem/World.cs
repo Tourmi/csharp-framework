@@ -1,9 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Attributes;
-using Tourmi.EntityComponentSystem.Components.Metacomponents;
-using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -12,37 +8,11 @@ namespace Tourmi.EntityComponentSystem;
 /// </summary>
 public sealed class World
 {
-    private static readonly IComparer<SortedSet<Identifier>> IdSetComparer = Comparer.FromFunc<SortedSet<Identifier>>((c1, c2) =>
-    {
-        var compare = c1.Count.CompareTo(c2.Count);
-        if (compare != 0)
-        {
-            return compare;
-        }
-
-        using var c1Enumerator = c1.GetEnumerator();
-        using var c2Enumerator = c2.GetEnumerator();
-
-        while (c1Enumerator.MoveNext() && c2Enumerator.MoveNext())
-        {
-            compare = c1Enumerator.Current.CompareTo(c2Enumerator.Current);
-
-            if (compare != 0)
-            {
-                return compare;
-            }
-        }
-
-        return 0;
-    });
-
     private readonly Dictionary<Type, Identifier> _typesToIdentifier = [];
     private readonly IdentifierCollection _ids = new();
     private readonly Identifier[] _builtInRelationIds = new Identifier[255];
     private readonly EntityArchetypeCollection _archetypes = new();
-
-    private readonly SortedDictionary<SortedSet<Identifier>, Query> _componentIdsToQuery = new(IdSetComparer);
-    private readonly Dictionary<Delegate, Query> _systemsToQuery = [];
+    private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
 
     /// <summary>
     /// Region reserved for future potential optimizations.
@@ -154,23 +124,6 @@ public sealed class World
         var entity = new Entity(CreateEntityInternal(), this);
 
         return entity;
-    }
-
-    /// <summary>
-    /// Adds a system to the world
-    /// </summary>[
-    [OverloadResolutionPriority(-1)]
-    public void AddSystem<T>(T system) where T : Delegate
-    {
-        _ = system.ThrowIfNull();
-
-        if (!_systemsToQuery.TryGetValue(system, out var query))
-        {
-            query = GetQueryForDelegate(system);
-            _systemsToQuery[system] = query;
-        }
-
-        // TODO: Add system with query
     }
 
     /// <summary>
@@ -386,6 +339,23 @@ public sealed class World
         return new(componentId, this);
     }
 
+    /// <summary>
+    /// Returns the cached query for the given type.
+    /// </summary>
+    internal Query GetCachedQueryFor<T>()
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var queryType = typeof(T);
+
+        if (!_queryParamsToQuery.TryGetValue(queryType, out var query))
+        {
+            query = Query.FromQueryParam<T>(this);
+            _queryParamsToQuery[queryType] = query;
+        }
+
+        return query;
+    }
+
     private void AddComponentIfMissing(Identifier entity, Identifier component)
     {
         if (_archetypes.HasComponent(entity, component))
@@ -425,58 +395,4 @@ public sealed class World
     }
 
     private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIds[(int)relationType - 1];
-
-    private Query GetQueryForDelegate<T>(T del) where T : Delegate
-    {
-        var ids = DelegateToComponentIds(del);
-
-        if (_componentIdsToQuery.TryGetValue(ids, out var query))
-        {
-            return query;
-        }
-
-        // TODO: Use QueryFilter instead
-        query = new Query(this, new EntityFilter(this, ids));
-        _componentIdsToQuery[ids] = query;
-        return query;
-    }
-
-    private SortedSet<Identifier> DelegateToComponentIds<T>(T del) where T : Delegate
-    {
-        var components = new SortedSet<Identifier>();
-        var parameters = del.Method.GetParameters();
-        foreach (var param in parameters)
-        {
-            ParseTypeInto(components, param.ParameterType);
-        }
-
-        if (del.Method.ReturnType != typeof(void))
-        {
-            if (del.Method.ReturnType.IsByRef || del.Method.ReturnType.IsByRefLike)
-            {
-                throw new NotSupportedException("Cannot create a query from a delegate that returns a ref, or refstruct value.");
-            }
-
-            ParseTypeInto(components, del.Method.ReturnType);
-        }
-
-        return components;
-
-        void ParseTypeInto(SortedSet<Identifier> components, Type type)
-        {
-            if (type.HasElementType)
-            {
-                type = type.GetElementType()!;
-            }
-
-            if (type.IsByRefLike)
-            {
-                // TODO: Unwrap ParamGroup, OutRef, Ref, RefReadonly, etc. recursively
-            }
-
-            // TODO: Process special types, Query, etc.
-
-            _ = components.Add(GetComponentForType(type));
-        }
-    }
 }

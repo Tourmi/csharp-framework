@@ -1,5 +1,3 @@
-using Tourmi.EntityComponentSystem.Archetypes;
-
 namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>

@@ -10,7 +10,6 @@ namespace Tourmi.EntityComponentSystem;
 [TestFixture]
 internal class GeneralTests
 {
-    private record struct StringId(string Id);
     private record struct Position(int X, int Y);
     private record struct Speed(int X, int Y);
     private record struct SomeComponent(float SomeValue);
@@ -299,46 +298,52 @@ internal class GeneralTests
     public void TestSystems()
     {
         var ecs = World.Create();
-        ecs.AddSystem(System1);
-        ecs.AddSystem(System2);
-        ecs.AddSystem(System3);
-        var someName1 = ecs.CreateEntity();
-        someName1.Set<Name>(new("SomeName1"));
-        someName1.Set<StringId>(new("1"));
-        someName1.Set<Position>(new(1, 1));
-
-        var someName2 = ecs.CreateEntity();
-        someName2.Set<Name>(new("SomeName2"));
-        someName2.Set<StringId>(new("2"));
-        someName2.Set<Position>(new(2, 2));
-
-        var ignored = ecs.CreateEntity();
-        ignored.Set<Name>(new("WrongName"));
-        someName2.Set<StringId>(new("3"));
-        ignored.Set<Position>(new(3, 3));
-
-        static SomeComponent System1(Identifier id, in StringId stringId, ref readonly Name name, ref Position position, Ref<Speed> speed)
+        _ = ecs.AddSystem((Identifier id, RefReadonly<Name> name, Ref<Position> position, Ref<Speed> speedRef) =>
         {
-            if (name.Value.Contains("SomeName", StringComparison.InvariantCultureIgnoreCase))
+            ref var speed = ref speedRef.Reference;
+            speed.X *= 2;
+            speed.Y *= 2;
+        });
+        _ = ecs.AddSystem((Identifier id, Name name, Speed speed, Ref<Position> positionRef) =>
+        {
+            ref var position = ref positionRef.Reference;
+            position.X += speed.X;
+            position.Y += speed.Y;
+        });
+        _ = ecs.AddSystem((Identifier id, Name name, Ref<Position> positionRef) =>
+        {
+            ref var position = ref positionRef.Reference;
+            if (name.Value == "WrongName")
             {
-                position.X += 1;
-                position.Y += 1;
-                speed.Reference = new Speed(1, 1);
-                return new(1);
+                position = new(50, 50);
             }
+        });
 
-            speed.Reference = default;
-            return new(2);
-        }
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+        someEntity1.Set<Position>(new(1, 1));
+        someEntity1.Set<Speed>(new(1, 1));
 
-        static void System2(Identifier id, Name name, StringId stringId, Ref<Speed> speed, SomeComponent someValue, Position position)
-        {
-            return;
-        }
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.Set<Position>(new(2, 2));
+        someEntity2.Set<Speed>(new(2, 2));
 
-        static void System3(Identifier id, Name name, StringId stringId, SomeComponent someValue, Position position)
-        {
-            return;
-        }
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("WrongName"));
+        someEntity3.Set<Position>(new(3, 3));
+        someEntity3.Set<Speed>(new(3, 3));
+
+        ecs.RunSystems();
+
+        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(3, 3)));
+        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(6, 6)));
+        Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(50, 50)));
+
+        ecs.RunSystems();
+
+        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(7, 7)));
+        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(14, 14)));
+        Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(50, 50)));
     }
 }
