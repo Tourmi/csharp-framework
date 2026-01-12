@@ -16,7 +16,10 @@ public readonly struct Name()
     /// <summary>
     /// Name of the entity.
     /// </summary>
-    public string Value { get; init; } = string.Empty;
+    public string Value { get => field ?? string.Empty; init; } = string.Empty;
+
+    /// <inheritdoc/>
+    public static Name Create(string name) => new(name);
 
     /// <inheritdoc/>
     public override string ToString() => Value;

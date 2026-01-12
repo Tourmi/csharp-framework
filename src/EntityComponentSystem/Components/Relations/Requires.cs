@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Attributes;
-
-namespace Tourmi.EntityComponentSystem.Components.Relations;
+﻿namespace Tourmi.EntityComponentSystem.Components.Relations;
 
 /// <summary>
 /// <inheritdoc cref="BuiltInRelationType.Requires"/>

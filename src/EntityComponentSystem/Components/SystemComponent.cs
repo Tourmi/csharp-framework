@@ -14,4 +14,7 @@ public readonly struct SystemComponent
     /// Executes the system.
     /// </summary>
     public Action Execute { get; }
+
+    /// <inheritdoc/>
+    public static SystemComponent Create(Action value) => new(value);
 }

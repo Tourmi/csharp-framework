@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Attributes;
-
-namespace Tourmi.EntityComponentSystem.Components.Tags;
+﻿namespace Tourmi.EntityComponentSystem.Components.Tags;
 
 /// <summary>
 /// Tag that marks an entity as a prefab.
