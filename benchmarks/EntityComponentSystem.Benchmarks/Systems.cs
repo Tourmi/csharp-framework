@@ -72,7 +72,7 @@ public class Systems
     [Benchmark]
     public void RunSystems()
     {
-        _ecs!.RunSystems();
+        _ecs!.Tick();
     }
 
     private protected static void SimpleSystem(Ref<Position> positionRef, RefReadonly<Speed> speedRef)

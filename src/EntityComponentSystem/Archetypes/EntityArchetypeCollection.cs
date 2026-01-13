@@ -31,6 +31,11 @@ internal class EntityArchetypeCollection
     public void Create(Identifier id) => _entities[id.ShortId] = _archetypes.EmptyArchetype.AddEntity(id);
 
     /// <summary>
+    /// Returns <see langword="true"/> if the entity associated to the given <paramref name="id"/> is alive.
+    /// </summary>
+    public bool IsAlive(Identifier id) => _entities[id.ShortId].Archetype is not null;
+
+    /// <summary>
     /// Kills the entity with the given <paramref name="entityId"/>
     /// </summary>
     public void Kill(Identifier entityId)
@@ -62,25 +67,25 @@ internal class EntityArchetypeCollection
     /// <summary>
     /// Checks whether or not the entity has the given component
     /// </summary>
-    public bool HasComponent(Identifier entityId, Identifier componentId) 
+    public bool HasComponent(Identifier entityId, Identifier componentId)
         => _entities[entityId.ShortId].Archetype.HasComponent(componentId);
 
     /// <summary>
     /// Returns the value of the component.
     /// </summary>
-    public T? GetComponent<T>(Identifier entityId, Identifier componentId) 
+    public T? GetComponent<T>(Identifier entityId, Identifier componentId)
         => _entities[entityId.ShortId].GetValue<T>(componentId);
 
     /// <summary>
     /// Returns a reference to the value of the component.
     /// </summary>
-    public ref T? GetRefComponent<T>(Identifier entityId, Identifier componentId) 
+    public ref T? GetRefComponent<T>(Identifier entityId, Identifier componentId)
         => ref _entities[entityId.ShortId].GetValueRef<T>(componentId);
 
     /// <summary>
     /// Sets the value of the component.
     /// </summary>
-    public void SetComponent<T>(Identifier entityId, Identifier componentId, T value) 
+    public void SetComponent<T>(Identifier entityId, Identifier componentId, T value)
         => _entities[entityId.ShortId].SetValue(componentId, value);
 
     /// <summary>
@@ -98,7 +103,7 @@ internal class EntityArchetypeCollection
     /// <summary>
     /// Used for debugging purposes
     /// </summary>
-    internal Archetype? GetEntityArchetype(Identifier entityId) 
+    internal Archetype? GetEntityArchetype(Identifier entityId)
         => _entities[entityId.ShortId].Archetype;
 
     /// <summary>

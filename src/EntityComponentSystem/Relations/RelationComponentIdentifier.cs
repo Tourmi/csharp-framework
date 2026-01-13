@@ -81,17 +81,17 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     public IdentifierTypes Types { get; }
 
     /// <summary>
-    /// Shortcut property mapping the <see cref="RelationType"/> to the appropriate <see cref="Relations.BuiltInRelationType"/>.
-    /// Will return <see cref="BuiltInRelationType.None"/> if the relation type cannot be mapped to a built-in type.
+    /// Shortcut property mapping the <see cref="RelationType"/> to the appropriate <see cref="BuiltInRelationType"/>.
+    /// Will return <see langword="null"/> if the relation type cannot be mapped to a built-in type.
     /// </summary>
-    public BuiltInRelationType BuiltInRelationType
+    public BuiltInRelationType? BuiltInRelationTypeOrNull
     {
         get
         {
             var relationType = RelationType;
-            if (relationType > 255)
+            if (relationType >= FixedIds.Relations.RegionSize)
             {
-                return BuiltInRelationType.None;
+                return null;
             }
 
             return (BuiltInRelationType)relationType;

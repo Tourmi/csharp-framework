@@ -12,21 +12,15 @@ public static class WorldSystemExtensions
     extension(World world)
     {
         /// <summary>
-        /// TODO: replace with proper system scheduling
-        /// </summary>
-        public void RunSystems()
-        {
-            var query = world.GetCachedQueryFor<ParamGroup<SystemComponent>>();
-            query.ForEach((SystemComponent param) => param.Execute());
-        }
-
-        /// <summary>
         /// Creates a new system entity with the given action.
         /// </summary>
         public SystemEntity CreateSystem(Action singleRunAction)
         {
+            (var scheduleId, var defaultSchedule) = world.GetCachedQueryFor<ParamGroup<Default<Schedule>>>().First<ParamGroup<Identifier, Schedule>>();
+
             var systemEntity = world.CreateEntity();
             systemEntity.Set<SystemComponent>(new(singleRunAction));
+            systemEntity.Add(new RelationComponentIdentifier(scheduleId.ShortId, BuiltInRelationType.ChildOf).Value);
             return (SystemEntity)systemEntity;
         }
 

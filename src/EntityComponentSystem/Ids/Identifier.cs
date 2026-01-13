@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem.Ids;
 
@@ -106,6 +105,12 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
 
     /// <inheritdoc/>
     public static bool operator !=(Identifier left, Identifier right) => !(left == right);
+
+    /// <inheritdoc/>
+    public static Identifier operator |(Identifier left, IdentifierTypes types) => left.Value | ((ulong)types << TypesBitOffset);
+
+    /// <inheritdoc/>
+    public static Identifier operator &(Identifier left, IdentifierTypes types) => left.Value & ((ulong)types << TypesBitOffset);
 
     /// <summary>
     /// Returns a new identifier with the version number incremented.

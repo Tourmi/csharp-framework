@@ -6,9 +6,9 @@
 public enum BuiltInRelationType : byte
 {
     /// <summary>
-    /// The relation does not map to any built-in types.
+    /// X has an undefined relation to Y.
     /// </summary>
-    None = 0,
+    Undefined = 0,
 
     /// <summary>
     /// Marks X as a child of Y. Useful for hierarchies.

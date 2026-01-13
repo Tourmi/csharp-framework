@@ -25,6 +25,35 @@ public static class QueryForEachExtensions
             }
         }
 
+        /// <summary>
+        /// Returns the first value of type <typeparamref name="T"/>.
+        /// </summary>
+        public T First<[DynamicallyAccessedMembers(Interfaces | PublicMethods | NonPublicMethods)] T>() where T : allows ref struct
+        {
+            var result = default(T);
+            var callbacks = ParamCallbacks.For<T>();
+            var globalCache = callbacks.GetGlobalCache(query.World);
+
+            foreach (var archetype in query.GetArchetypes())
+            {
+                var archetypeCache = callbacks.GetArchetypeCache(query.World, archetype, globalCache);
+
+                if (archetype.EntityCount == 0)
+                {
+                    callbacks.FreeArchetypeCache(archetypeCache, globalCache, query.World, archetype);
+                    continue;
+                }
+
+                result = callbacks.CreateFrom(new(query.World, archetype, 0, globalCache, archetypeCache));
+                callbacks.FreeArchetypeCache(archetypeCache, globalCache, query.World, archetype);
+                break;
+            }
+
+            callbacks.FreeGlobalCache(globalCache, query.World);
+
+            return result!;
+        }
+
         /// <inheritdoc cref="ForEach(Query, Action)"/>
         public void ForEach<T>(QueryParamAction<T> action)
             where T : IQueryParam<T>, allows ref struct

@@ -1,5 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.Framework.Collections;
+﻿using Tourmi.Framework.Collections;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -15,24 +14,6 @@ internal partial class IdentifierCollection
     private int _currentDefaultRegionIndex; // index into the _defaultRegionDataIndexes array
     private int[] _defaultRegionDataIndexes; // indexes for the default regions into the _regionsData array
     private IdRegionData[] _regionsData;
-
-    /// <summary>
-    /// Overrides the default region to use when creating new entities. 
-    /// If <see langword="null"/>, then the unreserved id space with be used.
-    /// </summary>
-    public IdentifierRegion? DefaultRegionOverride
-    {
-        get;
-        set
-        {
-            if (value != null && !_reservedRegionsToCurrentDataIndex.ContainsKey(value))
-            {
-                throw new ArgumentException("Cannot set region override to an un-reserved region", nameof(value));
-            }
-
-            field = value;
-        }
-    }
 
     public IdentifierCollection(uint initialCapacity = 0x1000)
     {
@@ -131,7 +112,6 @@ internal partial class IdentifierCollection
     /// </summary>
     public Identifier Create(IdentifierTypes entityTypes = IdentifierTypes.None, IdentifierRegion? idRegion = null)
     {
-        idRegion ??= DefaultRegionOverride;
         if (idRegion is null)
         {
             return CreateDefault(entityTypes);
@@ -177,9 +157,9 @@ internal partial class IdentifierCollection
     }
 
     /// <summary>
-    /// Returns true if the given id points to an entity that is alive.
+    /// Returns true if the given id is in use (usually when an entity is created).
     /// </summary>
-    public bool IsAlive(Identifier entityId)
+    public bool IsUsed(Identifier entityId)
     {
         if (entityId.ShortId is 0)
         {

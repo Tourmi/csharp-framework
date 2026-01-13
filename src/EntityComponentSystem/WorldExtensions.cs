@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Components.Metacomponents;
-
-namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem;
 
 /// <summary>
 /// Extension methods for <see cref="World"/>
@@ -9,6 +7,28 @@ public static class WorldExtensions
 {
     extension(World world)
     {
+        /// <summary>
+        /// Ticks the world's schedules, running any systems due for execution.
+        /// </summary>
+        public void Tick()
+        {
+            ref var defaultSchedule = ref world.GetCachedQueryFor<ParamGroup<Default<Schedule>, Ref<Schedule>>>().First<Ref<Schedule>>().Reference;
+
+            // TODO: Check DeltaTime, and compare with current schedule time.
+
+            defaultSchedule.CurrentTick++;
+            if (defaultSchedule.CurrentTick >= defaultSchedule.TickRate)
+            {
+                // TODO: Tick all children.
+
+                // TODO: Temporary solution.
+                var query = world.GetCachedQueryFor<ParamGroup<SystemComponent>>();
+                query.ForEach((SystemComponent param) => param.Execute());
+
+                defaultSchedule.CurrentTick = 0;
+            }
+        }
+
         /// <summary>
         /// Creates a new entity with the given <paramref name="name"/>.
         /// </summary>

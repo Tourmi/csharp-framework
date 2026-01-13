@@ -334,13 +334,13 @@ internal class GeneralTests
         someEntity3.Set<Position>(new(3, 3));
         someEntity3.Set<Speed>(new(3, 3));
 
-        ecs.RunSystems();
+        ecs.Tick();
 
         Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(3, 3)));
         Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(6, 6)));
         Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(50, 50)));
 
-        ecs.RunSystems();
+        ecs.Tick();
 
         Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(7, 7)));
         Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(14, 14)));
