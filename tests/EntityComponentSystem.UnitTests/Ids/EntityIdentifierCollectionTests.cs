@@ -20,13 +20,13 @@ internal class EntityIdentifierCollectionTests
     [Test]
     public void IsAliveReturnsFalseForDefaultId()
     {
-        Assert.That(Ids.IsUsed(default), Is.False);
+        Assert.That(Ids.IsInUse(default), Is.False);
     }
 
     [Test]
     public void IsAliveReturnsFalseForInvalidId()
     {
-        Assert.That(Ids.IsUsed(new Identifier(1)), Is.False);
+        Assert.That(Ids.IsInUse(new Identifier(1)), Is.False);
     }
 
     [Test]
@@ -37,7 +37,7 @@ internal class EntityIdentifierCollectionTests
 
         var modifiedId = new Identifier(id.ShortId | (((ulong)version + 1) << Identifier.VersionBitOffset));
 
-        Assert.That(Ids.IsUsed(modifiedId), Is.False);
+        Assert.That(Ids.IsInUse(modifiedId), Is.False);
     }
 
     [Test]
@@ -47,7 +47,7 @@ internal class EntityIdentifierCollectionTests
 
         Ids.Free(id);
 
-        Assert.That(Ids.IsUsed(id), Is.False);
+        Assert.That(Ids.IsInUse(id), Is.False);
     }
 
     [Test]
@@ -59,9 +59,9 @@ internal class EntityIdentifierCollectionTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(Ids.IsUsed(id1), Is.True);
-            Assert.That(Ids.IsUsed(id2), Is.True);
-            Assert.That(Ids.IsUsed(id3), Is.True);
+            Assert.That(Ids.IsInUse(id1), Is.True);
+            Assert.That(Ids.IsInUse(id2), Is.True);
+            Assert.That(Ids.IsInUse(id3), Is.True);
         });
     }
 

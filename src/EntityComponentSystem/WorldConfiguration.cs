@@ -7,7 +7,7 @@ public sealed class WorldConfiguration
 {
     /// <summary>
     /// Regions of identifiers that are reserved for special purposes.
-    /// Default entity generation will never generate entities with an Id contained in these regions.
+    /// Entities will never be generated with an Id contained in these regions.
     /// </summary>
     public IEnumerable<IdentifierRegion> ReservedIdentifierRegions
     {

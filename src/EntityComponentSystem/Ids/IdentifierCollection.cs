@@ -7,22 +7,28 @@ namespace Tourmi.EntityComponentSystem;
 /// </summary>
 internal partial class IdentifierCollection
 {
-    private readonly LazyPagedArray<Identifier> _indexToId = new();
-    private readonly LazyPagedArray<uint> _idToIndex = new();
-    private readonly Dictionary<IdentifierRegion, int> _reservedRegionsToCurrentDataIndex = [];
+    /// <summary>
+    /// Stores all identifiers.
+    /// </summary>
+    private readonly LazyPagedArray<Identifier> _identifiers = new();
 
-    private int _currentDefaultRegionIndex; // index into the _defaultRegionDataIndexes array
-    private int[] _defaultRegionDataIndexes; // indexes for the default regions into the _regionsData array
+    /// <summary>
+    /// When given an <see cref="Identifier"/>'s <see cref="Identifier.ShortId"/>, 
+    /// returns the index that the Id is stored in <see cref="_identifiers"/>.
+    /// </summary>
+    private readonly LazyPagedArray<uint> _idToIndex = new();
+    private readonly HashSet<IdentifierRegion> _reservedRegions = [];
+
+    private int _currentRegionIndex; // index into the _defaultRegionDataIndexes array
     private IdRegionData[] _regionsData;
 
     public IdentifierCollection(uint initialCapacity = 0x1000)
     {
-        _indexToId.EnsureCapacity(initialCapacity);
+        _identifiers.EnsureCapacity(initialCapacity);
         _idToIndex.EnsureCapacity(initialCapacity);
 
         var unreservedRegionData = new IdRegionData() { Offset = 1, Capacity = uint.MaxValue - 1, };
         _regionsData = [unreservedRegionData];
-        _defaultRegionDataIndexes = [0];
     }
 
     /// <summary>
@@ -36,7 +42,15 @@ internal partial class IdentifierCollection
             return;
         }
 
-        if (_reservedRegionsToCurrentDataIndex.ContainsKey(region.ThrowIfNull()))
+        if (region.Offset != 0 && _reservedRegions.Any(r => r != region && r.OverlapsWith(region)))
+        {
+            var overlappingRegions = string.Join("\n\t", _reservedRegions.Where(r => r.OverlapsWith(region)).Select(r => r.ToString()));
+            throw new InvalidOperationException(
+                $"Cannot reserve identifier region {region}, " +
+                $"as it overlaps with the following reserved regions:\n\t{overlappingRegions}");
+        }
+
+        if (!_reservedRegions.Add(region))
         {
             // Already reserved, just return.
             return;
@@ -44,9 +58,9 @@ internal partial class IdentifierCollection
 
         if (region.Offset is 0)
         {
-            for (var i = 0; i < _defaultRegionDataIndexes.Length; i++)
+            for (var i = 0; i < _regionsData.Length; i++)
             {
-                var regionData = _regionsData[_defaultRegionDataIndexes[i]];
+                var regionData = _regionsData[i];
                 if (regionData.Capacity >= region.Amount)
                 {
                     region.Offset = regionData.Offset;
@@ -57,174 +71,123 @@ internal partial class IdentifierCollection
 
         if (region.Offset is 0)
         {
-            throw new InvalidOperationException($"Failed to reserve id region: {region}");
+            throw new InvalidOperationException($"Failed to reserve id region '{region}', no available room.");
         }
 
-        if (_reservedRegionsToCurrentDataIndex.Keys.Any(r => r.OverlapsWith(region)))
-        {
-            var overlappingRegions = string.Join("\n\t", _reservedRegionsToCurrentDataIndex.Keys.Where(r => r.OverlapsWith(region)).Select(r => r.ToString()));
-            throw new InvalidOperationException(
-                $"Cannot reserve identifier region {region}, " +
-                $"as it overlaps with the following reserved regions:\n\t{overlappingRegions}");
-        }
+        var reservedRegionData = new IdRegionData() { Offset = region.Offset, Capacity = region.Amount };
 
-        var newRegionData = new IdRegionData() { Offset = region.Offset, Capacity = region.Amount };
-
-        var existingRegions = _regionsData
-            .SelectMany((r, i) =>
-            {
-                if (!_defaultRegionDataIndexes.Contains(i))
-                {
-                    return [(Region: r, IsDefault: false)];
-                }
-
-                return r.SplitWith(newRegionData).Select(r => (Region: r, IsDefault: true));
-            })
-            .Append((Region: newRegionData, IsDefault: false))
-            .OrderBy(ri => ri.Region.Offset)
-            .ToArray();
-
-        _regionsData = [.. existingRegions.Select(ri => ri.Region)];
-        _defaultRegionDataIndexes = [.. existingRegions
-            .Select((ri, i) => (ri.Region, ri.IsDefault, Index: i))
-            .Where(rii => rii.IsDefault)
-            .Select(rii => rii.Index)];
-        _currentDefaultRegionIndex = _defaultRegionDataIndexes
-            .Select((r, i) => (RegionIndex: r, ArrayIndex: i))
-            .Where(ri => !_regionsData[ri.RegionIndex].IsFull)
-            .Select(ri => ri.ArrayIndex)
-            .DefaultIfEmpty(-1)
-            .First();
-
-        _reservedRegionsToCurrentDataIndex.Add(region, -1);
-
-        foreach (var oldRegion in _reservedRegionsToCurrentDataIndex.Keys.ToArray())
-        {
-            _reservedRegionsToCurrentDataIndex[oldRegion] = _regionsData
-                .Select((r, i) => (Region: r, Index: i))
-                .First(ri => ri.Region.Offset == oldRegion.Offset)
-                .Index;
-        }
+        _regionsData = [.. _regionsData.SelectMany((r, i) => r.SplitWith(reservedRegionData))];
+        _currentRegionIndex = _regionsData
+            .Index()
+            .Where(ri => !ri.Item.IsFull)
+            .Select(ri => ri.Index)
+            .FirstOrDefault(-1);
     }
 
     /// <summary>
-    /// Creates a new id in the given <paramref name="idRegion"/>, (or the default id space when <see langword="null"/>), and returns its identifier.
+    /// Creates a new id and returns it.
     /// </summary>
-    public Identifier Create(IdentifierTypes entityTypes = IdentifierTypes.None, IdentifierRegion? idRegion = null)
+    public Identifier Create(IdentifierTypes entityTypes = IdentifierTypes.None)
     {
-        if (idRegion is null)
+        if (_currentRegionIndex < 0)
         {
-            return CreateDefault(entityTypes);
+            throw new InvalidOperationException("Ran out of entity Ids to create a new Entity with.");
         }
 
-        var regionDataIndex = _reservedRegionsToCurrentDataIndex[idRegion];
-        ref var regionData = ref _regionsData[regionDataIndex];
+        ref var regionData = ref _regionsData[_currentRegionIndex];
+        var identifier = Create(ref regionData, entityTypes);
+
         if (regionData.IsFull)
         {
-            throw new InvalidOperationException($"Ran out of entity Ids in the region {idRegion}");
+            _currentRegionIndex = -1;
+            for (var i = 0; i < _regionsData.Length; i++)
+            {
+                if (_regionsData[i].IsFull)
+                {
+                    continue;
+                }
+
+                _currentRegionIndex = i;
+                break;
+            }
         }
 
-        return Create(ref regionData, entityTypes);
+        return identifier;
 
-        // Creates an entity in the unreserved id space.
-        Identifier CreateDefault(IdentifierTypes entityTypes)
+        Identifier Create(ref IdRegionData regionData, IdentifierTypes types)
         {
-            if (_currentDefaultRegionIndex < 0)
-            {
-                throw new InvalidOperationException("Ran out of entity Ids to create a new Entity with.");
-            }
+            var typeBits = (uint)types << Identifier.TypesBitOffset;
 
-            var regionDataIndex = _defaultRegionDataIndexes[_currentDefaultRegionIndex];
-            ref var regionData = ref _regionsData[regionDataIndex];
-            var identifier = Create(ref regionData, entityTypes);
-            if (regionData.IsFull)
+            if (regionData.AliveCount < regionData.InitializedCount)
             {
-                _currentDefaultRegionIndex = -1;
-                for (var i = 0; i < _defaultRegionDataIndexes.Length; i++)
+                // Reuse dead identifiers
+                ref var id = ref _identifiers[regionData.NextAliveIndex];
+                id = (id & ~Identifier.TypesBitMask) | typeBits;
+
+                _idToIndex[id.ShortId] = regionData.NextAliveIndex;
+
+                checked
                 {
-                    if (_regionsData[_defaultRegionDataIndexes[i]].IsFull)
-                    {
-                        continue;
-                    }
-
-                    _currentDefaultRegionIndex = i;
-                    break;
+                    regionData.AliveCount++;
                 }
-            }
 
-            return identifier;
+                return id;
+            }
+            else
+            {
+                // New identifier needed
+                var id = new Identifier(regionData.NextInitializedIndex);
+                id |= typeBits;
+                _identifiers.Insert(id.ShortId, id);
+                _idToIndex[id.ShortId] = id.ShortId;
+
+                checked
+                {
+                    regionData.AliveCount++;
+                    regionData.InitializedCount++;
+                }
+
+                return id;
+            }
         }
     }
 
     /// <summary>
-    /// Returns true if the given id is in use (usually when an entity is created).
+    /// Returns true if the given id is currently in use.
     /// </summary>
-    public bool IsUsed(Identifier entityId)
+    public bool IsInUse(Identifier entityId)
     {
         if (entityId.ShortId is 0)
         {
             return false;
         }
 
-        return _indexToId[_idToIndex[entityId.ShortId]] == entityId;
+        return _identifiers[_idToIndex[entityId.ShortId]] == entityId;
     }
 
     /// <summary>
     /// Releases the given <paramref name="entityId"/> to the pool.
     /// </summary>
+    /// <remarks>
+    /// Purposefully does not validate if the <paramref name="entityId"/> is in use for better performance.
+    /// </remarks>
     public void Free(Identifier entityId)
     {
         ref var region = ref GetIdRegionData(entityId);
         var oldIndex = _idToIndex[entityId.ShortId];
+        var oldIdNewVersion = entityId.IncrementVersion();
 
-        _indexToId[oldIndex] = entityId.IncrementVersion();
+        // Swap the last alive entity with the one we just freed.
+        var lastAliveIndex = region.NextAliveIndex - 1;
+        var lastAliveId = _identifiers[lastAliveIndex];
+        _identifiers[oldIndex] = lastAliveId;
+        _identifiers[lastAliveIndex] = oldIdNewVersion;
+        _idToIndex[lastAliveId.ShortId] = oldIndex;
         _idToIndex[entityId.ShortId] = default;
 
         checked
         {
             region.AliveCount--;
-        }
-
-        var lastAliveIndex = region.NextAliveIndex;
-        var lastAliveId = _indexToId[lastAliveIndex];
-        _indexToId[oldIndex] = _indexToId[lastAliveIndex];
-        _idToIndex[lastAliveId.ShortId] = oldIndex;
-    }
-
-    private Identifier Create(ref IdRegionData regionData, IdentifierTypes types)
-    {
-        var typeBits = (uint)types << Identifier.TypesBitOffset;
-
-        if (regionData.AliveCount < regionData.InitializedCount)
-        {
-            // Reuse dead identifiers
-            ref var id = ref _indexToId[regionData.NextAliveIndex];
-            id = (id & ~Identifier.TypesBitMask) | typeBits;
-
-            _idToIndex[id.ShortId] = regionData.NextAliveIndex;
-
-            checked
-            {
-                regionData.AliveCount++;
-            }
-
-            return id;
-        }
-        else
-        {
-            // New identifier needed
-            var id = new Identifier(regionData.NextInitializedIndex);
-            id |= typeBits;
-            _indexToId.Insert(id.ShortId, id);
-            _idToIndex[id.ShortId] = id.ShortId;
-
-            checked
-            {
-                regionData.AliveCount++;
-                regionData.InitializedCount++;
-            }
-
-            return id;
         }
     }
 

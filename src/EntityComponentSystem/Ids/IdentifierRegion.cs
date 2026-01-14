@@ -6,10 +6,13 @@
 public sealed class IdentifierRegion
 {
     /// <summary>
-    /// If specified, Minimum Id at which this region of identifiers must start.
+    /// If specified, Id at which this region of identifiers must start.
     /// If 0, will automatically be set to the first available Id upon reservation, as to avoid leaving gaps in entity Ids.
     /// Cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>.
     /// </summary>
+    /// <remarks>
+    /// Once set, cannot be modified.
+    /// </remarks>
     public uint Offset
     {
         get;
@@ -41,9 +44,9 @@ public sealed class IdentifierRegion
     public string? Name { get; init; }
 
     /// <summary>
-    /// Id at which the region ends, inclusive.
+    /// Id at which the region ends, inclusive. Invalid if <see cref="Offset"/> is 0.
     /// </summary>
-    public uint EndIdInclusive => checked(Offset + (Amount - 1));
+    private uint EndIdInclusive => Offset + (Amount - 1);
 
     /// <summary>
     /// Returns true if this region overlaps with the <paramref name="other"/>
@@ -51,6 +54,16 @@ public sealed class IdentifierRegion
     public bool OverlapsWith(IdentifierRegion other)
     {
         _ = other.ThrowIfNull();
+
+        if (Offset == 0)
+        {
+            return false;
+        }
+
+        if (other.Offset == 0)
+        {
+            return false;
+        }
 
         return Offset <= other.EndIdInclusive && EndIdInclusive >= other.Offset;
     }

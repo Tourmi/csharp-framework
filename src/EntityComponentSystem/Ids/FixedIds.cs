@@ -6,29 +6,51 @@
 public static class FixedIds
 {
     /// <summary>
-    /// Start of the reserved region for Ids. May be used in the future.
+    /// Region of reserved Ids for potential future use.
     /// </summary>
-    public const uint ReservedRegionStart = 0x1;
+    public static class Reserved
+    {
+        /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = 0x1;
+
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0xFF;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
+    }
 
     /// <summary>
-    /// Size of the reserved region of Ids. May be used in the future.
+    /// Ids that have a special meaning
     /// </summary>
-    public const ushort ReservedRegionSize = 0xFF;
+    public static class Special
+    {
+        /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = Reserved.RegionEnd;
 
-    /// <summary>
-    /// Start of the Id range containing Core entities needed for the ECS to work properly.
-    /// </summary>
-    public const uint CoreRegionStart = Relations.RegionStart + Relations.RegionSize;
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0x100;
 
-    /// <summary>
-    /// Size of the Id range of Core entities.
-    /// </summary>
-    public const ushort CoreRegionSize = 0x400;
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
 
-    /// <summary>
-    /// Singleton entity that stores the <see cref="EntityComponentSystem.World"/>
-    /// </summary>
-    public static readonly Identifier World = CoreRegionStart + 0;
+        /// <summary>
+        /// Special Id which when used as the target of a Relation Id, will match any target.
+        /// </summary>
+        public static readonly Identifier Wildcard = new Identifier(RegionStart + 0x00) | IdentifierTypes.Relation;
+    }
 
     /// <summary>
     /// Entity Ids of relation definitions.
@@ -36,14 +58,19 @@ public static class FixedIds
     public static class Relations
     {
         /// <summary>
-        /// Start of the region for relation definitions.
+        /// Start of the Id region.
         /// </summary>
-        public const uint RegionStart = ReservedRegionStart + ReservedRegionSize;
+        public const uint RegionStart = Special.RegionEnd;
 
         /// <summary>
-        /// Size of the region for relation definitions.
+        /// Size of the Id region.
         /// </summary>
-        public const ushort RegionSize = 0x100;
+        public const uint RegionSize = 0x100;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
 
         /// <inheritdoc cref="BuiltInRelationType.Undefined"/>
         public static readonly Identifier Undefined = RegionStart + (byte)BuiltInRelationType.Undefined;
@@ -65,48 +92,109 @@ public static class FixedIds
     }
 
     /// <summary>
-    /// Entity Ids of components.
+    /// Ids for special entities.
+    /// </summary>
+    public static class Entities
+    {
+        /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = Relations.RegionEnd;
+
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0x100;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
+
+        /// <summary>
+        /// Singleton entity that stores the <see cref="EntityComponentSystem.World"/>
+        /// </summary>
+        public static readonly Identifier World = RegionStart + 0x00;
+    }
+
+    /// <summary>
+    /// Entity Ids of built-in components.
     /// </summary>
     public static class ComponentIds
     {
         /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = Entities.RegionEnd;
+
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0x100;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
+
+        /// <summary>
         /// <see cref="Components.Metacomponents.Component"/>
         /// </summary>
-        public static readonly Identifier Component = CoreRegionStart + 1;
+        public static readonly Identifier Component = RegionStart + 0x00;
 
         /// <summary>
         /// <see cref="Components.Metacomponents.DataComponent"/>
         /// </summary>
-        public static readonly Identifier DataComponent = CoreRegionStart + 2;
+        public static readonly Identifier DataComponent = RegionStart + 0x01;
 
         /// <summary>
         /// <see cref="Components.Name"/>
         /// </summary>
-        public static readonly Identifier Name = CoreRegionStart + 3;
+        public static readonly Identifier Name = RegionStart + 0x02;
 
         /// <summary>
         /// <see cref="Components.Metacomponents.RelationDefinition"/>
         /// </summary>
-        public static readonly Identifier RelationDefinition = CoreRegionStart + 4;
+        public static readonly Identifier RelationDefinition = RegionStart + 0x03;
 
         /// <summary>
         /// <see cref="Components.Metacomponents.Singleton"/>
         /// </summary>
-        public static readonly Identifier Singleton = CoreRegionStart + 5;
+        public static readonly Identifier Singleton = RegionStart + 0x04;
 
         /// <summary>
         /// <see cref="Components.Tags.Prefab"/>
         /// </summary>
-        public static readonly Identifier Prefab = CoreRegionStart + 6;
+        public static readonly Identifier Prefab = RegionStart + 0x05;
 
         /// <summary>
         /// <see cref="Components.Schedule"/>
         /// </summary>
-        public static readonly Identifier Schedule = CoreRegionStart + 7;
+        public static readonly Identifier Schedule = RegionStart + 0x06;
 
         /// <summary>
         /// <see cref="Components.SystemComponent"/>
         /// </summary>
-        public static readonly Identifier SystemComponent = CoreRegionStart + 8;
+        public static readonly Identifier SystemComponent = RegionStart + 0x07;
     }
+
+    /// <summary>
+    /// Start of the region of Core Ids.
+    /// </summary>
+    public const uint CoreRegionStart = Reserved.RegionStart;
+
+    /// <summary>
+    /// End of the region of Core Ids, exclusive. New entities may be created starting from this Id.
+    /// </summary>
+    public const uint CoreRegionEnd = ComponentIds.RegionEnd;
+
+    /// <summary>
+    /// Size of the region of Core Ids.
+    /// </summary>
+    public const uint CoreRegionSize = CoreRegionEnd - CoreRegionStart;
+
+    /// <summary>
+    /// Reserved region of core ids.
+    /// </summary>
+    public static readonly IdentifierRegion CoreRegion = new() { Offset = CoreRegionStart, Amount = CoreRegionSize, Name = "Core" };
 }
