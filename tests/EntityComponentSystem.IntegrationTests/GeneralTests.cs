@@ -15,7 +15,7 @@ internal class GeneralTests
     private record struct SomeComponent(float SomeValue);
 
     [Test]
-    public void Test1()
+    public void CreateKillAndIdRecycling()
     {
         var ecs = World.Create();
 
@@ -34,7 +34,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void Test2()
+    public void GetSetAndAddComponent()
     {
         var ecs = World.Create();
 
@@ -79,7 +79,7 @@ internal class GeneralTests
 
         var parent = ecs.CreateEntity();
         var child = ecs.CreateEntity();
-        var relationId = new Identifier(new RelationComponentIdentifier(parent.Id.ShortId, BuiltInRelationType.ChildOf));
+        var relationId = new RelationComponentIdentifier(parent.Id.ShortId, BuiltInRelationType.ChildOf);
         child.Add(relationId);
 
         Assert.That(child.Has(relationId));
@@ -90,8 +90,8 @@ internal class GeneralTests
 
         dependent.Add(dependency1);
         dependent.Add(dependency2);
-        var relationId1 = new Identifier(new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.Requires));
-        var relationId2 = new Identifier(new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.Requires));
+        var relationId1 = new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.Requires);
+        var relationId2 = new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.Requires);
         ecs.Set(dependent, relationId1, new Requires(Requires.DependencyMissingBehavior.Add, Requires.DependencyRemovedBehavior.RemoveThis));
         ecs.Set(dependent, relationId2, new Requires(Requires.DependencyMissingBehavior.Panic, Requires.DependencyRemovedBehavior.Panic));
 
