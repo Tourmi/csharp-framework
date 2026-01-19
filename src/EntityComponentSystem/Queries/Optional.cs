@@ -8,7 +8,6 @@ namespace Tourmi.EntityComponentSystem.Queries;
 /// Query Parameter that contains a value to the component <typeparamref name="T"/>, 
 /// without it being required.
 /// </summary>
-[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Needed for terse queries.")]
 public readonly ref struct Optional<T>() : IQueryParam<Optional<T>>
 {
     private readonly T? _value;

@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
 namespace Tourmi.EntityComponentSystem.Queries;

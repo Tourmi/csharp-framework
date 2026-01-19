@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
 namespace Tourmi.EntityComponentSystem.Queries;
@@ -8,7 +7,6 @@ namespace Tourmi.EntityComponentSystem.Queries;
 /// Query Parameter that contains a reference to the component <typeparamref name="T"/>, 
 /// without it being required.
 /// </summary>
-[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Needed for terse queries.")]
 public readonly ref struct OptionalRef<T>() : IQueryParam<OptionalRef<T>>
 {
     private readonly ref T? _value;

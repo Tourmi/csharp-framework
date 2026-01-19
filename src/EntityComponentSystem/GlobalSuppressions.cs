@@ -15,3 +15,8 @@ using System.Diagnostics.CodeAnalysis;
     "CA1815:Override equals and operator equals on value types",
     Justification = "Structs rarely need to be compared this way.",
     Scope = "module")]
+[assembly: SuppressMessage(
+    "Naming",
+    "CA1716:Identifiers should not match keywords",
+    Justification = "Needed for terse queries.",
+    Scope = "module")]
