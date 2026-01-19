@@ -414,5 +414,12 @@ internal class GeneralTests
                 Assert.That(entity.Get<Speed>(), Is.EqualTo(new Speed(i, i)));
             });
         }
+
+        entityQuery.ForEach((Entity entity) => entity.Kill());
+
+        ecs.RunQueuedActions();
+
+        var queryRemainingEntities = entityQuery.GetEntityEntries().ToArray();
+        Assert.That(queryRemainingEntities, Is.Empty);
     }
 }

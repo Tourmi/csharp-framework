@@ -86,18 +86,12 @@ public sealed class EntityActions : IEntityActions, IQueryParam<EntityActions>
 
         var collection = GetComponentCollection<T>(component);
 
-        if (!_componentValueOverrideIndexes.TryGetValue((entity, component), out var index))
+        if (_componentValueOverrideIndexes.TryGetValue((entity, component), out var index))
         {
-            var value = World.Get<T>(entity, component);
-
-            index = collection.Count;
-            collection.AddEntry();
-
-            _componentValueOverrideIndexes[(entity, component)] = index;
-            collection[index] = value;
+            return ref collection[index];
         }
 
-        return ref collection[index];
+        return ref World.GetMutable<T>(entity, component);
     }
 
     /// <inheritdoc/>
@@ -139,6 +133,11 @@ public sealed class EntityActions : IEntityActions, IQueryParam<EntityActions>
         if (!DeferActions)
         {
             World.Add(entity, component);
+            return;
+        }
+
+        if (Has(entity, component))
+        {
             return;
         }
 
