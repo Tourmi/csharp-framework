@@ -7,7 +7,7 @@ namespace Tourmi.EntityComponentSystem;
 /// Entity Component System, stores, updates, and allows for creating or querying entities.
 /// </summary>
 [Singleton]
-public sealed class World
+public sealed class World : IEntityActions
 {
     private readonly Dictionary<Type, Identifier> _typesToEntityIds = new()
     {
@@ -28,6 +28,8 @@ public sealed class World
     private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
 
+    private readonly Lock _threadLock = new();
+
     /// <summary>
     /// The world's entity identifier collection.
     /// </summary>
@@ -37,6 +39,9 @@ public sealed class World
     /// The world's archetype collection.
     /// </summary>
     internal EntityArchetypeCollection Archetypes { get; } = new();
+
+    /// <inheritdoc/>
+    World IEntityActions.World => this;
 
     /// <summary>
     /// Creates and initializes a new ECS world
@@ -135,9 +140,7 @@ public sealed class World
         return new World(configuration);
     }
 
-    /// <summary>
-    /// Creates new entity in the world.
-    /// </summary>
+    /// <inheritdoc/>
     public Entity CreateEntity()
     {
         var id = Ids.Create();
@@ -147,26 +150,12 @@ public sealed class World
         return entity;
     }
 
-    /// <summary>
-    /// Returns whether the <paramref name="entity"/> is alive or not.
-    /// </summary>
+    /// <inheritdoc/>
     public bool IsAlive(Identifier entity) => Archetypes.IsAlive(entity);
 
-    /// <summary>
-    /// Returns whether the <paramref name="id"/> is valid or not.
-    /// If the <paramref name="id"/> is disabled, returns <see langword="false"/>.
-    /// If the <paramref name="id"/> is an entity, 
-    ///     returns <see langword="true"/> if it is alive.
-    /// If the <paramref name="id"/> is a relation between two entities,
-    ///     returns <see langword="true"/> if the target entity is alive, and the relation exists.
-    /// </summary>
+    /// <inheritdoc/>
     public bool IsValid(Identifier id)
     {
-        if (id.Types.HasFlag(IdentifierTypes.IsDisabled))
-        {
-            return false;
-        }
-
         if (!id.Types.HasFlag(IdentifierTypes.Relation))
         {
             return Archetypes.IsAlive(id);
@@ -180,7 +169,7 @@ public sealed class World
             return false;
         }
 
-        Identifier relationEntity = default;
+        Identifier relationEntity;
         if (relationIndex < _builtInRelationIds.Length)
         {
             relationEntity = _builtInRelationIds[relationIndex];
@@ -188,6 +177,7 @@ public sealed class World
         else
         {
             // TODO: Get user-defined relations as well
+            throw new NotImplementedException();
         }
 
         if (!Archetypes.IsAlive(relationEntity))
@@ -203,9 +193,7 @@ public sealed class World
         return Archetypes.IsAlive(relationId.Target);
     }
 
-    /// <summary>
-    /// Kills the given entity.
-    /// </summary>
+    /// <inheritdoc/>
     public void Kill(Identifier entity)
     {
         if (!Archetypes.IsAlive(entity))
@@ -235,9 +223,7 @@ public sealed class World
         Ids.Free(entity);
     }
 
-    /// <summary>
-    /// Returns true if the <paramref name="entity"/> has the given <paramref name="componentId"/>.
-    /// </summary>
+    /// <inheritdoc/>
     public bool Has(Identifier entity, Identifier componentId)
     {
         if (!Archetypes.IsAlive(entity) || !IsValid(componentId))
@@ -248,9 +234,7 @@ public sealed class World
         return Archetypes.HasComponent(entity, componentId);
     }
 
-    /// <summary>
-    /// Returns the <paramref name="component"/> value for the given <paramref name="entity"/>.
-    /// </summary>
+    /// <inheritdoc/>
     public T? Get<T>(Identifier entity, Identifier component)
     {
         if (!Archetypes.IsAlive(entity) || !IsValid(component))
@@ -266,12 +250,7 @@ public sealed class World
         return Archetypes.GetComponent<T>(entity, component);
     }
 
-    /// <summary>
-    /// Returns a mutable reference of the <paramref name="component"/> for the given <paramref name="entity"/>.
-    /// </summary>
-    /// <remarks>
-    /// Will throw if the entity or the component are not valid.
-    /// </remarks>
+    /// <inheritdoc/>
     public ref T? GetMutable<T>(Identifier entity, Identifier component)
     {
         if (!Archetypes.IsAlive(entity))
@@ -292,46 +271,7 @@ public sealed class World
         return ref Archetypes.GetRefComponent<T>(entity, component);
     }
 
-    /// <summary>
-    /// Ensures that the <paramref name="entity"/> has the given <paramref name="component"/>,
-    /// and returns its value.
-    /// </summary>
-    public T? Ensure<T>(Identifier entity, Identifier component)
-    {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
-        {
-            return default;
-        }
-
-        AddComponentIfMissing(entity, component);
-
-        return Archetypes.GetComponent<T>(entity, component);
-    }
-
-    /// <summary>
-    /// Ensures that the <paramref name="entity"/> has the given <paramref name="component"/>,
-    /// and returns a reference to its value.
-    /// </summary>
-    public ref T? EnsureMutable<T>(Identifier entity, Identifier component)
-    {
-        if (!Archetypes.IsAlive(entity))
-        {
-            EntityInvalidException.ThrowEntityInvalid(entity);
-        }
-
-        if (!IsValid(component))
-        {
-            EntityInvalidException.ThrowComponentInvalid(component);
-        }
-
-        AddComponentIfMissing(entity, component);
-
-        return ref Archetypes.GetRefComponent<T>(entity, component);
-    }
-
-    /// <summary>
-    /// Adds the given <paramref name="component"/> to the <paramref name="entity"/>, without any associated data.
-    /// </summary>
+    /// <inheritdoc/>
     public void Add(Identifier entity, Identifier component)
     {
         if (!Archetypes.IsAlive(entity) || !IsValid(component))
@@ -342,9 +282,7 @@ public sealed class World
         AddComponentIfMissing(entity, component);
     }
 
-    /// <summary>
-    /// Sets the <paramref name="component"/>'s value for the <paramref name="entity"/> to the given <paramref name="value"/>
-    /// </summary>
+    /// <inheritdoc/>
     public void Set<T>(Identifier entity, Identifier component, T value)
     {
         if (!Archetypes.IsAlive(entity) || !IsValid(component))
@@ -357,9 +295,7 @@ public sealed class World
         Archetypes.SetComponent(entity, component, value);
     }
 
-    /// <summary>
-    /// Removes the given <paramref name="component"/> from the <paramref name="entity"/>.
-    /// </summary>
+    /// <inheritdoc/>
     public void Remove(Identifier entity, Identifier component)
     {
         if (!Archetypes.IsAlive(entity) || !IsValid(component))
@@ -376,80 +312,77 @@ public sealed class World
     }
 
     /// <summary>
-    /// Returns the entity mapped to the given <typeparamref name="TComponent"/> type.
-    /// </summary>
-    public Entity GetComponentForType<TComponent>() => GetComponentForType(typeof(TComponent));
-
-    /// <summary>
     /// Returns the entity mapped to the given <paramref name="type"/>.
     /// </summary>
     public Entity GetComponentForType(Type type)
     {
-        if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
+        lock (_threadLock)
         {
-            Entity entity;
-            if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
+            if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
             {
-                var genericArguments = type.GetGenericArguments();
-                var relationDefinitionType = genericArguments[0];
-                var targetType = genericArguments[1];
+                Entity entity;
+                if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
+                {
+                    var genericArguments = type.GetGenericArguments();
+                    var relationDefinitionType = genericArguments[0];
+                    var targetType = genericArguments[1];
 
-                var relationDefinition = GetComponentForType(relationDefinitionType);
-                var targetEntity = GetComponentForType(targetType);
-                var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
-                var targetId = targetEntity.Id;
+                    var relationDefinition = GetComponentForType(relationDefinitionType);
+                    var targetEntity = GetComponentForType(targetType);
+                    var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
+                    var targetId = targetEntity.Id;
 
-                entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
-                entity = CreateEntityFixedId(entityId);
-                entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
-                AttachEntityToType(type, entityId);
+                    entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
+                    entity = CreateEntityFixedId(entityId);
+                    entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
+                    _typesToEntityIds[type] = entity;
 
-                // Remaining setup is based on the relation definition.
-                type = relationDefinitionType;
+                    // Remaining setup is based on the relation definition.
+                    type = relationDefinitionType;
+                }
+                else
+                {
+                    entity = CreateEntity();
+                    entityId = entity.Id;
+                    entity.Set(new Name(type.Name));
+                    _typesToEntityIds[type] = entityId;
+                }
+
+                entity.Add<Component>();
+
+                if (type.GetCustomAttribute<TagComponentAttribute>() is null)
+                {
+                    entity.Set(new DataComponent(type));
+                }
+
+                if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
+                {
+                    entity.Add<RelationDefinition>();
+                }
+
+                if (type.GetCustomAttribute<SingletonAttribute>() is not null)
+                {
+                    entity.Add<Singleton>();
+                    entity.Add(entity.Id);
+                }
             }
-            else
-            {
-                entity = CreateEntity();
-                entityId = entity.Id;
-                entity.Set(new Name(type.Name));
-                AttachEntityToType(type, entityId);
-            }
 
-            entity.Add<Component>();
-
-            if (type.GetCustomAttribute<TagComponentAttribute>() is null)
-            {
-                entity.Set(new DataComponent(type));
-            }
-
-            if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
-            {
-                entity.Add<RelationDefinition>();
-            }
-
-            if (type.GetCustomAttribute<SingletonAttribute>() is not null)
-            {
-                entity.Add<Singleton>();
-                entity.Add(entity.Id);
-            }
+            return new(entityId, this);
         }
-
-        return new(entityId, this);
     }
-
-    /// <summary>
-    /// Attaches an existing entity to a type, 
-    /// such as when the type <typeparamref name="T"/> is requested, 
-    /// the given <paramref name="entity"/> will be filled in.
-    /// </summary>
-    public void AttachEntityToType<T>(Identifier entity) => AttachEntityToType(typeof(T), entity);
 
     /// <summary>
     /// Attaches an existing entity to a type,
     /// such as when the <paramref name="type"/> is requested,
     /// the given <paramref name="entity"/> will be filled in.
     /// </summary>
-    public void AttachEntityToType(Type type, Identifier entity) => _typesToEntityIds[type] = entity;
+    public void AttachEntityToType(Type type, Identifier entity)
+    {
+        lock (_threadLock)
+        {
+            _typesToEntityIds[type] = entity;
+        }
+    }
 
     /// <summary>
     /// Returns the cached query for the given type.

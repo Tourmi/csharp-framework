@@ -3,7 +3,7 @@
 /// <summary>
 /// Hinted entity representing a prefab that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
-public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<PrefabEntity>, IQueryParam<PrefabEntity>
+public readonly ref struct PrefabEntity(Identifier id, IEntityActions? entityActions) : IEntity<PrefabEntity>, IQueryParam<PrefabEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -11,15 +11,16 @@ public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<P
     [Obsolete("This constructor should never be used.")]
     public PrefabEntity() : this(default, default) { }
 
-    internal PrefabEntity(Entity entity) : this(entity.Id, entity.World) { }
+    internal PrefabEntity(Entity entity) : this(entity.Id, entity.Actions) { }
 
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
-    internal World? World { get; } = world;
+    /// <inheritdoc cref="IEntity.Actions"/>
+    internal IEntityActions? Actions { get; } = entityActions;
 
     /// <inheritdoc/>
-    World? IEntity.World => World;
+    IEntityActions? IEntity.Actions => Actions;
 
     /// <inheritdoc/>
     public static implicit operator Identifier(PrefabEntity entity) => entity.Id;
@@ -27,7 +28,7 @@ public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<P
     /// <summary>
     /// Returns the non-hinted entity implicitely
     /// </summary>
-    public static implicit operator Entity(PrefabEntity entity) => new(entity.Id, entity.World);
+    public static implicit operator Entity(PrefabEntity entity) => new(entity.Id, entity.Actions);
 
     /// <summary>
     /// Explicitely casts the entity to a prefab entity.

@@ -73,23 +73,6 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestEnsure()
-    {
-        var ecs = World.Create();
-
-        var entity = ecs.CreateEntity();
-        ref var name = ref entity.EnsureMutable<Name>();
-
-        Assert.That(entity.Has<Name>());
-
-        name = new Name("SomeName");
-        Assert.That(entity.Get<Name>().Value, Is.EqualTo("SomeName"));
-
-        var position = entity.Ensure<Position>();
-        Assert.That(position, Is.Default);
-    }
-
-    [Test]
     public void TestRelation()
     {
         var ecs = World.Create();
@@ -143,14 +126,16 @@ internal class GeneralTests
         var ecs = World.Create();
 
         var entity = ecs.CreateEntity();
-        ref var name = ref entity.EnsureMutable<Name>();
+        entity.Add<Name>();
+        ref var name = ref entity.GetMutable<Name>();
         name = new("SomeName");
 
         using var query = Query.FromQueryParam<ParamGroup<Name, Position>>(ecs);
 
         Assert.That(query.GetEntityIds(), Has.None.EqualTo(entity.Id));
 
-        ref var position = ref entity.EnsureMutable<Position>();
+        entity.Add<Position>();
+        ref var position = ref entity.GetMutable<Position>();
         position = new Position(1, 2);
 
         Assert.That(query.GetEntityIds(), Has.One.EqualTo(entity.Id));

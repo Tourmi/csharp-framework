@@ -8,7 +8,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(EntityDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>, IEquatable<Entity>, IQueryParam<Entity>
+public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) : IEntity<Entity>, IEquatable<Entity>, IQueryParam<Entity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -19,10 +19,11 @@ public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>
     /// <inheritdoc/>
     public Identifier Id { get; } = id;
 
-    internal World? World { get; } = world;
+    /// <inheritdoc cref="IEntity.Actions"/>
+    internal IEntityActions? Actions { get; } = entityActions;
 
     /// <inheritdoc/>
-    World? IEntity.World => World;
+    IEntityActions? IEntity.Actions => Actions;
 
     private EntityDebugView DebugView => new(this);
 
@@ -51,9 +52,9 @@ public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>
     internal class EntityDebugView(Entity entity)
     {
         private readonly Identifier _id = entity.Id;
-        private readonly World? _world = entity.World;
+        private readonly IEntityActions? _entityActions = entity.Actions;
 
-        private Entity Entity => new(_id, _world);
+        private Entity Entity => new(_id, _entityActions);
 
         public Identifier Id => _id;
 
@@ -61,14 +62,14 @@ public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>
 
         public string Name => Entity.Get<Name>().Value;
 
-        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype.Components.ToArray().Select(c => new ComponentDebugView(new(c, Entity.World))).ToArray();
+        public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype.Components.ToArray().Select(c => new ComponentDebugView(new(c, Entity.Actions))).ToArray();
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public (object? Value, ComponentDebugView Component)[]? ComponentValues => ArchetypeEntry?.Archetype.Components
             .ToArray()
-            .Select(c => (ArchetypeEntry!.Value.GetDebugValue(c), new ComponentDebugView(new(c, Entity.World))))
+            .Select(c => (ArchetypeEntry!.Value.GetDebugValue(c), new ComponentDebugView(new(c, Entity.Actions))))
             .ToArray();
 
-        private ArchetypeEntityEntry? ArchetypeEntry => Entity.World?.Archetypes.GetArchetypeEntry(Entity);
+        private ArchetypeEntityEntry? ArchetypeEntry => Entity.Actions?.World.Archetypes.GetArchetypeEntry(Entity);
     }
 }

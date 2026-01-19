@@ -7,7 +7,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(ComponentDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntity<ComponentEntity>, IQueryParam<ComponentEntity>
+public readonly ref struct ComponentEntity(Identifier id, IEntityActions? world) : IEntity<ComponentEntity>, IQueryParam<ComponentEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -15,16 +15,16 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
     [Obsolete("This constructor should never be used.")]
     public ComponentEntity() : this(default, default) { }
 
-    internal ComponentEntity(Entity entity) : this(entity.Id, entity.World) { }
+    internal ComponentEntity(Entity entity) : this(entity.Id, entity.Actions) { }
 
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
-    /// <inheritdoc/>
-    internal World? World { get; } = world;
+    /// <inheritdoc cref="IEntity.Actions"/>
+    internal IEntityActions? Actions { get; } = world;
 
     /// <inheritdoc/>
-    World? IEntity.World => World;
+    IEntityActions? IEntity.Actions => Actions;
 
     private ComponentDebugView DebugView => new(this);
 
@@ -34,12 +34,12 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
     /// <summary>
     /// Returns the non-hinted entity implicitely
     /// </summary>
-    public static implicit operator Entity(ComponentEntity entity) => new(entity.Id, entity.World);
+    public static implicit operator Entity(ComponentEntity entity) => new(entity.Id, entity.Actions);
 
     /// <summary>
     /// Explicitely casts the entity to a component entity.
     /// </summary>
-    public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.World);
+    public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.Actions);
 
     static ComponentEntity IQueryParam<ComponentEntity>.CreateFrom(QueryParamEntityInfo info)
         => new(info.Archetype.Entities[info.EntityIndex], info.World);
@@ -50,9 +50,9 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
     internal class ComponentDebugView(ComponentEntity entity)
     {
         private readonly Identifier _id = entity.Id;
-        private readonly World? _world = entity.World;
+        private readonly IEntityActions? _entityActions = entity.Actions;
 
-        private Entity Entity => new(_id, _world);
+        private Entity Entity => new(_id, _entityActions);
 
         public Identifier Id => _id;
 
@@ -61,14 +61,14 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
         public Type? DataType => Entity.Get<DataComponent>().DataType;
 
         public ComponentDebugView[]? Components => ArchetypeEntry?.Archetype?.Components.ToArray()
-            .Select(c => new ComponentDebugView(new(c, Entity.World)))
+            .Select(c => new ComponentDebugView(new(c, Entity.Actions)))
             .ToArray();
 
         public string[]? ComponentValues => ArchetypeEntry?.Archetype.Components.ToArray()
-            .Select(c => (Component: new ComponentDebugView(new(c, Entity.World)), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
+            .Select(c => (Component: new ComponentDebugView(new(c, Entity.Actions)), Value: ArchetypeEntry!.Value.GetDebugValue(c)))
             .Select(t => $"Component: {t.Component}, Value: {t.Value ?? "NULL"}")
             .ToArray();
 
-        private ArchetypeEntityEntry? ArchetypeEntry => Entity.World?.Archetypes.GetArchetypeEntry(Entity);
+        private ArchetypeEntityEntry? ArchetypeEntry => Entity.Actions?.World.Archetypes.GetArchetypeEntry(Entity);
     }
 }

@@ -3,7 +3,7 @@
 /// <summary>
 /// An entity representing a system.
 /// </summary>
-public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<SystemEntity>, IQueryParam<SystemEntity>
+public readonly ref struct SystemEntity(Identifier id, IEntityActions? entityActions) : IEntity<SystemEntity>, IQueryParam<SystemEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -11,15 +11,16 @@ public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<S
     [Obsolete("This constructor should never be used.")]
     public SystemEntity() : this(default, default) { }
 
-    internal SystemEntity(Entity entity) : this(entity.Id, entity.World) { }
+    internal SystemEntity(Entity entity) : this(entity.Id, entity.Actions) { }
 
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
-    internal World? World { get; } = world;
+    /// <inheritdoc cref="IEntity.Actions"/>
+    internal IEntityActions? Actions { get; } = entityActions;
 
     /// <inheritdoc/>
-    World? IEntity.World => World;
+    IEntityActions? IEntity.Actions => Actions;
 
     /// <inheritdoc/>
     public static implicit operator Identifier(SystemEntity entity) => entity.Id;
@@ -27,7 +28,7 @@ public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<S
     /// <summary>
     /// Returns the non-hinted entity implicitely
     /// </summary>
-    public static implicit operator Entity(SystemEntity entity) => new(entity.Id, entity.World);
+    public static implicit operator Entity(SystemEntity entity) => new(entity.Id, entity.Actions);
 
     /// <summary>
     /// Explicitely casts the entity to a system entity.
@@ -37,5 +38,5 @@ public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<S
     static SystemEntity IQueryParam<SystemEntity>.CreateFrom(QueryParamEntityInfo info)
         => new(info.Archetype.Entities[info.EntityIndex], info.World);
 
-    static void IQueryParam<SystemEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Components.SystemComponent>();
+    static void IQueryParam<SystemEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<SystemComponent>();
 }

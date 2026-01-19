@@ -25,7 +25,7 @@ public static class EntityExtensions
         /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.
         /// Does nothing if the entity already has the component.
         /// </summary>
-        public void Add<TComponent>() => entity.World?.Add<TComponent>(entity);
+        public void Add<TComponent>() => entity.Actions?.Add<TComponent>(entity);
 
         /// <summary>
         /// Adds the component with <paramref name="componentId"/> to the entity.
@@ -34,29 +34,29 @@ public static class EntityExtensions
         /// <remarks>
         /// This overload should be used if the component does not have a value. ie: for flags or states
         /// </remarks>
-        public void Add(Identifier componentId) => entity.World?.Add(entity, componentId);
+        public void Add(Identifier componentId) => entity.Actions?.Add(entity, componentId);
 
         /// <summary>
         /// Removes the <typeparamref name="TComponent"/> from the entity.
         /// </summary>
-        public void Remove<TComponent>() => entity.World?.Remove<TComponent>(entity);
+        public void Remove<TComponent>() => entity.Actions?.Remove<TComponent>(entity);
 
         /// <summary>
         /// Removes the component with <paramref name="componentId"/> from the entity.
         /// </summary>
-        public void Remove(Identifier componentId) => entity.World?.Remove(entity, componentId);
+        public void Remove(Identifier componentId) => entity.Actions?.Remove(entity, componentId);
 
         /// <summary>
         /// Returns a readonly copy of the <typeparamref name="TComponent"/> from the entity.
         /// Will throw if the entity does not contain the <typeparamref name="TComponent"/>.
         /// </summary>
-        public TComponent? Get<TComponent>() => entity.World is null ? default : entity.World.Get<TComponent>(entity);
+        public TComponent? Get<TComponent>() => entity.Actions is null ? default : entity.Actions.Get<TComponent>(entity);
 
         /// <summary>
         /// Returns a readonly copy of the <typeparamref name="TComponent"/> with <paramref name="componentId"/> from the <paramref name="entity"/>.
         /// Will throw if the entity does not contain a component with the given <paramref name="componentId"/>.
         /// </summary>
-        public TComponent? Get<TComponent>(Identifier componentId) => entity.World is null ? default : entity.World.Get<TComponent>(entity, componentId);
+        public TComponent? Get<TComponent>(Identifier componentId) => entity.Actions is null ? default : entity.Actions.Get<TComponent>(entity, componentId);
 
         /// <summary>
         /// Returns the <typeparamref name="TComponent"/> from the entity.
@@ -64,12 +64,12 @@ public static class EntityExtensions
         /// </summary>
         public ref TComponent? GetMutable<TComponent>()
         {
-            if (entity.World is null)
+            if (entity.Actions is null)
             {
                 EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
-            return ref entity.World.GetMutable<TComponent>(entity);
+            return ref entity.Actions.GetMutable<TComponent>(entity);
         }
 
         /// <summary>
@@ -78,82 +78,42 @@ public static class EntityExtensions
         /// </summary>
         public ref TComponent? GetMutable<TComponent>(Identifier componentId)
         {
-            if (entity.World is null)
+            if (entity.Actions is null)
             {
                 EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
-            return ref entity.World.GetMutable<TComponent>(entity, componentId);
-        }
-
-        /// <summary>
-        /// Adds the <typeparamref name="TComponent"/> to the entity if it doesn't contain it,
-        /// then returns the value of the component.
-        /// </summary>
-        public TComponent? Ensure<TComponent>() => entity.World is null ? default : entity.World.Ensure<TComponent>(entity);
-
-        /// <summary>
-        /// Adds the <typeparamref name="TComponent"/> with <paramref name="componentId"/> to the entity if it doesn't contain it,
-        /// then returns the value of the component.
-        /// </summary>
-        public TComponent? Ensure<TComponent>(Identifier componentId) => entity.World is null ? default : entity.World.Ensure<TComponent>(entity, componentId);
-
-        /// <summary>
-        /// Adds the <typeparamref name="TComponent"/> to the entity if it doesn't contain it,
-        /// then returns the component.
-        /// </summary>
-        public ref TComponent? EnsureMutable<TComponent>()
-        {
-            if (entity.World is null)
-            {
-                EntityInvalidException.ThrowEntityUninitialized(entity);
-            }
-
-            return ref entity.World.EnsureMutable<TComponent>(entity);
-        }
-
-        /// <summary>
-        /// Adds the <typeparamref name="TComponent"/> with <paramref name="componentId"/> to the entity if it doesn't contain it,
-        /// then returns the component.
-        /// </summary>
-        public ref TComponent? EnsureMutable<TComponent>(Identifier componentId)
-        {
-            if (entity.World is null)
-            {
-                EntityInvalidException.ThrowEntityUninitialized(entity);
-            }
-
-            return ref entity.World.EnsureMutable<TComponent>(entity, componentId);
+            return ref entity.Actions.GetMutable<TComponent>(entity, componentId);
         }
 
         /// <summary>
         /// Returns <see langword="true"/> if the entity contains the given component.
         /// </summary>
-        public bool Has<TComponent>() => entity.World?.Has<TComponent>(entity) ?? false;
+        public bool Has<TComponent>() => entity.Actions?.Has<TComponent>(entity) ?? false;
 
         /// <summary>
         /// Returns <see langword="true"/> if the entity contains the given component with <paramref name="componentId"/>.
         /// </summary>
-        public bool Has(Identifier componentId) => entity.World?.Has(entity, componentId) ?? false;
+        public bool Has(Identifier componentId) => entity.Actions?.Has(entity, componentId) ?? false;
 
         /// <summary>
         /// Sets the component for the entity, adding it if the entity did not contain it.
         /// </summary>
-        public void Set<TComponent>(TComponent component) => entity.World?.Set(entity, component);
+        public void Set<TComponent>(TComponent component) => entity.Actions?.Set(entity, component);
 
         /// <summary>
         /// Sets the component with <paramref name="componentId"/> for the entity, adding it if the entity did not contain it.
         /// </summary>
-        public void Set<TComponent>(Identifier componentId, TComponent component) => entity.World?.Set(entity, componentId, component);
+        public void Set<TComponent>(Identifier componentId, TComponent component) => entity.Actions?.Set(entity, componentId, component);
 
         /// <summary>
         /// Returns <see langword="true"/> if the entity is alive.
         /// </summary>
-        public bool IsAlive() => entity.World?.IsAlive(entity) ?? false;
+        public bool IsAlive() => entity.Actions?.IsAlive(entity) ?? false;
 
         /// <summary>
         /// Kills the entity, deleting its components.
         /// </summary>
-        public void Kill() => entity.World?.Kill(entity);
+        public void Kill() => entity.Actions?.Kill(entity);
     }
 }
