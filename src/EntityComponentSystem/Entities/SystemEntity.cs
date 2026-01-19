@@ -5,6 +5,14 @@
 /// </summary>
 public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<SystemEntity>, IQueryParam<SystemEntity>
 {
+    /// <summary>
+    /// Constructs an invalid entity.
+    /// </summary>
+    [Obsolete("This constructor should never be used.")]
+    public SystemEntity() : this(default, default) { }
+
+    internal SystemEntity(Entity entity) : this(entity.Id, entity.World) { }
+
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
@@ -12,13 +20,6 @@ public readonly ref struct SystemEntity(Identifier id, World? world) : IEntity<S
 
     /// <inheritdoc/>
     World? IEntity.World => World;
-
-    /// <summary>
-    /// Constructs an invalid entity.
-    /// </summary>
-    public SystemEntity() : this(default, default) { }
-
-    internal SystemEntity(Entity entity) : this(entity.Id, entity.World) { }
 
     /// <inheritdoc/>
     public static implicit operator Identifier(SystemEntity entity) => entity.Id;

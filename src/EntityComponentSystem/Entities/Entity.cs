@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Queries;
 using static Tourmi.EntityComponentSystem.Entities.ComponentEntity;
 
 namespace Tourmi.EntityComponentSystem.Entities;
@@ -12,6 +10,12 @@ namespace Tourmi.EntityComponentSystem.Entities;
 [DebuggerDisplay("{DebugView,nq}")]
 public readonly ref struct Entity(Identifier id, World? world) : IEntity<Entity>, IEquatable<Entity>, IQueryParam<Entity>
 {
+    /// <summary>
+    /// Constructs an invalid entity.
+    /// </summary>
+    [Obsolete("This constructor should never be used.")]
+    public Entity() : this(default, default) { }
+
     /// <inheritdoc/>
     public Identifier Id { get; } = id;
 

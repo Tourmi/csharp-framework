@@ -12,15 +12,14 @@ public static class WorldSystemExtensions
     extension(World world)
     {
         /// <summary>
-        /// Creates a new system entity with the given action.
+        /// Creates a new system entity that is activated on each Tick, with the given <paramref name="action"/>.
         /// </summary>
-        public SystemEntity CreateSystem(Action singleRunAction)
+        public SystemEntity CreateTickSystem(Action action)
         {
-            (var scheduleId, var defaultSchedule) = world.GetCachedQueryFor<ParamGroup<Default<Schedule>>>().First<ParamGroup<Identifier, Schedule>>();
-
             var systemEntity = world.CreateEntity();
-            systemEntity.Set<SystemComponent>(new(singleRunAction));
-            systemEntity.Add(new RelationComponentIdentifier(scheduleId.ShortId, BuiltInRelationType.ChildOf).Value);
+            systemEntity.Set<SystemComponent>(new(action));
+            systemEntity.Add<Relation<SubscribedTo, Events.Tick>>();
+
             return (SystemEntity)systemEntity;
         }
 
@@ -34,7 +33,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<T1>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -48,7 +47,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -64,7 +63,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -82,7 +81,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -102,7 +101,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -124,7 +123,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -148,7 +147,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -174,7 +173,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -186,7 +185,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
 
@@ -202,7 +201,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -219,7 +218,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -238,7 +237,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -259,7 +258,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -282,7 +281,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -307,7 +306,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6, T7>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
 
         /// <inheritdoc cref="AddSystem{T1}(World, QueryParamAction{T1})"/>
@@ -334,7 +333,7 @@ public static class WorldSystemExtensions
 
             var query = world.GetCachedQueryFor<ParamGroup<T1, T2, T3, T4, T5, T6, T7, T8>>();
 
-            return world.CreateSystem(() => query.ForEach(system));
+            return world.CreateTickSystem(() => query.ForEach(system));
         }
     }
 }

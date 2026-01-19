@@ -1,12 +1,18 @@
-﻿using Tourmi.EntityComponentSystem.Queries;
-
-namespace Tourmi.EntityComponentSystem.Entities;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Hinted entity representing a prefab that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
 public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<PrefabEntity>, IQueryParam<PrefabEntity>
 {
+    /// <summary>
+    /// Constructs an invalid entity.
+    /// </summary>
+    [Obsolete("This constructor should never be used.")]
+    public PrefabEntity() : this(default, default) { }
+
+    internal PrefabEntity(Entity entity) : this(entity.Id, entity.World) { }
+
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
@@ -14,13 +20,6 @@ public readonly ref struct PrefabEntity(Identifier id, World? world) : IEntity<P
 
     /// <inheritdoc/>
     World? IEntity.World => World;
-
-    /// <summary>
-    /// Constructs an invalid entity.
-    /// </summary>
-    public PrefabEntity() : this(default, default) { }
-
-    internal PrefabEntity(Entity entity) : this(entity.Id, entity.World) { }
 
     /// <inheritdoc/>
     public static implicit operator Identifier(PrefabEntity entity) => entity.Id;

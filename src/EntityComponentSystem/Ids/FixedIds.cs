@@ -89,6 +89,9 @@ public static class FixedIds
 
         /// <inheritdoc cref="BuiltInRelationType.DependsOn"/>
         public static readonly Identifier DependsOn = RegionStart + (byte)BuiltInRelationType.DependsOn;
+
+        /// <inheritdoc cref="BuiltInRelationType.SubscribedTo"/>
+        public static readonly Identifier SubscribedTo = RegionStart + (byte)BuiltInRelationType.SubscribedTo;
     }
 
     /// <summary>
@@ -179,6 +182,32 @@ public static class FixedIds
     }
 
     /// <summary>
+    /// Entity Ids of built-in events.
+    /// </summary>
+    public static class Events
+    {
+        /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = ComponentIds.RegionEnd;
+
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0x100;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
+
+        /// <summary>
+        /// The default Tick event, which new systems are usually subscribed to.
+        /// </summary>
+        public static readonly Identifier Tick = RegionStart + 0x00;
+    }
+
+    /// <summary>
     /// Start of the region of Core Ids.
     /// </summary>
     public const uint CoreRegionStart = Reserved.RegionStart;
@@ -186,7 +215,7 @@ public static class FixedIds
     /// <summary>
     /// End of the region of Core Ids, exclusive. New entities may be created starting from this Id.
     /// </summary>
-    public const uint CoreRegionEnd = ComponentIds.RegionEnd;
+    public const uint CoreRegionEnd = Events.RegionEnd;
 
     /// <summary>
     /// Size of the region of Core Ids.

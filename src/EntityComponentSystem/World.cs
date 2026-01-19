@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+using Tourmi.EntityComponentSystem.Exceptions;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -9,18 +9,21 @@ namespace Tourmi.EntityComponentSystem;
 [Singleton]
 public sealed class World
 {
-    private readonly Dictionary<Type, Identifier> _componentTypesToIdentifier = new()
+    private readonly Dictionary<Type, Identifier> _typesToEntityIds = new()
     {
         [typeof(Component)] = FixedIds.ComponentIds.Component,
         [typeof(DataComponent)] = FixedIds.ComponentIds.DataComponent,
         [typeof(Name)] = FixedIds.ComponentIds.Name,
         [typeof(SystemComponent)] = FixedIds.ComponentIds.SystemComponent,
         [typeof(Schedule)] = FixedIds.ComponentIds.Schedule,
+        [typeof(RelationDefinition)] = FixedIds.ComponentIds.RelationDefinition,
         [typeof(ChildOf)] = FixedIds.Relations.ChildOf,
         [typeof(IsA)] = FixedIds.Relations.IsA,
         [typeof(InstanceOf)] = FixedIds.Relations.InstanceOf,
         [typeof(Requires)] = FixedIds.Relations.Requires,
         [typeof(DependsOn)] = FixedIds.Relations.DependsOn,
+        [typeof(SubscribedTo)] = FixedIds.Relations.SubscribedTo,
+        [typeof(Events.Tick)] = FixedIds.Events.Tick,
     };
     private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
@@ -84,17 +87,23 @@ public sealed class World
 
         void InitializeRelations()
         {
-            for (uint i = 0; i < _builtInRelationIds.Length; i++)
+            var relationDefinition = CreateEntityFixedId(FixedIds.ComponentIds.RelationDefinition);
+            this.Add<Component>(relationDefinition);
+            this.Set<Name>(relationDefinition, new(nameof(RelationDefinition)));
+            this.Set<DataComponent>(relationDefinition, new(typeof(RelationDefinition)));
+
+            for (ushort i = 0; i < _builtInRelationIds.Length; i++)
             {
                 if (!Enum.IsDefined((BuiltInRelationType)(i)))
                 {
                     continue;
                 }
 
-                var relationDefinition = CreateEntityFixedId(new Identifier(FixedIds.Relations.RegionStart + i) | IdentifierTypes.Relation);
-                this.Add<Component>(relationDefinition);
-                this.Set<Name>(relationDefinition, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
-                _builtInRelationIds[i] = relationDefinition;
+                var relation = CreateEntityFixedId(new Identifier(FixedIds.Relations.RegionStart + i) | IdentifierTypes.Relation);
+                this.Add<Component>(relation);
+                this.Set<Name>(relation, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
+                this.Set<RelationDefinition>(relation, new(i));
+                _builtInRelationIds[i] = relation;
             }
 
             // For now, configure relations manually.
@@ -112,10 +121,6 @@ public sealed class World
             this.Add<Component>(scheduleComponent);
             this.Set<DataComponent>(scheduleComponent, new(typeof(Schedule)));
             this.Set<Name>(scheduleComponent, new(nameof(Schedule)));
-
-            var defaultSchedule = CreateEntity();
-            defaultSchedule.Set<Schedule>(new(TimeSpan.Zero, 1));
-            defaultSchedule.Add<Default<Schedule>>();
         }
     }
 
@@ -203,14 +208,31 @@ public sealed class World
     /// </summary>
     public void Kill(Identifier entity)
     {
-        if (Archetypes.IsAlive(entity))
+        if (!Archetypes.IsAlive(entity))
         {
-            Archetypes.Kill(entity);
-            if (Ids.IsInUse(entity))
+            return;
+        }
+
+        // Remove entity from entities (if it was used as a component)
+        foreach (var archetype in Archetypes.ComponentsToArchetypes[entity])
+        {
+            while (archetype.EntityCount > 0)
             {
-                Ids.Free(entity);
+                Remove(archetype.Entities[0], entity);
             }
         }
+
+        // TODO: Kill all relations where Target == entity
+        // TODO: Kill all relations where RelationType == entity
+
+        Archetypes.Kill(entity);
+
+        if (!Ids.IsInUse(entity))
+        {
+            return;
+        }
+
+        Ids.Free(entity);
     }
 
     /// <summary>
@@ -252,14 +274,19 @@ public sealed class World
     /// </remarks>
     public ref T? GetMutable<T>(Identifier entity, Identifier component)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity))
         {
-            return ref StrongBox<T?>.Default.Value;
+            EntityInvalidException.ThrowEntityInvalid(entity);
+        }
+
+        if (!IsValid(component))
+        {
+            EntityInvalidException.ThrowComponentInvalid(component);
         }
 
         if (!Archetypes.HasComponent(entity, component))
         {
-            return ref StrongBox<T?>.Default.Value;
+            EntityInvalidException.ThrowMissingComponent(entity, component);
         }
 
         return ref Archetypes.GetRefComponent<T>(entity, component);
@@ -287,9 +314,14 @@ public sealed class World
     /// </summary>
     public ref T? EnsureMutable<T>(Identifier entity, Identifier component)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity))
         {
-            return ref StrongBox<T?>.Default.Value;
+            EntityInvalidException.ThrowEntityInvalid(entity);
+        }
+
+        if (!IsValid(component))
+        {
+            EntityInvalidException.ThrowComponentInvalid(component);
         }
 
         AddComponentIfMissing(entity, component);
@@ -344,43 +376,80 @@ public sealed class World
     }
 
     /// <summary>
-    /// Returns the entity representing the component of the given <typeparamref name="TComponent"/> type.
+    /// Returns the entity mapped to the given <typeparamref name="TComponent"/> type.
     /// </summary>
-    public ComponentEntity GetComponentForType<TComponent>() => GetComponentForType(typeof(TComponent));
+    public Entity GetComponentForType<TComponent>() => GetComponentForType(typeof(TComponent));
 
     /// <summary>
-    /// Returns the entity representing the component of the given <paramref name="type"/>.
+    /// Returns the entity mapped to the given <paramref name="type"/>.
     /// </summary>
-    public ComponentEntity GetComponentForType(Type type)
+    public Entity GetComponentForType(Type type)
     {
-        if (!_componentTypesToIdentifier.TryGetValue(type, out var componentId) || !IsAlive(componentId))
+        if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
         {
-            var component = CreateEntity();
-            component.Add<Component>();
-            component.Set(new Name(type.Name));
+            Entity entity;
+            if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
+            {
+                var genericArguments = type.GetGenericArguments();
+                var relationDefinitionType = genericArguments[0];
+                var targetType = genericArguments[1];
+
+                var relationDefinition = GetComponentForType(relationDefinitionType);
+                var targetEntity = GetComponentForType(targetType);
+                var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
+                var targetId = targetEntity.Id;
+
+                entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
+                entity = CreateEntityFixedId(entityId);
+                entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
+                AttachEntityToType(type, entityId);
+
+                // Remaining setup is based on the relation definition.
+                type = relationDefinitionType;
+            }
+            else
+            {
+                entity = CreateEntity();
+                entityId = entity.Id;
+                entity.Set(new Name(type.Name));
+                AttachEntityToType(type, entityId);
+            }
+
+            entity.Add<Component>();
 
             if (type.GetCustomAttribute<TagComponentAttribute>() is null)
             {
-                component.Set(new DataComponent(type));
+                entity.Set(new DataComponent(type));
             }
 
             if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
             {
-                component.Add<RelationDefinition>();
+                entity.Add<RelationDefinition>();
             }
 
             if (type.GetCustomAttribute<SingletonAttribute>() is not null)
             {
-                component.Add<Singleton>();
-                component.Add(component.Id);
+                entity.Add<Singleton>();
+                entity.Add(entity.Id);
             }
-
-            componentId = component.Id;
-            _componentTypesToIdentifier[type] = componentId;
         }
 
-        return new(componentId, this);
+        return new(entityId, this);
     }
+
+    /// <summary>
+    /// Attaches an existing entity to a type, 
+    /// such as when the type <typeparamref name="T"/> is requested, 
+    /// the given <paramref name="entity"/> will be filled in.
+    /// </summary>
+    public void AttachEntityToType<T>(Identifier entity) => AttachEntityToType(typeof(T), entity);
+
+    /// <summary>
+    /// Attaches an existing entity to a type,
+    /// such as when the <paramref name="type"/> is requested,
+    /// the given <paramref name="entity"/> will be filled in.
+    /// </summary>
+    public void AttachEntityToType(Type type, Identifier entity) => _typesToEntityIds[type] = entity;
 
     /// <summary>
     /// Returns the cached query for the given type.
@@ -420,17 +489,18 @@ public sealed class World
             else
             {
                 // TODO: Also process user-created relations.
+                throw new NotImplementedException();
             }
         }
 
-        var dataType = Get<DataComponent>(datatypeId, GetComponentForType<DataComponent>());
+        var dataType = this.Get<DataComponent>(datatypeId);
         Archetypes.AddComponent(entity, component, dataType.DataType);
     }
 
-    private Identifier CreateEntityFixedId(Identifier id)
+    private Entity CreateEntityFixedId(Identifier id)
     {
         Archetypes.Create(id);
-        return id;
+        return new(id, this);
     }
 
     private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIds[(int)relationType];

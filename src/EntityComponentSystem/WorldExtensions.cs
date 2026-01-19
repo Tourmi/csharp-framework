@@ -8,26 +8,34 @@ public static class WorldExtensions
     extension(World world)
     {
         /// <summary>
-        /// Ticks the world's schedules, running any systems due for execution.
+        /// Sends out the Tick event, allowing schedules and systems subscribed to it to run.
         /// </summary>
-        public void Tick()
+        public void Tick() => world.GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, Events.Tick>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
         {
-            ref var defaultSchedule = ref world.GetCachedQueryFor<ParamGroup<Default<Schedule>, Ref<Schedule>>>().First<Ref<Schedule>>().Reference;
-
-            // TODO: Check DeltaTime, and compare with current schedule time.
-
-            defaultSchedule.CurrentTick++;
-            if (defaultSchedule.CurrentTick >= defaultSchedule.TickRate)
+            // If entity has
+            if (scheduleRef.HasValue)
             {
-                // TODO: Tick all children.
+                ref var schedule = ref scheduleRef.Reference;
+                // TODO: Check DeltaTime, and compare with current schedule time.
 
-                // TODO: Temporary solution.
-                var query = world.GetCachedQueryFor<ParamGroup<SystemComponent>>();
-                query.ForEach((SystemComponent param) => param.Execute());
+                schedule.CurrentTick++;
+                if (schedule.CurrentTick >= schedule.TickRate)
+                {
+                    if (system.HasValue)
+                    {
+                        system.Value.Execute();
+                    }
 
-                defaultSchedule.CurrentTick = 0;
+                    // TODO: Tick all subscribers.
+
+                    schedule.CurrentTick = 0;
+                }
             }
-        }
+            else if (system.HasValue)
+            {
+                system.Value.Execute();
+            }
+        });
 
         /// <summary>
         /// Creates a new entity with the given <paramref name="name"/>.
@@ -40,40 +48,6 @@ public static class WorldExtensions
         }
 
         /// <summary>
-        /// Creates and returns a new component with no data.
-        /// </summary>
-        public ComponentEntity CreateComponent()
-        {
-            var entity = world.ThrowIfNull().CreateEntity();
-            entity.Add<Component>();
-
-            return new ComponentEntity(entity);
-        }
-
-        /// <summary>
-        /// Creates and returns a new component with data of type <typeparamref name="T"/>.
-        /// </summary>
-        public ComponentEntity CreateComponent<T>()
-        {
-            var entity = world.ThrowIfNull().CreateEntity();
-            entity.Add<Component>();
-            entity.Set<DataComponent>(new(typeof(T)));
-
-            return new ComponentEntity(entity);
-        }
-
-        /// <summary>
-        /// Creates and returns a new prefab
-        /// </summary>
-        public PrefabEntity CreatePrefab()
-        {
-            var entity = world.ThrowIfNull().CreateEntity();
-            entity.Add<Prefab>();
-
-            return new PrefabEntity(entity);
-        }
-
-        /// <summary>
         /// Returns <see langword="true"/> if the entity is alive and contains the component of type <typeparamref name="T"/>, <see langword="false"/> otherwise.
         /// </summary>
         public bool Has<T>(Identifier entity) => world.ThrowIfNull().Has(entity, world.GetComponentForType<T>());
@@ -81,7 +55,7 @@ public static class WorldExtensions
         /// <summary>
         /// Returns the component of type <typeparamref name="T"/> for the <paramref name="entity"/>.
         /// </summary>
-        /// <returns>The component for the <paramref name="entity"/>, or <see langword="null"/> if the component is missing.</returns>
+        /// <returns>The component for the <paramref name="entity"/>, or <see langword="default"/> if the component is missing.</returns>
         public T? Get<T>(Identifier entity) => world.ThrowIfNull().Get<T>(entity, world.GetComponentForType<T>());
 
         /// <summary>

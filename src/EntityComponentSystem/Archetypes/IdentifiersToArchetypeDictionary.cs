@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Tourmi.EntityComponentSystem.Archetypes;
 
 internal class IdentifiersToArchetypeDictionary
@@ -34,8 +36,8 @@ internal class IdentifiersToArchetypeDictionary
     /// <summary>
     /// Returns all archetypes containing the given <paramref name="componentId"/>
     /// </summary>
-    public IEnumerable<Archetype> this[Identifier componentId]
-        => _archetypeGroups.TryGetValue(componentId, out var archetypes) ? archetypes : [];
+    public ReadOnlySpan<Archetype> this[Identifier componentId]
+        => _archetypeGroups.TryGetValue(componentId, out var archetypes) ? CollectionsMarshal.AsSpan(archetypes) : default;
 
     /// <summary>
     /// Returns the archetype represented by the given <paramref name="components"/>, 

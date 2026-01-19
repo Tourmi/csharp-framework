@@ -1,7 +1,4 @@
 ﻿using System.Diagnostics;
-using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Components.Metacomponents;
-using Tourmi.EntityComponentSystem.Queries;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
@@ -12,6 +9,14 @@ namespace Tourmi.EntityComponentSystem.Entities;
 [DebuggerDisplay("{DebugView,nq}")]
 public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntity<ComponentEntity>, IQueryParam<ComponentEntity>
 {
+    /// <summary>
+    /// Constructs an invalid entity.
+    /// </summary>
+    [Obsolete("This constructor should never be used.")]
+    public ComponentEntity() : this(default, default) { }
+
+    internal ComponentEntity(Entity entity) : this(entity.Id, entity.World) { }
+
     /// <inheritdoc cref="Entity.Id"/>
     public Identifier Id { get; } = id;
 
@@ -22,13 +27,6 @@ public readonly ref struct ComponentEntity(Identifier id, World? world) : IEntit
     World? IEntity.World => World;
 
     private ComponentDebugView DebugView => new(this);
-
-    /// <summary>
-    /// Constructs an invalid entity.
-    /// </summary>
-    public ComponentEntity() : this(default, default) { }
-
-    internal ComponentEntity(Entity entity) : this(entity.Id, entity.World) { }
 
     /// <inheritdoc/>
     public static implicit operator Identifier(ComponentEntity entity) => entity.Id;

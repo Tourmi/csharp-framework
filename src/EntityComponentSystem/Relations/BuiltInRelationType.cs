@@ -41,4 +41,9 @@ public enum BuiltInRelationType : byte
     /// May be used in different ways, but mainly used to declare systems that require other systems to have been run first.
     /// </summary>
     DependsOn = 5,
+
+    /// <summary>
+    /// Used by systems, marks what events a system is subscribed to.
+    /// </summary>
+    SubscribedTo = 6,
 }

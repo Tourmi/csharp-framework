@@ -1,5 +1,3 @@
-using Tourmi.EntityComponentSystem.Archetypes;
-
 namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>
@@ -18,7 +16,7 @@ public interface IQueryParam<T>
     /// if needed (such as in the case of object pooling)
     /// </summary>
     internal static virtual void FreeGlobalCache(
-        QueryParamGlobalCache cacheToFree, 
+        QueryParamGlobalCache cacheToFree,
         World world)
     {
     }
@@ -27,8 +25,8 @@ public interface IQueryParam<T>
     /// Should return a cache object that will be passed to the following calls during a query iteration
     /// </summary>
     internal static virtual QueryParamArchetypeCache GetArchetypeCache(
-        World world, 
-        Archetype archetype, 
+        World world,
+        Archetype archetype,
         QueryParamGlobalCache globalCache) => default;
 
     /// <summary>

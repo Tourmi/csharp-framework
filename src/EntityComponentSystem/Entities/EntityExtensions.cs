@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Tourmi.EntityComponentSystem.Exceptions;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 
@@ -10,6 +10,17 @@ public static class EntityExtensions
     /// <param name="entity">The entity that will be acted on</param>
     extension(Entity entity)
     {
+        /// <summary>
+        /// Returns the name of the entity, if it has one.
+        /// </summary>
+        public string? Name => entity.Get<Name>().Value;
+
+        /// <summary>
+        /// Returns the display name of the entity, it being the entity's <see cref="Name"/> if it has one, 
+        /// otherwise returns its <see cref="Entity.Id"/>.
+        /// </summary>
+        public string DisplayName => entity.Name ?? entity.Id.ToString();
+
         /// <summary>
         /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.
         /// Does nothing if the entity already has the component.
@@ -55,7 +66,7 @@ public static class EntityExtensions
         {
             if (entity.World is null)
             {
-                return ref StrongBox<TComponent?>.Default.Value;
+                EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
             return ref entity.World.GetMutable<TComponent>(entity);
@@ -69,7 +80,7 @@ public static class EntityExtensions
         {
             if (entity.World is null)
             {
-                return ref StrongBox<TComponent?>.Default.Value;
+                EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
             return ref entity.World.GetMutable<TComponent>(entity, componentId);
@@ -95,7 +106,7 @@ public static class EntityExtensions
         {
             if (entity.World is null)
             {
-                return ref StrongBox<TComponent?>.Default.Value;
+                EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
             return ref entity.World.EnsureMutable<TComponent>(entity);
@@ -109,7 +120,7 @@ public static class EntityExtensions
         {
             if (entity.World is null)
             {
-                return ref StrongBox<TComponent?>.Default.Value;
+                EntityInvalidException.ThrowEntityUninitialized(entity);
             }
 
             return ref entity.World.EnsureMutable<TComponent>(entity, componentId);

@@ -97,7 +97,7 @@ internal class EntityArchetypeCollection
     /// Returns all existing archetypes that contain the 
     /// given component represented by <paramref name="componentId"/>
     /// </summary>
-    internal IEnumerable<Archetype> GetArchetypesContainingComponent(Identifier componentId)
+    internal ReadOnlySpan<Archetype> GetArchetypesContainingComponent(Identifier componentId)
         => _archetypes[componentId];
 
     /// <summary>

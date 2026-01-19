@@ -125,6 +125,19 @@ internal class GeneralTests
     }
 
     [Test]
+    public void TestStronglyTypedRelations()
+    {
+        var ecs = World.Create();
+
+        var entity = ecs.CreateEntity();
+        entity.Add<Relation<DependsOn, Position>>();
+
+        var expectedId = new RelationComponentIdentifier(ecs.GetComponentForType<Position>().Id.ShortId, BuiltInRelationType.DependsOn);
+
+        Assert.That(ecs.GetComponentForType<Relation<DependsOn, Position>>().Id.Value, Is.EqualTo(expectedId.Value));
+    }
+
+    [Test]
     public void QueryArchetypeCaching()
     {
         var ecs = World.Create();
@@ -248,7 +261,7 @@ internal class GeneralTests
         using var query = Query.FromQueryParam<Entity>(ecs);
 
         var entity = ecs.CreateEntity();
-        var component = ecs.CreateComponent();
+        var component = ecs.CreateTag();
         var prefab = ecs.CreatePrefab();
 
         var entityIds = query.GetEntityIds().ToArray();
@@ -266,7 +279,7 @@ internal class GeneralTests
         using var query = Query.FromQueryParam<ComponentEntity>(ecs);
 
         var entity = ecs.CreateEntity();
-        var component = ecs.CreateComponent();
+        var component = ecs.CreateTag();
         var prefab = ecs.CreatePrefab();
 
         var entityIds = query.GetEntityIds().ToArray();
@@ -284,7 +297,7 @@ internal class GeneralTests
         using var query = Query.FromQueryParam<PrefabEntity>(ecs);
 
         var entity = ecs.CreateEntity();
-        var component = ecs.CreateComponent();
+        var component = ecs.CreateTag();
         var prefab = ecs.CreatePrefab();
 
         var entityIds = query.GetEntityIds().ToArray();

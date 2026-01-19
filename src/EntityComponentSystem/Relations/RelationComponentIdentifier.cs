@@ -104,6 +104,11 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     public static implicit operator ulong(RelationComponentIdentifier identifier) => identifier.Value;
 
     /// <summary>
+    /// Implicitely converts the identifier to an identifier.
+    /// </summary>
+    public static implicit operator Identifier(RelationComponentIdentifier identifier) => identifier.Value;
+
+    /// <summary>
     /// Implicitely converts the ulong to an identifier.
     /// </summary>
     public static implicit operator RelationComponentIdentifier(ulong id) => new(id);
