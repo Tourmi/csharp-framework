@@ -321,7 +321,7 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Returns the entity mapped to the given <paramref name="type"/>.
     /// </summary>
-    public Entity GetComponentForType(Type type)
+    public Entity GetEntityForType(Type type)
     {
         lock (_threadLock)
         {
@@ -334,8 +334,8 @@ public sealed class World : IEntityActions
                     var relationDefinitionType = genericArguments[0];
                     var targetType = genericArguments[1];
 
-                    var relationDefinition = GetComponentForType(relationDefinitionType);
-                    var targetEntity = GetComponentForType(targetType);
+                    var relationDefinition = GetEntityForType(relationDefinitionType);
+                    var targetEntity = GetEntityForType(targetType);
                     var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
                     var targetId = targetEntity.Id;
 

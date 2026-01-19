@@ -25,7 +25,7 @@ public sealed class EntityFilter
     /// <summary>
     /// Specifies that a component of type <typeparamref name="T"/> is required.
     /// </summary>
-    public void Requires<T>() => Requires(_world.GetComponentForType<T>());
+    public void Requires<T>() => Requires(_world.GetEntityForType<T>());
 
     /// <summary>
     /// Specifies that a component with the given <paramref name="componentId"/> is required.
@@ -35,7 +35,7 @@ public sealed class EntityFilter
     /// <summary>
     /// Specifies that entities with the component <typeparamref name="T"/> should be excluded.
     /// </summary>
-    public void Excludes<T>() => Excludes(_world.GetComponentForType<T>());
+    public void Excludes<T>() => Excludes(_world.GetEntityForType<T>());
 
     /// <summary>
     /// Specifies that entities with the component represented by the given <paramref name="componentId"/> should be excluded.

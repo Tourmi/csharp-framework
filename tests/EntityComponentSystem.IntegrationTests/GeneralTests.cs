@@ -115,9 +115,9 @@ internal class GeneralTests
         var entity = ecs.CreateEntity();
         entity.Add<Relation<DependsOn, Position>>();
 
-        var expectedId = new RelationComponentIdentifier(ecs.GetComponentForType<Position>().Id.ShortId, BuiltInRelationType.DependsOn);
+        var expectedId = new RelationComponentIdentifier(ecs.GetEntityForType<Position>().Id.ShortId, BuiltInRelationType.DependsOn);
 
-        Assert.That(ecs.GetComponentForType<Relation<DependsOn, Position>>().Id.Value, Is.EqualTo(expectedId.Value));
+        Assert.That(ecs.GetEntityForType<Relation<DependsOn, Position>>().Id.Value, Is.EqualTo(expectedId.Value));
     }
 
     [Test]

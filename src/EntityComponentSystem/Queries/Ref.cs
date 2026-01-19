@@ -19,7 +19,7 @@ public readonly ref struct Ref<T>(ref T reference) : IQueryParam<Ref<T>>
     static QueryParamGlobalCache IQueryParam<Ref<T>>.GetGlobalCache(World world)
     {
         var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
-        idCache.Value = world.GetComponentForType<T>().Id;
+        idCache.Value = world.GetEntityForType<T>().Id;
         return new(idCache);
     }
 

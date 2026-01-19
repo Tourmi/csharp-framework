@@ -29,8 +29,8 @@ public class QueryForEach : QueryBase
     [Benchmark]
     public (Position, Speed)[] ManualComponentCollections()
     {
-        var positionId = _ecs!.GetComponentForType<Position>();
-        var speedId = _ecs!.GetComponentForType<Speed>();
+        var positionId = _ecs!.GetEntityForType<Position>();
+        var speedId = _ecs!.GetEntityForType<Speed>();
         foreach (var archetype in _archetypes!)
         {
             var positionCollection = archetype.GetComponentCollection<Position>(positionId).AsSpan();

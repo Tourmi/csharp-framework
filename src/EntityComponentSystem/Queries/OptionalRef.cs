@@ -45,7 +45,7 @@ public readonly ref struct OptionalRef<T>() : IQueryParam<OptionalRef<T>>
     static QueryParamGlobalCache IQueryParam<OptionalRef<T>>.GetGlobalCache(World world)
     {
         var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
-        idCache.Value = world.GetComponentForType<T>().Id;
+        idCache.Value = world.GetEntityForType<T>().Id;
         return new(idCache);
     }
 

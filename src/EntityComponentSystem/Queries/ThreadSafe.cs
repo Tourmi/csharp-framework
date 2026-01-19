@@ -25,7 +25,7 @@ public readonly ref struct ThreadSafe<T>(T instance) : IQueryParam<ThreadSafe<T>
     {
         var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
 
-        idCache.Value = world.GetComponentForType<T>().Id;
+        idCache.Value = world.GetEntityForType<T>().Id;
         return new(idCache);
     }
 

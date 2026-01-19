@@ -53,8 +53,8 @@ public abstract class QueryBase
             additionalComponents[i] = entity;
         }
 
-        _positionId = _ecs.GetComponentForType<Position>();
-        _speedId = _ecs.GetComponentForType<Speed>();
+        _positionId = _ecs.GetEntityForType<Position>();
+        _speedId = _ecs.GetEntityForType<Speed>();
 
         for (var i = 0; i < EntityCount; i++)
         {

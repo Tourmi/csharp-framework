@@ -114,7 +114,7 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
         static QueryParamGlobalCache GetGlobalCache(World world)
         {
             var idCache = QueryParam.GetCache<StrongBox<Identifier>>();
-            idCache.Value = world.GetComponentForType<TOther>().Id;
+            idCache.Value = world.GetEntityForType<TOther>().Id;
             return new(idCache);
         }
 
