@@ -41,8 +41,13 @@ public readonly ref struct ComponentEntity(Identifier id, IEntityActions? world)
     /// </summary>
     public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.Actions);
 
-    static ComponentEntity IQueryParam<ComponentEntity>.CreateFrom(QueryParamEntityInfo info)
-        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+    static QueryParamGlobalCache IQueryParam<ComponentEntity>.GetGlobalCache(World world) => new(world.GetEntityActions());
+
+    static void IQueryParam<ComponentEntity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
+        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
+
+    static ComponentEntity IQueryParam<ComponentEntity>.CreateFrom(QueryParamEntityInfo entry)
+        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
 
     static void IQueryParam<ComponentEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Component>();
 

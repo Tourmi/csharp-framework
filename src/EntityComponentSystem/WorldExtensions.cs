@@ -10,31 +10,36 @@ public static class WorldExtensions
         /// <summary>
         /// Sends out the Tick event, allowing schedules and systems subscribed to it to run.
         /// </summary>
-        public void Tick() => world.GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, Events.Tick>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
+        public void Tick()
         {
-            if (scheduleRef.HasValue)
+            world.ThrowIfNull().GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, Events.Tick>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
             {
-                ref var schedule = ref scheduleRef.Reference;
-                // TODO: Check DeltaTime, and compare with current schedule time.
-
-                schedule.CurrentTick++;
-                if (schedule.CurrentTick >= schedule.TickRate)
+                if (scheduleRef.HasValue)
                 {
-                    if (system.HasValue)
+                    ref var schedule = ref scheduleRef.Reference;
+                    // TODO: Check DeltaTime, and compare with current schedule time.
+
+                    schedule.CurrentTick++;
+                    if (schedule.CurrentTick >= schedule.TickRate)
                     {
-                        system.Value.Execute();
+                        if (system.HasValue)
+                        {
+                            system.Value.Execute();
+                        }
+
+                        // TODO: Tick all subscribers.
+
+                        schedule.CurrentTick = 0;
                     }
-
-                    // TODO: Tick all subscribers.
-
-                    schedule.CurrentTick = 0;
                 }
-            }
-            else if (system.HasValue)
-            {
-                system.Value.Execute();
-            }
-        });
+                else if (system.HasValue)
+                {
+                    system.Value.Execute();
+                }
+            });
+
+            world.RunQueuedActions();
+        }
 
         /// <summary>
         /// Attaches an existing entity to a type, 

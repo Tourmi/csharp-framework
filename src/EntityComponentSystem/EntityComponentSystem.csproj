@@ -11,6 +11,7 @@
     <Using Include="Tourmi.EntityComponentSystem.Components.Relations" />
     <Using Include="Tourmi.EntityComponentSystem.Components.Tags" />
     <Using Include="Tourmi.EntityComponentSystem.Entities" />
+    <Using Include="Tourmi.EntityComponentSystem.Exceptions" />
     <Using Include="Tourmi.EntityComponentSystem.Ids" />
     <Using Include="Tourmi.EntityComponentSystem.Queries" />
     <Using Include="Tourmi.EntityComponentSystem.Relations" />

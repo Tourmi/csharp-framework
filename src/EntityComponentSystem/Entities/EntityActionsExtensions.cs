@@ -1,4 +1,4 @@
-﻿namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Extension methods for <see cref="World"/>

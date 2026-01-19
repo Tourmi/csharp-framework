@@ -1,4 +1,4 @@
-﻿namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Exposes actions that can be accomplished on entities.

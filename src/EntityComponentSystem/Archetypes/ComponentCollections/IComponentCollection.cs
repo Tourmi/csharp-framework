@@ -18,12 +18,23 @@ internal interface IComponentCollection
     void RemoveEntry(int index);
 
     /// <summary>
-    /// Steals an entry's value from the <paramref name="originalCollection"/> at the given <paramref name="index"/>.
+    /// Steals an entry's value from the <paramref name="sourceCollection"/> at the given <paramref name="index"/>.
     /// </summary>
     /// <remarks>
-    /// Only works if the <paramref name="originalCollection"/>'s type is compatible with this collection's type.
+    /// Only works if the <paramref name="sourceCollection"/>'s type is compatible with this collection's type.
     /// </remarks>
-    void TakeEntryFrom(IComponentCollection originalCollection, int index);
+    void TakeEntryFrom(IComponentCollection sourceCollection, int index);
+
+    /// <summary>
+    /// Overwrites the value at <paramref name="targetIndex"/> in this collection 
+    /// based on the value in the <paramref name="sourceCollection"/>'s <paramref name="sourceIndex"/>.
+    /// </summary>
+    void CopyValueFrom(IComponentCollection sourceCollection, int sourceIndex, int targetIndex);
+
+    /// <summary>
+    /// Clears all entries for the collection.
+    /// </summary>
+    void Clear();
 
     /// <summary>
     /// For debugging purposes, returns a boxed value for the entity at the given <paramref name="index"/>

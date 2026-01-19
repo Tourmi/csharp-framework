@@ -344,4 +344,75 @@ internal class GeneralTests
         Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(14, 14)));
         Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(50, 50)));
     }
+
+    [Test]
+    public void QueuedActions()
+    {
+        var ecs = World.Create();
+
+        var entityQuery = Query.FromQueryParam<ParamGroup<Name, Position, Speed, int>>(ecs);
+
+        _ = ecs.AddSystem((Identifier id, Name name, Position position, Speed speed, int i, EntityActions actions) =>
+        {
+            var entity = actions.CreateEntity($"Child of {name}");
+            entity.Set(i);
+            entity.Add<Position>();
+            Assert.That(entity.Has<Position>(), Is.True);
+
+            entity.Set(position);
+            Assert.That(entity.Get<Position>(), Is.EqualTo(position));
+
+            ref var mutablePosition = ref entity.GetMutable<Position>();
+            mutablePosition.X += speed.X;
+            mutablePosition.Y += speed.Y;
+
+            Assert.That(entity.Get<Position>(), Is.EqualTo(mutablePosition));
+
+            entity.Set(speed);
+            Assert.That(entity.Has<Speed>(), Is.True);
+
+            actions.Kill(id);
+            Assert.That(actions.IsAlive(id), Is.False);
+        });
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+        someEntity1.Set<Position>(new(1, 1));
+        someEntity1.Set<Speed>(new(1, 1));
+        someEntity1.Set<int>(1);
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.Set<Position>(new(2, 2));
+        someEntity2.Set<Speed>(new(2, 2));
+        someEntity2.Set<int>(2);
+
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("SomeName3"));
+        someEntity3.Set<Position>(new(3, 3));
+        someEntity3.Set<Speed>(new(3, 3));
+        someEntity3.Set<int>(3);
+
+        ecs.Tick();
+
+        Assert.That(someEntity1.IsAlive(), Is.False);
+        Assert.That(someEntity2.IsAlive(), Is.False);
+        Assert.That(someEntity3.IsAlive(), Is.False);
+
+        var childEntityEntries = entityQuery.GetEntityEntries().ToArray();
+        Assert.That(childEntityEntries, Has.Length.EqualTo(3));
+
+        foreach (var entry in childEntityEntries)
+        {
+            Assert.Multiple(() =>
+            {
+                var entity = new Entity(entry.Archetype.Entities[entry.Index], ecs);
+                var i = entity.Get<int>();
+
+                Assert.That(entity.Get<Name>().Value, Is.EqualTo($"Child of SomeName{i}"));
+                Assert.That(entity.Get<Position>(), Is.EqualTo(new Position(i + i, i + i)));
+                Assert.That(entity.Get<Speed>(), Is.EqualTo(new Speed(i, i)));
+            });
+        }
+    }
 }

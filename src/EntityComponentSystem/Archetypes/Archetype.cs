@@ -18,7 +18,6 @@ internal partial class Archetype
     private readonly ImmutableSortedDictionary<Identifier, Type?> _componentDataTypes;
     private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
     private readonly Identifier[] _components;
-    private readonly Type?[] _dataTypes;
     private readonly IComponentCollection[] _data;
 
     internal Archetype(ArchetypeSharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
@@ -26,9 +25,8 @@ internal partial class Archetype
         _sharedData = sharedData;
         _componentDataTypes = componentTypes.ToImmutableSortedDictionary();
         _componentsData = _componentDataTypes.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
-        _components = [.._componentDataTypes.Keys];
-        _dataTypes = [.._componentDataTypes.Values];
-        _data = [.._componentsData.Values];
+        _components = [.. _componentDataTypes.Keys];
+        _data = [.. _componentsData.Values];
     }
 
     internal Archetype(ArchetypeSharedData sharedData)
@@ -37,7 +35,6 @@ internal partial class Archetype
         _componentDataTypes = ImmutableSortedDictionary<Identifier, Type?>.Empty;
         _componentsData = ImmutableSortedDictionary<Identifier, IComponentCollection>.Empty;
         _components = [];
-        _dataTypes = [];
         _data = [];
     }
 
@@ -59,8 +56,14 @@ internal partial class Archetype
     /// <summary>
     /// Returns the collection of components for the given <paramref name="componentId"/>
     /// </summary>
+    public IComponentCollection GetComponentCollection(Identifier componentId)
+        => _data[_components.IndexOf(componentId)];
+
+    /// <summary>
+    /// Returns the collection of components for the given <paramref name="componentId"/>
+    /// </summary>
     public IComponentCollection<T> GetComponentCollection<T>(Identifier componentId)
-        => (IComponentCollection<T>)_data[_components.IndexOf(componentId)];
+        => (IComponentCollection<T>)GetComponentCollection(componentId);
 
     /// <summary>
     /// Returns whether or not the archetype contains the given component

@@ -35,8 +35,13 @@ public readonly ref struct SystemEntity(Identifier id, IEntityActions? entityAct
     /// </summary>
     public static explicit operator SystemEntity(Entity entity) => new(entity);
 
-    static SystemEntity IQueryParam<SystemEntity>.CreateFrom(QueryParamEntityInfo info)
-        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+    static QueryParamGlobalCache IQueryParam<SystemEntity>.GetGlobalCache(World world) => new(world.GetEntityActions());
+
+    static void IQueryParam<SystemEntity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
+        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
+
+    static SystemEntity IQueryParam<SystemEntity>.CreateFrom(QueryParamEntityInfo entry)
+        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
 
     static void IQueryParam<SystemEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<SystemComponent>();
 }

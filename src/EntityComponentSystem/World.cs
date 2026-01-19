@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Tourmi.EntityComponentSystem.Exceptions;
 
 namespace Tourmi.EntityComponentSystem;
 
@@ -29,6 +28,11 @@ public sealed class World : IEntityActions
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
 
     private readonly Lock _threadLock = new();
+
+    /// <summary>
+    /// The world's queued actions, which are executed once it is safe to do so.
+    /// </summary>
+    private readonly Stack<EntityActions> _queuedActions = new();
 
     /// <summary>
     /// The world's entity identifier collection.
@@ -143,11 +147,14 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public Entity CreateEntity()
     {
-        var id = Ids.Create();
-        Archetypes.Create(id);
-        var entity = new Entity(id, this);
+        lock (_threadLock)
+        {
+            var id = Ids.Create();
+            Archetypes.Create(id);
+            var entity = new Entity(id, this);
 
-        return entity;
+            return entity;
+        }
     }
 
     /// <inheritdoc/>
@@ -381,6 +388,41 @@ public sealed class World : IEntityActions
         lock (_threadLock)
         {
             _typesToEntityIds[type] = entity;
+        }
+    }
+
+    internal EntityActions GetEntityActions()
+    {
+        lock (_threadLock)
+        {
+            if (!_queuedActions.TryPop(out var actions))
+            {
+                actions = new(this);
+            }
+
+            actions.DeferActions = true;
+
+            return actions;
+        }
+    }
+
+    internal void ReturnQueuedActions(EntityActions actions)
+    {
+        lock (_threadLock)
+        {
+            _queuedActions.Push(actions);
+        }
+    }
+
+    internal void RunQueuedActions()
+    {
+        lock (_threadLock)
+        {
+            foreach (var actions in _queuedActions)
+            {
+                actions.DequeueActions();
+                actions.DeferActions = false;
+            }
         }
     }
 

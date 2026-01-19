@@ -29,10 +29,24 @@ internal class ComponentCollection<T> : IComponentCollection<T>, IReadOnlyCollec
     }
 
     /// <inheritdoc/>
+    public void CopyValueFrom(IComponentCollection originalCollection, int originalIndex, int targetIndex)
+    {
+        if (originalCollection is not ICovariantComponentCollection<T> collection)
+        {
+            throw new ArgumentOutOfRangeException(nameof(originalCollection));
+        }
+
+        _values[targetIndex] = collection[originalIndex];
+    }
+
+    /// <inheritdoc/>
     public void RemoveEntry(int index) => _values.RemoveSwap(index);
 
     /// <inheritdoc/>
     public Span<T?> AsSpan() => CollectionsMarshal.AsSpan(_values);
+
+    /// <inheritdoc/>
+    public void Clear() => _values.Clear();
 
     /// <inheritdoc/>
     public ComponentCollectionEnumerator<T> GetEnumerator() => new(this);

@@ -45,8 +45,13 @@ public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => false;
 
-    static Entity IQueryParam<Entity>.CreateFrom(QueryParamEntityInfo info)
-        => new(info.Archetype.Entities[info.EntityIndex], info.World);
+    static QueryParamGlobalCache IQueryParam<Entity>.GetGlobalCache(World world) => new(world.GetEntityActions());
+
+    static void IQueryParam<Entity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
+        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
+
+    static Entity IQueryParam<Entity>.CreateFrom(QueryParamEntityInfo entry)
+        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
 
     [DebuggerDisplay("Id = { Id.Value }, IsAlive {IsAlive}, Name = { Name }")]
     internal class EntityDebugView(Entity entity)
