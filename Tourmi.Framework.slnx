@@ -31,6 +31,7 @@
   </Folder>
   <Folder Name="/EntityComponentSystem/">
     <Project Path="src/EntityComponentSystem/EntityComponentSystem.csproj" />
+    <Project Path="tests/EntityComponentSystem.IntegrationTests/EntityComponentSystem.IntegrationTests.csproj" />
     <Project Path="tests/EntityComponentSystem.UnitTests/EntityComponentSystem.UnitTests.csproj" />
     <Project Path="benchmarks/EntityComponentSystem.Benchmarks/EntityComponentSystem.Benchmarks.csproj" />
   </Folder>
