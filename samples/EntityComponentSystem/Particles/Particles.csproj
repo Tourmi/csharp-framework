@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ApplicationIcon>Content/Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Particles.mgcb" />
+  </ItemGroup>
+</Project>

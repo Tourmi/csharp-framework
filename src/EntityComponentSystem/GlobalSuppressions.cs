@@ -20,3 +20,8 @@ using System.Diagnostics.CodeAnalysis;
     "CA1716:Identifiers should not match keywords",
     Justification = "Needed for terse queries.",
     Scope = "module")]
+[assembly: SuppressMessage(
+    "Naming",
+    "CA1724:Type Names Should Not Match Namespaces",
+    Justification = "Dumb.",
+    Scope = "module")]

@@ -30,10 +30,14 @@
     <Project Path="tests/Aseprite.UnitTests/Aseprite.UnitTests.csproj" />
   </Folder>
   <Folder Name="/EntityComponentSystem/">
+    <Project Path="benchmarks/EntityComponentSystem.Benchmarks/EntityComponentSystem.Benchmarks.csproj" />
     <Project Path="src/EntityComponentSystem/EntityComponentSystem.csproj" />
     <Project Path="tests/EntityComponentSystem.IntegrationTests/EntityComponentSystem.IntegrationTests.csproj" />
     <Project Path="tests/EntityComponentSystem.UnitTests/EntityComponentSystem.UnitTests.csproj" />
-    <Project Path="benchmarks/EntityComponentSystem.Benchmarks/EntityComponentSystem.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/EntityComponentSystem/samples/">
+    <File Path="samples/EntityComponentSystem/Directory.Build.props" />
+    <Project Path="samples/EntityComponentSystem/Particles/Particles.csproj" />
   </Folder>
   <Folder Name="/Framework/">
     <Project Path="src/Framework/Framework.csproj" />
