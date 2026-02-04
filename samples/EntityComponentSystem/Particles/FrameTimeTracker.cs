@@ -4,36 +4,34 @@ internal sealed class FrameTimeTracker(int bufferSize = 600)
 {
     private readonly float[] _frameTimes = new float[bufferSize.ThrowIfNegativeOrZero()];
 
-    private float _averageFrameTime;
     private int _currentIndex;
     private int _warmupCount;
 
-    public float AverageFrameTimeMilliseconds => _averageFrameTime / MathF.Max(1, MathF.Min(_frameTimes.Length, _warmupCount));
+    public float AverageFrameTimeMilliseconds { get; private set; }
 
-    public float WorstFrameTime
-    {
-        get
-        {
-            var time = 0f;
-            for (var i = 0; i < _frameTimes.Length; i++)
-            {
-                time = MathF.Max(_frameTimes[i], time);
-            }
+    public float AverageFrameRateSeconds => MathF.Min(99999, 1000f / AverageFrameTimeMilliseconds);
 
-            return time;
-        }
-    }
-
-    public float AverageFrameRateSeconds => 1000f / AverageFrameTimeMilliseconds;
+    public float WorstFrameTime { get; private set; }
 
     public void AddFrameTime(TimeSpan frameTime)
     {
-        _averageFrameTime -= _frameTimes[_currentIndex];
-
         _frameTimes[_currentIndex] = (float)frameTime.TotalMilliseconds;
-        _averageFrameTime += (float)frameTime.TotalMilliseconds;
+
+        var sampleCount = MathF.Min(50, _warmupCount);
+        AverageFrameTimeMilliseconds = (AverageFrameTimeMilliseconds * sampleCount + (float)frameTime.TotalMilliseconds) / (sampleCount + 1);
 
         _currentIndex = (_currentIndex + 1) % _frameTimes.Length;
         _warmupCount++;
+    }
+
+    public void Refresh()
+    {
+        var worstTime = 0f;
+        for (var i = 0; i < _frameTimes.Length; i++)
+        {
+            worstTime = MathF.Max(_frameTimes[i], worstTime);
+        }
+
+        WorstFrameTime = worstTime;
     }
 }

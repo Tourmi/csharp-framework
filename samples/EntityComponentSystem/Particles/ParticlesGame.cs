@@ -31,6 +31,8 @@ internal sealed class ParticlesGame : Game
     private MouseState _mouseState;
     private TimeSpan _deltaTime;
 
+    private TimeSpan _refreshDisplayTime;
+
     public ParticlesGame()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this)
@@ -200,6 +202,13 @@ internal sealed class ParticlesGame : Game
         _deltaTime = gameTime.ElapsedGameTime;
         _mouseState = Mouse.GetState();
         _frameTimeTracker.AddFrameTime(gameTime.ElapsedGameTime);
+
+        _refreshDisplayTime -= gameTime.ElapsedGameTime;
+        if (_refreshDisplayTime <= TimeSpan.Zero)
+        {
+            _refreshDisplayTime = TimeSpan.FromSeconds(0.5);
+            _frameTimeTracker.Refresh();
+        }
 
         _ecs.Tick();
 
