@@ -11,18 +11,23 @@ namespace Tourmi.Samples.Particles;
 /// <inheritdoc/>
 internal sealed class ParticlesGame : Game
 {
-    private const int ParticleCount = 10000;
+    private const int ParticleCount = 100000;
     private const float MaximumSpeed = 100;
+    private const float FrictionCoefficient = 0.9f;
 
     private static readonly Rectangle Bounds = new(0, 0, 1920, 1080);
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private readonly World _ecs;
     private readonly Query _drawablesQuery;
+    private readonly FrameTimeTracker _frameTimeTracker = new();
 
     private SpriteBatch? _spriteBatch;
     private Texture2D? _whitePixel;
+    private Texture2D? _whiteCircle;
+    private SpriteFont? _font;
 
+    private int _framerateLineOffset;
     private MouseState _mouseState;
     private TimeSpan _deltaTime;
 
@@ -33,12 +38,13 @@ internal sealed class ParticlesGame : Game
             IsFullScreen = false,
             PreferredBackBufferWidth = 1920,
             PreferredBackBufferHeight = 1080,
+            SynchronizeWithVerticalRetrace = false,
         };
         IsFixedTimeStep = false;
         IsMouseVisible = true;
 
         _ecs = World.Create();
-        _drawablesQuery = Query.FromQueryParam<ParamGroup<Position, Color, With<DrawableParticle>>>(_ecs);
+        _drawablesQuery = Query.FromQueryParam<ParamGroup<Position, Color, Size, OpacityMultiplier, With<DrawableParticle>>>(_ecs);
 
         Services.AddService(_graphicsDeviceManager);
 
@@ -46,6 +52,9 @@ internal sealed class ParticlesGame : Game
     }
 
     public Texture2D WhitePixel => _whitePixel.ThrowIfNull();
+    public Texture2D WhiteCircle => _whiteCircle.ThrowIfNull();
+
+    public SpriteFont Font => _font.ThrowIfNull();
 
     public SpriteBatch SpriteBatch => _spriteBatch.ThrowIfNull();
 
@@ -61,9 +70,13 @@ internal sealed class ParticlesGame : Game
             var entity = _ecs.CreateEntity();
             entity.Add<BouncingParticle>();
             entity.Add<DrawableParticle>();
-            entity.Set<Color>(new(new(random.NextSingle(), random.NextSingle(), random.NextSingle())));
+            var maxOpacity = MathF.Min(1f, 4f / MathF.Sqrt(ParticleCount));
+            entity.Set<Color>(new(new(0.1f + random.NextSingle() * 0.8f, 0.1f + random.NextSingle() * 0.8f, 0.1f + random.NextSingle() * 0.8f, maxOpacity + maxOpacity * i / ParticleCount)));
             entity.Set<Position>(new(new(random.NextSingle() * Bounds.Width, random.NextSingle() * Bounds.Height)));
             entity.Set<Speed>(new(new((random.NextSingle() * 2 - 1) * MaximumSpeed, (random.NextSingle() * 2 - 1) * MaximumSpeed)));
+            var size = 5 + (1 - ((float)i / ParticleCount)) * (1 - MathF.Sqrt(random.NextSingle())) * 250;
+            entity.Set<Size>(new(size, size));
+            entity.Set<OpacityMultiplier>(new(1));
         }
 
         _ = _ecs.CreateTickSystem(() =>
@@ -74,7 +87,7 @@ internal sealed class ParticlesGame : Game
             }
         });
 
-        _ = _ecs.AddSystem((Position position, Ref<Speed> speedRef, With<BouncingParticle> _) =>
+        _ = _ecs.AddSystem((Position position, Ref<Speed> speedRef, Size size, With<BouncingParticle> _) =>
         {
             var direction = 0;
             if (_mouseState.LeftButton is ButtonState.Pressed)
@@ -96,9 +109,9 @@ internal sealed class ParticlesGame : Game
             var sp = speed.Value;
 
             var dirToMouse = _mouseState.Position.ToVector2() - position.Value;
-            var distanceToMouse = dirToMouse.LengthSquared();
+            var distanceSquaredToMouse = dirToMouse.LengthSquared();
 
-            if (distanceToMouse is > 40000 or < 1)
+            if (distanceSquaredToMouse is 0)
             {
                 return;
             }
@@ -106,7 +119,9 @@ internal sealed class ParticlesGame : Game
             dirToMouse.Normalize();
             dirToMouse *= direction;
 
-            sp += 0.03f * dirToMouse * (40000 - distanceToMouse) * (float)_deltaTime.TotalSeconds;
+            var force = MathF.Min(MathF.Sqrt(size.Width * size.Height), 5000000f / distanceSquaredToMouse);
+
+            sp += force * dirToMouse * (float)_deltaTime.TotalSeconds;
 
             speed = new(sp);
         });
@@ -116,7 +131,7 @@ internal sealed class ParticlesGame : Game
             ref var speed = ref speedRef.Reference;
             var sp = speed.Value;
 
-            sp *= MathF.Pow(0.9f, (float)_deltaTime.TotalSeconds);
+            sp *= MathF.Pow(FrictionCoefficient, (float)_deltaTime.TotalSeconds);
 
             speed = new(sp);
         });
@@ -161,12 +176,17 @@ internal sealed class ParticlesGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _whitePixel = Content.Load<Texture2D>("white-pixel");
+        _whiteCircle = Content.Load<Texture2D>("white-circle");
+        _font = Content.Load<SpriteFont>("Fonts/Hud");
+
+        _framerateLineOffset = (_font.MeasureString("0 ms") + new Vector2(0, 5)).ToPoint().Y;
     }
 
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         _whitePixel?.Dispose();
+        _whiteCircle?.Dispose();
         _drawablesQuery?.Dispose();
         _spriteBatch?.Dispose();
         _graphicsDeviceManager.Dispose();
@@ -179,6 +199,7 @@ internal sealed class ParticlesGame : Game
     {
         _deltaTime = gameTime.ElapsedGameTime;
         _mouseState = Mouse.GetState();
+        _frameTimeTracker.AddFrameTime(gameTime.ElapsedGameTime);
 
         _ecs.Tick();
 
@@ -188,13 +209,21 @@ internal sealed class ParticlesGame : Game
     /// <inheritdoc/>
     protected override void Draw(GameTime gameTime)
     {
-        // Clears the screen with the MonoGame orange color before drawing.
         GraphicsDevice.Clear(XnaColor.Black);
 
+        SpriteBatch.Begin(blendState: BlendState.Additive);
+        _drawablesQuery.ForEach((Position position, Size size, Color color, OpacityMultiplier mult)
+            => SpriteBatch.Draw(WhiteCircle, new Rectangle(position.Value.ToPoint() - (size / 2).ToPoint(), size.ToPoint()), null, new(color.XnaColor, mult.Value * (color.XnaColor.A / 255f))));
+        SpriteBatch.End();
+
         SpriteBatch.Begin();
+        SpriteBatch.Draw(WhitePixel, new Rectangle(new(5), new Point(200, _framerateLineOffset * 3 - 5)), null, new XnaColor(XnaColor.Black, 1f));
+        SpriteBatch.End();
 
-        _drawablesQuery.ForEach((Position position, Color color) => SpriteBatch.Draw(WhitePixel, new Rectangle(position.Value.ToPoint() - new Point(1), new Point(2)), null, color.XnaColor));
-
+        SpriteBatch.Begin();
+        SpriteBatch.DrawString(Font, $"Frame Time {_frameTimeTracker.AverageFrameTimeMilliseconds:00.00} ms", 5 * Vector2.One, XnaColor.Green);
+        SpriteBatch.DrawString(Font, $"Worst Time {_frameTimeTracker.WorstFrameTime:00.00} ms", 5 * Vector2.One + new Vector2(0, _framerateLineOffset), XnaColor.Green);
+        SpriteBatch.DrawString(Font, $"{_frameTimeTracker.AverageFrameRateSeconds:0000.00} fps", 5 * Vector2.One + new Vector2(0, 2 * _framerateLineOffset), XnaColor.Green);
         SpriteBatch.End();
 
         base.Draw(gameTime);
