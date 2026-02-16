@@ -2,8 +2,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Tourmi.Samples.Particles.Components;
-
 using Color = Tourmi.Samples.Particles.Components.Color;
+using EcsEvents = Tourmi.EntityComponentSystem.Entities.Events;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Tourmi.Samples.Particles;
@@ -81,12 +81,35 @@ internal sealed class ParticlesGame : Game
             entity.Set<OpacityMultiplier>(new(1));
         }
 
+        _ = _ecs.CreateEventSystem<EcsEvents.PreTick>(() =>
+        {
+            _mouseState = Mouse.GetState();
+            _frameTimeTracker.AddFrameTime(_deltaTime);
+
+            _refreshDisplayTime -= _deltaTime;
+            if (_refreshDisplayTime <= TimeSpan.Zero)
+            {
+                _refreshDisplayTime = TimeSpan.FromSeconds(0.5);
+                _frameTimeTracker.Refresh();
+            }
+        });
+
         _ = _ecs.CreateTickSystem(() =>
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 Exit();
             }
+        });
+
+        _ = _ecs.AddSystem((Ref<Speed> speedRef, With<BouncingParticle> _) =>
+        {
+            ref var speed = ref speedRef.Reference;
+            var sp = speed.Value;
+
+            sp *= MathF.Pow(FrictionCoefficient, (float)_deltaTime.TotalSeconds);
+
+            speed = new(sp);
         });
 
         _ = _ecs.AddSystem((Position position, Ref<Speed> speedRef, Size size, With<BouncingParticle> _) =>
@@ -106,9 +129,7 @@ internal sealed class ParticlesGame : Game
                 return;
             }
 
-            ref var speed = ref speedRef.Reference;
-
-            var sp = speed.Value;
+            var sp = speedRef.Reference.Value;
 
             var dirToMouse = _mouseState.Position.ToVector2() - position.Value;
             var distanceSquaredToMouse = dirToMouse.LengthSquared();
@@ -125,17 +146,7 @@ internal sealed class ParticlesGame : Game
 
             sp += force * dirToMouse * (float)_deltaTime.TotalSeconds;
 
-            speed = new(sp);
-        });
-
-        _ = _ecs.AddSystem((Ref<Speed> speedRef, With<BouncingParticle> _) =>
-        {
-            ref var speed = ref speedRef.Reference;
-            var sp = speed.Value;
-
-            sp *= MathF.Pow(FrictionCoefficient, (float)_deltaTime.TotalSeconds);
-
-            speed = new(sp);
+            speedRef.Reference = new(sp);
         });
 
         _ = _ecs.AddSystem((Ref<Position> positionRef, Ref<Speed> speedRef, With<BouncingParticle> _) =>
@@ -171,6 +182,29 @@ internal sealed class ParticlesGame : Game
             position = new(pos);
             speed = new(sp);
         });
+
+        _ = _ecs.CreateEventSystem<Events.PreDraw>(() => GraphicsDevice.Clear(XnaColor.Black));
+        _ = _ecs.CreateEventSystem<Events.Draw>(() =>
+        {
+            SpriteBatch.Begin(blendState: BlendState.Additive);
+            _drawablesQuery.ForEach((Position position, Size size, Color color, OpacityMultiplier mult)
+                => SpriteBatch.Draw(WhiteCircle, new Rectangle(position.Value.ToPoint() - (size / 2).ToPoint(), size.ToPoint()), null, new(color.XnaColor, mult.Value * (color.XnaColor.A / 255f))));
+            SpriteBatch.End();
+        });
+        _ = _ecs.CreateEventSystem<Events.Draw>(() =>
+        {
+            SpriteBatch.Begin();
+            SpriteBatch.Draw(WhitePixel, new Rectangle(new(5), new Point(200, _framerateLineOffset * 3 - 5)), null, new XnaColor(XnaColor.Black, 1f));
+            SpriteBatch.End();
+        });
+        _ = _ecs.CreateEventSystem<Events.Draw>(() =>
+        {
+            SpriteBatch.Begin();
+            SpriteBatch.DrawString(Font, $"Frame Time {_frameTimeTracker.AverageFrameTimeMilliseconds:00.00} ms", 5 * Vector2.One, XnaColor.Green);
+            SpriteBatch.DrawString(Font, $"Worst Time {_frameTimeTracker.WorstFrameTime:00.00} ms", 5 * Vector2.One + new Vector2(0, _framerateLineOffset), XnaColor.Green);
+            SpriteBatch.DrawString(Font, $"{_frameTimeTracker.AverageFrameRateSeconds:0000.00} fps", 5 * Vector2.One + new Vector2(0, 2 * _framerateLineOffset), XnaColor.Green);
+            SpriteBatch.End();
+        });
     }
 
     /// <inheritdoc/>
@@ -200,41 +234,14 @@ internal sealed class ParticlesGame : Game
     protected override void Update(GameTime gameTime)
     {
         _deltaTime = gameTime.ElapsedGameTime;
-        _mouseState = Mouse.GetState();
-        _frameTimeTracker.AddFrameTime(gameTime.ElapsedGameTime);
-
-        _refreshDisplayTime -= gameTime.ElapsedGameTime;
-        if (_refreshDisplayTime <= TimeSpan.Zero)
-        {
-            _refreshDisplayTime = TimeSpan.FromSeconds(0.5);
-            _frameTimeTracker.Refresh();
-        }
-
         _ecs.Tick();
-
-        base.Update(gameTime);
     }
 
     /// <inheritdoc/>
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(XnaColor.Black);
-
-        SpriteBatch.Begin(blendState: BlendState.Additive);
-        _drawablesQuery.ForEach((Position position, Size size, Color color, OpacityMultiplier mult)
-            => SpriteBatch.Draw(WhiteCircle, new Rectangle(position.Value.ToPoint() - (size / 2).ToPoint(), size.ToPoint()), null, new(color.XnaColor, mult.Value * (color.XnaColor.A / 255f))));
-        SpriteBatch.End();
-
-        SpriteBatch.Begin();
-        SpriteBatch.Draw(WhitePixel, new Rectangle(new(5), new Point(200, _framerateLineOffset * 3 - 5)), null, new XnaColor(XnaColor.Black, 1f));
-        SpriteBatch.End();
-
-        SpriteBatch.Begin();
-        SpriteBatch.DrawString(Font, $"Frame Time {_frameTimeTracker.AverageFrameTimeMilliseconds:00.00} ms", 5 * Vector2.One, XnaColor.Green);
-        SpriteBatch.DrawString(Font, $"Worst Time {_frameTimeTracker.WorstFrameTime:00.00} ms", 5 * Vector2.One + new Vector2(0, _framerateLineOffset), XnaColor.Green);
-        SpriteBatch.DrawString(Font, $"{_frameTimeTracker.AverageFrameRateSeconds:0000.00} fps", 5 * Vector2.One + new Vector2(0, 2 * _framerateLineOffset), XnaColor.Green);
-        SpriteBatch.End();
-
-        base.Draw(gameTime);
+        _ecs.Raise<Events.PreDraw>();
+        _ecs.Raise<Events.Draw>();
+        _ecs.Raise<Events.PostDraw>();
     }
 }
