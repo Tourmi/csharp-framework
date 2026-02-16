@@ -25,9 +25,18 @@ public sealed class World : IEntityActions
         [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
         [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
+        [typeof(Parameter1)] = FixedIds.Special.Parameter1,
+        [typeof(Parameter2)] = FixedIds.Special.Parameter2,
+        [typeof(Parameter3)] = FixedIds.Special.Parameter3,
+        [typeof(Parameter4)] = FixedIds.Special.Parameter4,
+        [typeof(Parameter5)] = FixedIds.Special.Parameter5,
+        [typeof(Parameter6)] = FixedIds.Special.Parameter6,
+        [typeof(Parameter7)] = FixedIds.Special.Parameter7,
+        [typeof(Parameter8)] = FixedIds.Special.Parameter8,
     };
     private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
+    private readonly Dictionary<(Type, Identifier), Query> _parametrized1Queries = [];
 
     private readonly Lock _threadLock = new();
 
@@ -323,61 +332,64 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Returns the entity mapped to the given <paramref name="type"/>.
     /// </summary>
-    public Entity GetEntityForType(Type type)
+    public Entity GetComponentForType(Type type)
     {
-        lock (_threadLock)
+        if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
         {
-            if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
+            Entity entity;
+            if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
             {
-                Entity entity;
-                if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
+                var genericArguments = type.GetGenericArguments();
+                var relationDefinitionType = genericArguments[0];
+                var targetType = genericArguments[1];
+
+                var relationDefinition = GetComponentForType(relationDefinitionType);
+                var targetEntity = GetComponentForType(targetType);
+                var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
+                var targetId = targetEntity.Id;
+
+                entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
+                entity = CreateEntityFixedId(entityId);
+                entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
+                lock (_threadLock)
                 {
-                    var genericArguments = type.GetGenericArguments();
-                    var relationDefinitionType = genericArguments[0];
-                    var targetType = genericArguments[1];
-
-                    var relationDefinition = GetEntityForType(relationDefinitionType);
-                    var targetEntity = GetEntityForType(targetType);
-                    var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
-                    var targetId = targetEntity.Id;
-
-                    entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
-                    entity = CreateEntityFixedId(entityId);
-                    entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
                     _typesToEntityIds[type] = entity;
-
-                    // Remaining setup is based on the relation definition.
-                    type = relationDefinitionType;
                 }
-                else
+
+                // Remaining setup is based on the relation definition.
+                type = relationDefinitionType;
+            }
+            else
+            {
+                entity = _typesToEntityIds.TryGetValue(type, out var predefinedId) ? CreateEntityFixedId(predefinedId) : CreateEntity();
+                entityId = entity.Id;
+                entity.Set(new Name(type.Name));
+                lock (_threadLock)
                 {
-                    entity = CreateEntity();
-                    entityId = entity.Id;
-                    entity.Set(new Name(type.Name));
                     _typesToEntityIds[type] = entityId;
-                }
-
-                entity.Add<Component>();
-
-                if (type.GetCustomAttribute<TagComponentAttribute>() is null)
-                {
-                    entity.Set(new DataComponent(type));
-                }
-
-                if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
-                {
-                    entity.Add<RelationDefinition>();
-                }
-
-                if (type.GetCustomAttribute<SingletonAttribute>() is not null)
-                {
-                    entity.Add<Singleton>();
-                    entity.Add(entity.Id);
                 }
             }
 
-            return new(entityId, this);
+            entity.Add<Component>();
+
+            if (type.GetCustomAttribute<TagComponentAttribute>() is null)
+            {
+                entity.Set(new DataComponent(type));
+            }
+
+            if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
+            {
+                entity.Add<RelationDefinition>();
+            }
+
+            if (type.GetCustomAttribute<SingletonAttribute>() is not null)
+            {
+                entity.Add<Singleton>();
+                entity.Add(entity.Id);
+            }
         }
+
+        return new(entityId, this);
     }
 
     /// <summary>
@@ -429,7 +441,7 @@ public sealed class World : IEntityActions
     }
 
     /// <summary>
-    /// Returns the cached query for the given type.
+    /// Returns the cached query for the given type <typeparamref name="T"/>.
     /// </summary>
     internal Query GetCachedQueryFor<T>()
         where T : IQueryParam<T>, allows ref struct
@@ -440,6 +452,23 @@ public sealed class World : IEntityActions
         {
             query = Query.FromQueryParam<T>(this);
             _queryParamsToQuery[queryType] = query;
+        }
+
+        return query;
+    }
+
+    /// <summary>
+    /// Returns the cached query for the given type <typeparamref name="T"/>.
+    /// </summary>
+    internal Query GetCachedQueryFor<T>(Identifier parameter1)
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var queryType = typeof(T);
+
+        if (!_parametrized1Queries.TryGetValue((queryType, parameter1), out var query))
+        {
+            query = Query.FromQueryParam<T>(this, parameter1);
+            _parametrized1Queries[(queryType, parameter1)] = query;
         }
 
         return query;

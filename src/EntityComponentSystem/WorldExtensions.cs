@@ -11,9 +11,16 @@ public static class WorldExtensions
         /// Raises the <typeparamref name="TEvent"/> event, updating all systems or schedules subscribed to it.
         /// </summary>
         [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "Used externally, not a C# event")]
-        public void Raise<TEvent>()
-        {
-            world.ThrowIfNull().GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, TEvent>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
+        public void Raise<TEvent>() => world.Raise(world.GetEntityForType<TEvent>());
+
+        /// <summary>
+        /// Raises the event represented by the given <paramref name="eventId"/>, updating all systems or schedules subscribed to it.
+        /// </summary>
+        [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "Used externally, not a C# event")]
+        public void Raise(Identifier eventId) => world
+            .ThrowIfNull()
+            .GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, Parameter1>>>(eventId)
+            .ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
             {
                 if (scheduleRef.HasValue)
                 {
@@ -28,19 +35,17 @@ public static class WorldExtensions
                             system.Value.Execute();
                         }
 
-                        // TODO: Tick all subscribers to the given id.
-
                         schedule.CurrentTick = 0;
+                        world.Raise(id);
                     }
                 }
                 else if (system.HasValue)
                 {
                     system.Value.Execute();
                 }
-            });
 
-            world.RunQueuedActions();
-        }
+                world.RunQueuedActions();
+            });
 
         /// <summary>
         /// Sends out the <see cref="Events.Tick"/> event, along with its <see cref="Events.PreTick"/> and <see cref="Events.PostTick"/> events, updating schedules and systems subscribed to them.

@@ -28,6 +28,18 @@ public static class WorldSystemExtensions
         }
 
         /// <summary>
+        /// Creates a new system that is subscribed to the <paramref name="eventId"/>.
+        /// </summary>
+        public SystemEntity CreateEventSystem(Identifier eventId, Action action)
+        {
+            var systemEntity = world.CreateEntity();
+            systemEntity.Set<SystemComponent>(new(action));
+            systemEntity.Add(new RelationComponentIdentifier(eventId.ShortId, BuiltInRelationType.SubscribedTo));
+
+            return (SystemEntity)systemEntity;
+        }
+
+        /// <summary>
         /// Adds a system to the default schedule.
         /// </summary>
         public SystemEntity AddSystem<T1>(QueryParamAction<T1> system)

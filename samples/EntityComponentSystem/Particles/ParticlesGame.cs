@@ -31,8 +31,6 @@ internal sealed class ParticlesGame : Game
     private MouseState _mouseState;
     private TimeSpan _deltaTime;
 
-    private TimeSpan _refreshDisplayTime;
-
     public ParticlesGame()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this)
@@ -85,13 +83,15 @@ internal sealed class ParticlesGame : Game
         {
             _mouseState = Mouse.GetState();
             _frameTimeTracker.AddFrameTime(_deltaTime);
+        });
 
-            _refreshDisplayTime -= _deltaTime;
-            if (_refreshDisplayTime <= TimeSpan.Zero)
-            {
-                _refreshDisplayTime = TimeSpan.FromSeconds(0.5);
-                _frameTimeTracker.Refresh();
-            }
+        var every30TickSchedule = _ecs.CreateEntity("Every30TickSchedule");
+        every30TickSchedule.Set<Schedule>(new(TimeSpan.Zero, 30));
+        every30TickSchedule.Add<Relation<SubscribedTo, EcsEvents.Tick>>();
+
+        _ = _ecs.CreateEventSystem(every30TickSchedule, () =>
+        {
+            _frameTimeTracker.Refresh();
         });
 
         _ = _ecs.CreateTickSystem(() =>

@@ -51,6 +51,6 @@ public static class EntityActionsExtensions
         /// <summary>
         /// Returns the entity mapped to the given <typeparamref name="TComponent"/> type.
         /// </summary>
-        public Entity GetEntityForType<TComponent>() => actions.ThrowIfNull().World.GetEntityForType(typeof(TComponent));
+        public Entity GetEntityForType<TComponent>() => actions.ThrowIfNull().World.GetComponentForType(typeof(TComponent));
     }
 }

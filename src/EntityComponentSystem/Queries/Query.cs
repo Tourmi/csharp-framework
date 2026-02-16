@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
@@ -33,6 +32,18 @@ public sealed class Query : IDisposable
         where T : IQueryParam<T>, allows ref struct
     {
         var filter = new EntityFilter(world);
+        T.UpdateFilter(filter);
+        return new Query(world, filter);
+    }
+
+    /// <summary>
+    /// Generates a new query from the given query param <typeparamref name="T"/>, 
+    /// and parametrizing it with the given parameters.
+    /// </summary>
+    public static Query FromQueryParam<T>(World world, Identifier parameter1)
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var filter = new EntityFilter(world, parameter1);
         T.UpdateFilter(filter);
         return new Query(world, filter);
     }

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Tourmi.EntityComponentSystem.Relations;
 
@@ -118,6 +117,11 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
 
     /// <inheritdoc/>
     public static bool operator !=(RelationComponentIdentifier left, RelationComponentIdentifier right) => !(left == right);
+
+    /// <summary>
+    /// Returns this id with <see cref="Target"/> set to the given <paramref name="newTarget"/>.
+    /// </summary>
+    public RelationComponentIdentifier WithTarget(uint newTarget) => new(newTarget, RelationType, Types);
 
     /// <inheritdoc/>
     public bool Equals(RelationComponentIdentifier other) => Value == other.Value;

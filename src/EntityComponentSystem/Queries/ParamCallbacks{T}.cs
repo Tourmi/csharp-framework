@@ -1,7 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
@@ -58,12 +56,12 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
                 throw new InvalidOperationException("Refs and ByRefLike types are not supported for custom types");
             }
 
-            var callback = typeof(ParamCallbacks<T>)
+            var callbackGetter = typeof(ParamCallbacks<T>)
                 .GetMethod(nameof(GetDefaultCallbacksFor), BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!
                 .MakeGenericMethod(typeof(T))
                 .CreateDelegate<Func<ParamCallbacks<T>>>();
 
-            return callback();
+            return callbackGetter();
         }
 
         var interfaceType = interfaceTypes[index];

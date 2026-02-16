@@ -50,6 +50,46 @@ public static class FixedIds
         /// Special Id which when used as the target of a Relation Id, will match any target.
         /// </summary>
         public static readonly Identifier Wildcard = new Identifier(RegionStart + 0x00) | IdentifierTypes.Relation;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter1 = RegionStart + 0x01;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter2 = RegionStart + 0x02;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter3 = RegionStart + 0x03;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter4 = RegionStart + 0x04;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter5 = RegionStart + 0x05;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter6 = RegionStart + 0x06;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter7 = RegionStart + 0x07;
+
+        /// <summary>
+        /// Special Id that acts as a placeholder for a query parameter determined at runtime.
+        /// </summary>
+        public static readonly Identifier Parameter8 = RegionStart + 0x08;
     }
 
     /// <summary>
