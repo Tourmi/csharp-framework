@@ -94,11 +94,11 @@ internal sealed class ParticlesGame : Game
             var direction = 0;
             if (_mouseState.LeftButton is ButtonState.Pressed)
             {
-                direction = 1;
+                direction += 1;
             }
             if (_mouseState.RightButton is ButtonState.Pressed)
             {
-                direction = -1;
+                direction += -1;
             }
 
             if (direction is 0)
