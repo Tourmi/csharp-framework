@@ -202,9 +202,19 @@ public static class FixedIds
         public const uint RegionEnd = RegionStart + RegionSize;
 
         /// <summary>
+        /// Event that is raised right before a <see cref="Tick"/> event.
+        /// </summary>
+        public static readonly Identifier PreTick = RegionStart + 0x00;
+
+        /// <summary>
         /// The default Tick event, which new systems are usually subscribed to.
         /// </summary>
-        public static readonly Identifier Tick = RegionStart + 0x00;
+        public static readonly Identifier Tick = RegionStart + 0x01;
+
+        /// <summary>
+        /// Event that is raised after a <see cref="Tick"/> event.
+        /// </summary>
+        public static readonly Identifier PostTick = RegionStart + 0x02;
     }
 
     /// <summary>

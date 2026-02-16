@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
@@ -28,7 +27,8 @@ public static class QueryForEachExtensions
         /// <summary>
         /// Returns the first value of type <typeparamref name="T"/>.
         /// </summary>
-        public T First<[DynamicallyAccessedMembers(Interfaces | PublicMethods | NonPublicMethods)] T>() where T : allows ref struct
+        public T First<[DynamicallyAccessedMembers(Interfaces | PublicMethods | NonPublicMethods)] T>()
+            where T : allows ref struct
         {
             var result = default(T);
             var callbacks = ParamCallbacks.For<T>();

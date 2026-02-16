@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem;
@@ -14,11 +13,16 @@ public static class WorldSystemExtensions
         /// <summary>
         /// Creates a new system entity that is activated on each Tick, with the given <paramref name="action"/>.
         /// </summary>
-        public SystemEntity CreateTickSystem(Action action)
+        public SystemEntity CreateTickSystem(Action action) => world.CreateEventSystem<Events.Tick>(action);
+
+        /// <summary>
+        /// Creates a new system that is subscribed to the <typeparamref name="TEvent"/> event.
+        /// </summary>
+        public SystemEntity CreateEventSystem<TEvent>(Action action)
         {
             var systemEntity = world.CreateEntity();
             systemEntity.Set<SystemComponent>(new(action));
-            systemEntity.Add<Relation<SubscribedTo, Events.Tick>>();
+            systemEntity.Add<Relation<SubscribedTo, TEvent>>();
 
             return (SystemEntity)systemEntity;
         }

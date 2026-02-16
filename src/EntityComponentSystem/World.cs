@@ -22,7 +22,9 @@ public sealed class World : IEntityActions
         [typeof(Requires)] = FixedIds.Relations.Requires,
         [typeof(DependsOn)] = FixedIds.Relations.DependsOn,
         [typeof(SubscribedTo)] = FixedIds.Relations.SubscribedTo,
+        [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
+        [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
     };
     private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];

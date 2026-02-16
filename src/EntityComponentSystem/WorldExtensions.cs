@@ -8,11 +8,12 @@ public static class WorldExtensions
     extension(World world)
     {
         /// <summary>
-        /// Sends out the Tick event, allowing schedules and systems subscribed to it to run.
+        /// Raises the <typeparamref name="TEvent"/> event, updating all systems or schedules subscribed to it.
         /// </summary>
-        public void Tick()
+        [SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "Used externally, not a C# event")]
+        public void Raise<TEvent>()
         {
-            world.ThrowIfNull().GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, Events.Tick>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
+            world.ThrowIfNull().GetCachedQueryFor<ParamGroup<Relation<SubscribedTo, TEvent>>>().ForEach((Identifier id, Optional<SystemComponent> system, OptionalRef<Schedule> scheduleRef) =>
             {
                 if (scheduleRef.HasValue)
                 {
@@ -27,7 +28,7 @@ public static class WorldExtensions
                             system.Value.Execute();
                         }
 
-                        // TODO: Tick all subscribers.
+                        // TODO: Tick all subscribers to the given id.
 
                         schedule.CurrentTick = 0;
                     }
@@ -39,6 +40,16 @@ public static class WorldExtensions
             });
 
             world.RunQueuedActions();
+        }
+
+        /// <summary>
+        /// Sends out the <see cref="Events.Tick"/> event, along with its <see cref="Events.PreTick"/> and <see cref="Events.PostTick"/> events, updating schedules and systems subscribed to them.
+        /// </summary>
+        public void Tick()
+        {
+            world.Raise<Events.PreTick>();
+            world.Raise<Events.Tick>();
+            world.Raise<Events.PostTick>();
         }
 
         /// <summary>

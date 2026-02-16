@@ -43,7 +43,7 @@ public enum BuiltInRelationType : byte
     DependsOn = 5,
 
     /// <summary>
-    /// Used by systems, marks what events a system is subscribed to.
+    /// Used by systems and schedules, marks what events a system or schedule is subscribed to.
     /// </summary>
     SubscribedTo = 6,
 }

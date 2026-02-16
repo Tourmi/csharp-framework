@@ -1,7 +1,4 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Tourmi.Framework.Collections;
-using Tourmi.Framework.Runtime;
 
 namespace Tourmi.EntityComponentSystem.Queries;
 
