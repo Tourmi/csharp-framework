@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using static Tourmi.EntityComponentSystem.Entities.ComponentEntity;
+﻿using static Tourmi.EntityComponentSystem.Entities.ComponentEntity;
 
 namespace Tourmi.EntityComponentSystem.Entities;
 

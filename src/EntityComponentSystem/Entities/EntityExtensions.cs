@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Exceptions;
-
-namespace Tourmi.EntityComponentSystem.Entities;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Extension methods for <see cref="Entity"/>

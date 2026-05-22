@@ -22,7 +22,7 @@ public static class WorldSystemExtensions
         {
             var systemEntity = world.CreateEntity();
             systemEntity.Set<SystemComponent>(new(action));
-            systemEntity.Add<Relation<SubscribedTo, TEvent>>();
+            systemEntity.SubscribedTo<TEvent>();
 
             return (SystemEntity)systemEntity;
         }

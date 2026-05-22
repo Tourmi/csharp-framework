@@ -80,7 +80,7 @@ internal class GeneralTests
         var parent = ecs.CreateEntity();
         var child = ecs.CreateEntity();
         var relationId = new RelationComponentIdentifier(parent.Id.ShortId, BuiltInRelationType.ChildOf);
-        child.Add(relationId);
+        child.ChildOf(parent);
 
         Assert.That(child.Has(relationId));
 
@@ -90,13 +90,11 @@ internal class GeneralTests
 
         dependent.Add(dependency1);
         dependent.Add(dependency2);
-        var relationId1 = new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.Requires);
-        var relationId2 = new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.Requires);
-        ecs.Set(dependent, relationId1, new Requires(Requires.DependencyMissingBehavior.Add, Requires.DependencyRemovedBehavior.RemoveThis));
-        ecs.Set(dependent, relationId2, new Requires(Requires.DependencyMissingBehavior.Panic, Requires.DependencyRemovedBehavior.Panic));
+        dependent.Requires(dependency1, Requires.DependencyMissingBehavior.Add, Requires.DependencyRemovedBehavior.RemoveThis);
+        dependent.Requires(dependency2, Requires.DependencyMissingBehavior.Panic, Requires.DependencyRemovedBehavior.Panic);
 
-        var relationValue1 = dependent.Get<Requires>(relationId1);
-        var relationValue2 = dependent.Get<Requires>(relationId2);
+        var relationValue1 = dependent.Get<Requires>(new RelationComponentIdentifier(dependency1.Id.ShortId, BuiltInRelationType.Requires));
+        var relationValue2 = dependent.Get<Requires>(new RelationComponentIdentifier(dependency2.Id.ShortId, BuiltInRelationType.Requires));
 
         Assert.Multiple(() =>
         {
@@ -113,7 +111,7 @@ internal class GeneralTests
         var ecs = World.Create();
 
         var entity = ecs.CreateEntity();
-        entity.Add<Relation<DependsOn, Position>>();
+        entity.DependsOn<Position>();
 
         var expectedId = new RelationComponentIdentifier(ecs.GetEntityForType<Position>().Id.ShortId, BuiltInRelationType.DependsOn);
 

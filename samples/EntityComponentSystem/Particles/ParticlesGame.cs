@@ -87,7 +87,7 @@ internal sealed class ParticlesGame : Game
 
         var every30TickSchedule = _ecs.CreateEntity("Every30TickSchedule");
         every30TickSchedule.Set<Schedule>(new(TimeSpan.Zero, 30));
-        every30TickSchedule.Add<Relation<SubscribedTo, EcsEvents.Tick>>();
+        every30TickSchedule.SubscribedTo<EcsEvents.Tick>();
 
         _ = _ecs.CreateEventSystem(every30TickSchedule, () =>
         {
