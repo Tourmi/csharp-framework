@@ -54,6 +54,6 @@ public static class Vector2Extensions
             return 0;
         }
 
-        return MathF.IEEERemainder(MathF.Atan2(v.Y, v.X), MathF.Tau);
+        return MathF.IEEERemainder(MathF.Atan2(v.Y, v.X), MathF.Tau) / MathF.Tau;
     }
 }
