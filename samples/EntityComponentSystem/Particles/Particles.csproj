@@ -5,4 +5,7 @@
   <ItemGroup>
     <MonoGameContentReference Include="Content\Particles.mgcb" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Monogame\Monogame.csproj" />
+  </ItemGroup>
 </Project>

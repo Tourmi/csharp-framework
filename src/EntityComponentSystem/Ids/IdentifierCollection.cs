@@ -1,6 +1,4 @@
-﻿using Tourmi.Framework.Collections;
-
-namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem;
 
 /// <summary>
 /// Collection that contains a world's entitity IDs.
@@ -19,7 +17,10 @@ internal partial class IdentifierCollection
     private readonly LazyPagedArray<uint> _idToIndex = new();
     private readonly HashSet<IdentifierRegion> _reservedRegions = [];
 
-    private int _currentRegionIndex; // index into the _defaultRegionDataIndexes array
+    /// <summary>
+    /// index into the _regionsData array
+    /// </summary>
+    private int _currentRegionIndex;
     private IdRegionData[] _regionsData;
 
     public IdentifierCollection(uint initialCapacity = 0x1000)
@@ -36,7 +37,7 @@ internal partial class IdentifierCollection
     /// </summary>
     public void Reserve(IdentifierRegion region)
     {
-        if (region?.Amount is null or 0)
+        if (region.ThrowIfNull().Amount is 0)
         {
             // Nothing to reserve, just return.
             return;
@@ -58,12 +59,12 @@ internal partial class IdentifierCollection
 
         if (region.Offset is 0)
         {
-            for (var i = 0; i < _regionsData.Length; i++)
+            for (var i = _regionsData.Length - 1; i >= 0; i--)
             {
                 var regionData = _regionsData[i];
                 if (regionData.Capacity >= region.Amount)
                 {
-                    region.Offset = regionData.Offset;
+                    region.Offset = regionData.EndIdInclusive - region.Amount + 1;
                     break;
                 }
             }
@@ -76,13 +77,18 @@ internal partial class IdentifierCollection
 
         var reservedRegionData = new IdRegionData() { Offset = region.Offset, Capacity = region.Amount };
 
-        _regionsData = [.. _regionsData.SelectMany((r, i) => r.SplitWith(reservedRegionData))];
+        _regionsData = [.. _regionsData.SelectMany(r => r.SplitWith(reservedRegionData)).OrderBy(r => r.Offset)];
         _currentRegionIndex = _regionsData
             .Index()
             .Where(ri => !ri.Item.IsFull)
             .Select(ri => ri.Index)
             .FirstOrDefault(-1);
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if the <paramref name="region"/> is reserved, <see langword="false"/> otherwise.
+    /// </summary>
+    public bool IsReserved(IdentifierRegion region) => _reservedRegions.Contains(region);
 
     /// <summary>
     /// Creates a new id and returns it.

@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
-
-namespace Tourmi.EntityComponentSystem.Entities;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Performs actions on entities, which may be executed immediately, or later.
@@ -44,6 +42,9 @@ public sealed class EntityActions : IEntityActions, IQueryParam<EntityActions>
 
     /// <inheritdoc/>
     public Entity CreateEntity() => new(World.CreateEntity(), this);
+
+    /// <inheritdoc/>
+    public Entity CreateEntity(Identifier id, IdentifierRegion region) => new(World.CreateEntity(id, region), this);
 
     /// <inheritdoc/>
     public void Kill(Identifier entity)

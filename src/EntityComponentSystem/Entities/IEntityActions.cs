@@ -11,9 +11,25 @@ public interface IEntityActions
     internal World World { get; }
 
     /// <summary>
-    /// Creates new entity in the world.
+    /// Creates a new entity in the world.
     /// </summary>
     Entity CreateEntity();
+
+    /// <summary>
+    /// Creates a new entity in the world with the given <paramref name="id"/>.
+    /// The <paramref name="id"/> must be part of the given <paramref name="region"/>, 
+    /// and the <paramref name="region"/> must have been part of the initial world configuration.
+    /// </summary>
+    /// <param name="id">The fixed identifier for the new entity</param>
+    /// <param name="region">The region that the id is part of</param>
+    /// <returns>The new entity</returns>
+    /// <exception cref="IdentifierInvalidException">
+    /// Thrown when the given id is already in use, or it is not part of the given <paramref name="region"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the <paramref name="region"/> was never reserved via the world's <see cref="WorldConfiguration.ReservedIdentifierRegions"/>.
+    /// </exception>
+    Entity CreateEntity(Identifier id, IdentifierRegion region);
 
     /// <summary>
     /// Returns whether the <paramref name="entity"/> is alive or not.

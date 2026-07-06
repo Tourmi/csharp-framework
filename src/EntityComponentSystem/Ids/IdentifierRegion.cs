@@ -7,7 +7,7 @@ public sealed class IdentifierRegion
 {
     /// <summary>
     /// If specified, Id at which this region of identifiers must start.
-    /// If 0, will automatically be set to the first available Id upon reservation, as to avoid leaving gaps in entity Ids.
+    /// If 0, will automatically be set to the last available Id upon reservation, as to avoid leaving gaps in entity Ids.
     /// Cannot have a value such as <see cref="Offset"/> + <see cref="Amount"/> would give a value higher than <see cref="uint.MaxValue"/>.
     /// </summary>
     /// <remarks>
@@ -35,7 +35,7 @@ public sealed class IdentifierRegion
     public required uint Amount
     {
         get;
-        init => field = value.ThrowIfGreaterThan(uint.MaxValue - Offset);
+        init => field = Offset is 0 ? value : value.ThrowIfGreaterThan(uint.MaxValue - Offset + 1);
     }
 
     /// <summary>
@@ -44,12 +44,12 @@ public sealed class IdentifierRegion
     public string? Name { get; init; }
 
     /// <summary>
-    /// Id at which the region ends, inclusive. Invalid if <see cref="Offset"/> is 0.
+    /// Id at which the region ends, inclusive. Undefined if <see cref="Offset"/> or <see cref="Amount"/> is 0.
     /// </summary>
     private uint EndIdInclusive => Offset + (Amount - 1);
 
     /// <summary>
-    /// Returns true if this region overlaps with the <paramref name="other"/>
+    /// Returns <see langword="true"/> if this region overlaps with the <paramref name="other"/>
     /// </summary>
     public bool OverlapsWith(IdentifierRegion other)
     {
@@ -67,6 +67,11 @@ public sealed class IdentifierRegion
 
         return Offset <= other.EndIdInclusive && EndIdInclusive >= other.Offset;
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if this region contains the given <paramref name="id"/>.
+    /// </summary>
+    public bool Contains(Identifier id) => Offset <= id.ShortId && id.ShortId <= EndIdInclusive;
 
     /// <inheritdoc/>
     public override string ToString() => $"IdentifierRegion: {{ Name: '{Name ?? "Unnamed"}', Offset: {Offset}, Amount: {Amount} }}";

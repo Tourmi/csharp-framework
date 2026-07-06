@@ -69,7 +69,7 @@ internal partial class IdentifierCollection
                 ];
             }
 
-            if (Offset < other.Offset && EndIdInclusive >= other.Offset && EndIdInclusive < other.EndIdInclusive)
+            if (Offset < other.Offset && EndIdInclusive >= other.Offset && EndIdInclusive <= other.EndIdInclusive)
             {
                 // This region starts before the other, and ends before.
                 return [new() { Offset = Offset, Capacity = other.Offset - Offset }];

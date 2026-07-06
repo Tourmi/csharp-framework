@@ -12,6 +12,7 @@
     <RootNamespace>Tourmi.$(MSBuildProjectName)</RootNamespace>
     <WarningLevel>9999</WarningLevel>
     <AnalysisLevel>latest-all</AnalysisLevel>
+    <NoWarn>$(NoWarn);CA1708</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='RELEASE'">
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

@@ -169,6 +169,33 @@ public sealed class World : IEntityActions
     }
 
     /// <inheritdoc/>
+    public Entity CreateEntity(Identifier id, IdentifierRegion region)
+    {
+        if (!Ids.IsReserved(region))
+        {
+            throw new InvalidOperationException($"Cannot create an entity with id {id}, as the region {region} was never reserved.");
+        }
+
+        if (!region.Contains(id))
+        {
+            throw new IdentifierInvalidException(id, $"Given id {id} was not part of the given region {region}");
+        }
+
+        lock (_threadLock)
+        {
+            if (Archetypes.IsAlive(id))
+            {
+                IdentifierInvalidException.ThrowIdentifierAlreadyInUse(id);
+            }
+
+            Archetypes.Create(id);
+            var entity = new Entity(id, this);
+
+            return entity;
+        }
+    }
+
+    /// <inheritdoc/>
     public bool IsAlive(Identifier entity) => Archetypes.IsAlive(entity);
 
     /// <inheritdoc/>
@@ -443,7 +470,7 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Returns the cached query for the given type <typeparamref name="T"/>.
     /// </summary>
-    internal Query GetCachedQueryFor<T>()
+    public Query GetCachedQueryFor<T>()
         where T : IQueryParam<T>, allows ref struct
     {
         var queryType = typeof(T);
@@ -460,7 +487,7 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Returns the cached query for the given type <typeparamref name="T"/>.
     /// </summary>
-    internal Query GetCachedQueryFor<T>(Identifier parameter1)
+    public Query GetCachedQueryFor<T>(Identifier parameter1)
         where T : IQueryParam<T>, allows ref struct
     {
         var queryType = typeof(T);
