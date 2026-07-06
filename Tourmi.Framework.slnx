@@ -18,6 +18,9 @@
     <File Path="src/.editorconfig" />
     <File Path="src/Directory.Build.props" />
   </Folder>
+  <Folder Name="/_SolutionItems/benchmarks/">
+    <File Path="benchmarks/Directory.Build.props" />
+  </Folder>
   <Folder Name="/_SolutionItems/tests/">
     <File Path="tests/.editorconfig" />
     <File Path="tests/Directory.Build.props" />
@@ -25,6 +28,16 @@
   <Folder Name="/Aseprite/">
     <Project Path="src/Aseprite/Aseprite.csproj" />
     <Project Path="tests/Aseprite.UnitTests/Aseprite.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/EntityComponentSystem/">
+    <Project Path="benchmarks/EntityComponentSystem.Benchmarks/EntityComponentSystem.Benchmarks.csproj" />
+    <Project Path="src/EntityComponentSystem/EntityComponentSystem.csproj" />
+    <Project Path="tests/EntityComponentSystem.IntegrationTests/EntityComponentSystem.IntegrationTests.csproj" />
+    <Project Path="tests/EntityComponentSystem.UnitTests/EntityComponentSystem.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/EntityComponentSystem/samples/">
+    <File Path="samples/EntityComponentSystem/Directory.Build.props" />
+    <Project Path="samples/EntityComponentSystem/Particles/Particles.csproj" />
   </Folder>
   <Folder Name="/Framework/">
     <Project Path="src/Framework/Framework.csproj" />

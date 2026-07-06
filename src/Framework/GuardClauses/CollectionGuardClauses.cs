@@ -39,7 +39,7 @@ public static class CollectionGuardClauses
     /// <exception cref="ArgumentNullException"/>
     [return: NotNull]
     public static ICollection<T> ThrowIfContainsLessThan<T>(
-        [NotNull] this ICollection<T> argument,
+        [NotNull] this ICollection<T>? argument,
         int count,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
