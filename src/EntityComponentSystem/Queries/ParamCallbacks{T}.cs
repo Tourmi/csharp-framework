@@ -41,6 +41,7 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
     public Func<QueryParamEntityInfo, T> CreateFrom { get; }
     public Action<EntityFilter> UpdateFilter { get; }
 
+    [DynamicDependency(PublicMethods | NonPublicMethods, typeof(ParamCallbacks<>))]
     internal static ParamCallbacks<T> GetCallbacks()
     {
         var interfaceTypes = typeof(T).GetInterfaces();
