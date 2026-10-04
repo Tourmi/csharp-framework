@@ -29,6 +29,11 @@
     <Project Path="src/Aseprite/Aseprite.csproj" />
     <Project Path="tests/Aseprite.UnitTests/Aseprite.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/Coroutines/">
+    <Project Path="src/Coroutines/Coroutines.csproj" />
+    <Project Path="tests/Coroutines.IntegrationTests/Coroutines.IntegrationTests.csproj" />
+    <Project Path="tests/Coroutines.UnitTests/Coroutines.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/EntityComponentSystem/">
     <Project Path="benchmarks/EntityComponentSystem.Benchmarks/EntityComponentSystem.Benchmarks.csproj" />
     <Project Path="src/EntityComponentSystem/EntityComponentSystem.csproj" />
