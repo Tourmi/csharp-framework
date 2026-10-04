@@ -23,9 +23,26 @@ Models for Serialization/deserialization of Aseprite json data
 - For Spritesheet exports in version 1.3 of Aseprite
 
 ## Tourmi.EntityComponentSystem
-Implementation of ECS for learning and personal projects
+Implementation of an ECS for personal projects and learning.
 
-- https://github.com/SanderMertens/flecs/blob/9480854eaa7aa9d294647076d96c97d8c3047630/src/world.c#L10
-- https://ajmmertens.medium.com/building-an-ecs-1-types-hierarchies-and-prefabs-9f07666a1e9d
-- https://ajmmertens.medium.com/doing-a-lot-with-a-little-ecs-identifiers-25a72bd2647
-- https://ajmmertens.medium.com/building-an-ecs-storage-in-pictures-642b8bfd6e04
+Refer to sample projects for example uses.
+
+### Todo
+- Implement OnAdd, OnModified, OnRemove events.
+  - Allow subscribing to those events via queries
+    - Query for matching, and query for additional values
+  - OnSet should ideally have the before and after values.
+- Implement Querying by Relation Type, and by Relation Target (ie: `Relation<ChildOf, *>` or `Relation<*,Target>`)
+- Implement ChildOf relation type
+  - Kill child if parent is killed
+- Implement ordered structures
+- Implement dependency tree structure
+  - Make registered systems use dependency tree structure for ordering
+- Implement automatic parallelization of systems
+
+### Maybe
+- Create Source Generator project which automatically creates ref struct types representing a Query result.
+  - Would allow for less boilerplate in systems
+
+### References and useful reading
+- https://ajmmertens.medium.com/doing-a-lot-with-a-little-ecs-identifiers-25a72bd2647 (and related blogs)
