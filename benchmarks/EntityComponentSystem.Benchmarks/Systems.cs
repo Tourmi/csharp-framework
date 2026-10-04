@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Tourmi.EntityComponentSystem.Components;
+using Tourmi.EntityComponentSystem.Queries.Parameters;
 
 namespace Tourmi.EntityComponentSystem;
 

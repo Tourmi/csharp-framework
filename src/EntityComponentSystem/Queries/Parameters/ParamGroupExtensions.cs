@@ -1,4 +1,4 @@
-﻿namespace Tourmi.EntityComponentSystem.Queries;
+﻿namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Extension methods for query parameter groups

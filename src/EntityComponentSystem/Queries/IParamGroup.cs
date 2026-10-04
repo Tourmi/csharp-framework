@@ -1,3 +1,5 @@
+using Tourmi.EntityComponentSystem.Queries.Parameters;
+
 namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>

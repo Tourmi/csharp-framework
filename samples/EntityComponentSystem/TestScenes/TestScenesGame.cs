@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Tourmi.EntityComponentSystem.Queries.Parameters;
 using Tourmi.Monogame;
 using Tourmi.Samples.TestScenes.Components;
 using EcsEvents = Tourmi.EntityComponentSystem.Entities.Events;

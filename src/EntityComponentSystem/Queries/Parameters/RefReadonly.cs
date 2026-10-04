@@ -1,8 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes;
-using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Query parameter that provides a readonly reference for a value of type <typeparamref name="T"/>. 

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Query parameter that provides a reference to a value of type <typeparamref name="T"/>.

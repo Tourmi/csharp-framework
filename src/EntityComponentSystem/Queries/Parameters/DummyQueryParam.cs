@@ -1,7 +1,7 @@
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
-/// Type that only exists because C# Default interface implementations suck.
+/// Type that only exists because C# Default interface implementations suck when using reflection.
 /// </summary>
 internal readonly struct DummyQueryParam : IQueryParam<DummyQueryParam>
 {

@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-
+using Tourmi.EntityComponentSystem.Queries.Parameters;
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;

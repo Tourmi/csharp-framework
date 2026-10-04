@@ -3,6 +3,7 @@ using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
 using Tourmi.EntityComponentSystem.Ids;
 using Tourmi.EntityComponentSystem.Queries;
+using Tourmi.EntityComponentSystem.Queries.Parameters;
 using Tourmi.EntityComponentSystem.Relations;
 
 namespace Tourmi.EntityComponentSystem;
