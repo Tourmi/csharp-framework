@@ -1,0 +1,26 @@
+﻿namespace Tourmi.EntityComponentSystem.Components;
+
+/// <summary>
+/// Names an entity, allowing for easier debugging.
+/// </summary>
+public readonly struct Name()
+{
+    /// <summary>
+    /// Constructs a new instance of the component with the given <paramref name="name"/> value.
+    /// </summary>
+    public Name(string name) : this()
+    {
+        Value = name;
+    }
+
+    /// <summary>
+    /// Name of the entity.
+    /// </summary>
+    public string Value { get => field ?? string.Empty; init; } = string.Empty;
+
+    /// <inheritdoc/>
+    public static Name Create(string name) => new(name);
+
+    /// <inheritdoc/>
+    public override string ToString() => Value;
+}

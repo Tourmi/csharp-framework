@@ -1,0 +1,19 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Tourmi.$([System.Text.RegularExpressions.Regex]::Match($(MSBuildProjectName), `[^\.]*`))</RootNamespace>
+    <NoWarn>$(NoWarn);CA1852;CA1515;CA1024</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="BenchmarkDotNet.Attributes" />
+    <Using Include="Microsoft.VSDiagnostics" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" />
+  </ItemGroup>
+</Project>

@@ -229,6 +229,7 @@ csharp_style_prefer_readonly_struct_member = true:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
 csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
+csharp_prefer_system_threading_lock = true:suggestion
 
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
@@ -269,9 +270,11 @@ dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
 insert_final_newline = true
 
 # CA1062: Validate arguments of public methods
-dotnet_diagnostic.CA1062.severity = warning
+# Detection is bad
+dotnet_diagnostic.CA1062.severity = silent
 
-# CA5394: Insecure Randomness, this solution does not deal in anything security-critical
+# CA5394: Do not use insecure randomness
+# This solution does not deal in anything security-critical
 dotnet_diagnostic.CA5394.severity = none
 
 # CA1822: Mark members as static
@@ -280,3 +283,7 @@ dotnet_diagnostic.CA1822.severity = suggestion
 # CA1034: Nested types should not be visible
 # Broken due to extension members
 dotnet_diagnostic.CA1034.severity = silent
+
+# CA2225: Operator overloads have named alternates
+# Causes lots of boilerplate code in structs
+dotnet_diagnostic.CA2225.severity = silent

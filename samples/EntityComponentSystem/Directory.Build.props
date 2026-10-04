@@ -1,0 +1,34 @@
+<Project>
+  <Import Project="../../Directory.Build.props" />
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <Platforms>AnyCPU</Platforms>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Tourmi.Samples.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>Tourmi.Samples.$(MSBuildProjectName)</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Remove="..\..\src\Framework\Framework.csproj" />
+    <ProjectReference Include="..\..\..\src\Framework\Framework.csproj" />
+    <ProjectReference Include="..\..\..\src\EntityComponentSystem\EntityComponentSystem.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Tourmi.EntityComponentSystem" />
+    <Using Include="Tourmi.EntityComponentSystem.Archetypes" />
+    <Using Include="Tourmi.EntityComponentSystem.Attributes" />
+    <Using Include="Tourmi.EntityComponentSystem.Components" />
+    <Using Include="Tourmi.EntityComponentSystem.Components.Metacomponents" />
+    <Using Include="Tourmi.EntityComponentSystem.Components.Relations" />
+    <Using Include="Tourmi.EntityComponentSystem.Components.Tags" />
+    <Using Include="Tourmi.EntityComponentSystem.Entities" />
+    <Using Include="Tourmi.EntityComponentSystem.Exceptions" />
+    <Using Include="Tourmi.EntityComponentSystem.Ids" />
+    <Using Include="Tourmi.EntityComponentSystem.Queries" />
+    <Using Include="Tourmi.EntityComponentSystem.Relations" />
+  </ItemGroup>
+</Project>

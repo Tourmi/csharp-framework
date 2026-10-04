@@ -8,18 +8,20 @@ namespace Tourmi.Framework.GuardClauses;
 /// </summary>
 public static class ObjectGuardClauses
 {
-    /// <summary>
-    /// Throws an <see cref="ArgumentNullException"/> if <paramref name="value"/> is null
-    /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    [return: NotNull]
-    public static T ThrowIfNull<T>([NotNull] this T? value, [CallerArgumentExpression(nameof(value))] string? valueName = null)
+    extension<T>([NotNull] T? value)
+#if NET9_0_OR_GREATER
+        where T : allows ref struct
+#endif
     {
-        if (value is null)
+        /// <summary>
+        /// Throws an <see cref="ArgumentNullException"/> if <paramref name="value"/> is null
+        /// </summary>
+        /// <exception cref="ArgumentNullException"/>
+        [return: NotNull]
+        public T ThrowIfNull([CallerArgumentExpression(nameof(value))] string? valueName = null) => value switch
         {
-            throw new ArgumentNullException(valueName);
-        }
-
-        return value;
+            null => throw new ArgumentNullException(valueName),
+            _ => value
+        };
     }
 }
