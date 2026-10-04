@@ -38,7 +38,7 @@ Contains useful extension methods and helper functions for Monogame/XNA
 Models for Serialization/deserialization of Aseprite json data
 - For Spritesheet exports in version 1.3 of Aseprite
 
-## Tourmi.EntityComponentSystem
+## [BETA] Tourmi.EntityComponentSystem
 Implementation of an ECS for personal projects and learning.
 
 Refer to sample projects for example uses.
