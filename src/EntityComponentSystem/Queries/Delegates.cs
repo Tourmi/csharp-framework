@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>
-/// Actions that is executed on query parameters.
+/// Action that is executed on query parameters.
 /// </summary>
 public delegate void QueryParamAction<in T1>(
     T1 param1)

@@ -38,6 +38,7 @@
   <Folder Name="/EntityComponentSystem/samples/">
     <File Path="samples/EntityComponentSystem/Directory.Build.props" />
     <Project Path="samples/EntityComponentSystem/Particles/Particles.csproj" />
+    <Project Path="samples/EntityComponentSystem/TestScenes/TestScenes.csproj" />
   </Folder>
   <Folder Name="/Framework/">
     <Project Path="src/Framework/Framework.csproj" />
