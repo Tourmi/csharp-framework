@@ -3,6 +3,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <RootNamespace>Tourmi.$([System.Text.RegularExpressions.Regex]::Match($(MSBuildProjectName), `[^\.]*`))</RootNamespace>
     <NoWarn>$(NoWarn);CA1852</NoWarn>
   </PropertyGroup>

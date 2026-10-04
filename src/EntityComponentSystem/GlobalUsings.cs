@@ -1,0 +1,17 @@
+﻿global using System.Diagnostics;
+global using System.Diagnostics.CodeAnalysis;
+global using Tourmi.EntityComponentSystem;
+global using Tourmi.EntityComponentSystem.Archetypes;
+global using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
+global using Tourmi.EntityComponentSystem.Attributes;
+global using Tourmi.EntityComponentSystem.Components;
+global using Tourmi.EntityComponentSystem.Components.Metacomponents;
+global using Tourmi.EntityComponentSystem.Components.Relations;
+global using Tourmi.EntityComponentSystem.Components.Tags;
+global using Tourmi.EntityComponentSystem.Entities;
+global using Tourmi.EntityComponentSystem.Exceptions;
+global using Tourmi.EntityComponentSystem.Ids;
+global using Tourmi.EntityComponentSystem.Queries;
+global using Tourmi.EntityComponentSystem.Relations;
+global using Tourmi.Framework.Collections;
+global using Tourmi.Framework.Runtime;
