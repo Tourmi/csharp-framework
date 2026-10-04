@@ -7,7 +7,7 @@ namespace Tourmi.EntityComponentSystem.Entities;
 /// </summary>
 [DebuggerTypeProxy(typeof(EntityDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) : IEntity<Entity>, IEquatable<Entity>, IQueryParam<Entity>
+public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) : IEntity<Entity>, IEquatable<Entity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -43,14 +43,6 @@ public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) 
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => false;
-
-    static QueryParamGlobalCache IQueryParam<Entity>.GetGlobalCache(World world) => new(world.GetEntityActions());
-
-    static void IQueryParam<Entity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
-        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
-
-    static Entity IQueryParam<Entity>.CreateFrom(QueryParamEntityInfo entry)
-        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
 
     [DebuggerDisplay("Id = { Id.Value }, IsAlive {IsAlive}, Name = { Name }")]
     internal class EntityDebugView(Entity entity)
