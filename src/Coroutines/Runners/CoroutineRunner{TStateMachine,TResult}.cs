@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Tourmi.Coroutines.Contexts;
-using Tourmi.Framework.Collections.Generic;
+using Tourmi.Framework.Collections;
 
 namespace Tourmi.Coroutines.Runners;
 
@@ -36,7 +36,7 @@ internal sealed class CoroutineRunner<TStateMachine, TResult> : ICoroutineRunner
             _runnerPool = new();
         }
 
-        if (!_runnerPool.TryTake(out var runner))
+        if (!_runnerPool.TryPop(out var runner))
         {
             runner = new();
         }
@@ -124,7 +124,7 @@ internal sealed class CoroutineRunner<TStateMachine, TResult> : ICoroutineRunner
         _postContinuation = null;
         _capturedContext = null;
 
-        _runnerPool?.Return(this);
+        _runnerPool?.Push(this);
     }
 
     public bool TryComplete()

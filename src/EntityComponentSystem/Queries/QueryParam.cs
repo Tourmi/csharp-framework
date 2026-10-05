@@ -14,7 +14,7 @@ internal static class QueryParam
         where T : class, new()
     {
         var pool = ThreadStaticProvider<Pool<T>>.Value;
-        if (!pool.TryTake(out var cache))
+        if (!pool.TryPop(out var cache))
         {
             cache = new();
         }
@@ -52,6 +52,6 @@ internal static class QueryParam
         where T : class, new()
     {
         var pool = ThreadStaticProvider<Pool<T>>.Value;
-        pool.Return(cache);
+        pool.Push(cache);
     }
 }
