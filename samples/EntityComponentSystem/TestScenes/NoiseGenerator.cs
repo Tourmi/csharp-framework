@@ -3,7 +3,7 @@ using Tourmi.Monogame;
 
 namespace Tourmi.Samples.TestScenes;
 
-internal class NoiseGenerator
+internal sealed class NoiseGenerator
 {
     private const float DefaultFrequency = 1.0f / 64f;
 

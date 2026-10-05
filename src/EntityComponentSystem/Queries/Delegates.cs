@@ -1,4 +1,6 @@
-﻿namespace Tourmi.EntityComponentSystem.Queries;
+﻿using Tourmi.EntityComponentSystem.Queries.Parameters;
+
+namespace Tourmi.EntityComponentSystem.Queries;
 
 /// <summary>
 /// Action that is executed on query parameters.

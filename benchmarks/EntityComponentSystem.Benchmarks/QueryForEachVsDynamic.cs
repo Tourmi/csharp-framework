@@ -1,4 +1,6 @@
-﻿namespace Tourmi.EntityComponentSystem;
+﻿using Tourmi.EntityComponentSystem.Queries.Parameters;
+
+namespace Tourmi.EntityComponentSystem;
 
 public class QueryForEachVsDynamic : QueryBase
 {

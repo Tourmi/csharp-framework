@@ -3,7 +3,7 @@
 /// <summary>
 /// Performs actions on entities, which may be executed immediately, or later.
 /// </summary>
-public sealed class EntityActions : IEntityActions, IQueryParam<EntityActions>
+public sealed class EntityActions : IEntityActions
 {
     private enum ActionType
     {
@@ -271,12 +271,4 @@ public sealed class EntityActions : IEntityActions, IQueryParam<EntityActions>
 
         return (IComponentCollection<T>)collection;
     }
-
-    static QueryParamGlobalCache IQueryParam<EntityActions>.GetGlobalCache(World world) => new(world.GetEntityActions());
-
-    static void IQueryParam<EntityActions>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
-        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
-
-    static EntityActions IQueryParam<EntityActions>.CreateFrom(QueryParamEntityInfo entry)
-        => QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache);
 }

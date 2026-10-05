@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Tourmi.EntityComponentSystem.Archetypes;
-
-using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
+﻿using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 using static Tourmi.EntityComponentSystem.Queries.QueryParam;
 
 using ArchetypeCache1 = System.Runtime.CompilerServices.StrongBox<
@@ -93,7 +90,7 @@ using GlobalCache8 = System.Runtime.CompilerServices.StrongBox<(
     Tourmi.EntityComponentSystem.Queries.QueryParamGlobalCache,
     Tourmi.EntityComponentSystem.Queries.QueryParamGlobalCache)>;
 
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Wrapper type for multiple query parameters.

@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-
+using Tourmi.EntityComponentSystem.Queries.Parameters;
+using Tourmi.EntityComponentSystem.Queries.Parameters.Overrides;
 using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Tourmi.EntityComponentSystem.Queries;
@@ -41,14 +42,29 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
     public Func<QueryParamEntityInfo, T> CreateFrom { get; }
     public Action<EntityFilter> UpdateFilter { get; }
 
+    [DynamicDependency(PublicMethods | NonPublicMethods, typeof(ParamCallbacks<>))]
     internal static ParamCallbacks<T> GetCallbacks()
     {
-        var interfaceTypes = typeof(T).GetInterfaces();
-        var index = interfaceTypes.Index()
-            .Where(i => i.Item.IsGenericType && i.Item.GetGenericTypeDefinition() == typeof(IQueryParam<>))
+        var mappingType = typeof(T);
+        var targetInterfaceType = typeof(IQueryParam<>);
+
+        var overridingType = ParamCallbacks.GetOverridingTypeOrDefaultFor<T>();
+        if (overridingType is not null)
+        {
+            mappingType = overridingType;
+            targetInterfaceType = typeof(IQueryParamOverride<>);
+        }
+
+#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
+        var interfaceTypes = mappingType.GetInterfaces();
+#pragma warning restore IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
+        var index = interfaceTypes
+            .Index()
+            .Where(i => i.Item.IsGenericType && i.Item.GetGenericTypeDefinition() == targetInterfaceType)
             .Select(i => i.Index)
             .DefaultIfEmpty(-1)
             .FirstOrDefault();
+
         if (index < 0)
         {
             if (typeof(T).IsByRefLike || typeof(T).IsByRef)
@@ -66,7 +82,7 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
 
         var interfaceType = interfaceTypes[index];
 #pragma warning disable IL2062 // The parameter of method has a DynamicallyAccessedMembersAttribute, but the value passed to it can not be statically analyzed.
-        var mapping = typeof(T).GetInterfaceMap(interfaceType)!;
+        var mapping = mappingType.GetInterfaceMap(interfaceType)!;
 #pragma warning restore IL2062
 
         var getGlobalCache = GetDelegate<Func<World, QueryParamGlobalCache>>(mapping, nameof(IQueryParam<>.GetGlobalCache));
@@ -92,8 +108,7 @@ internal readonly record struct ParamCallbacks<[DynamicallyAccessedMembers(Inter
             {
                 var interfaceType = typeof(DummyQueryParam)
                     .GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryParam<>))
-                    .First();
+                    .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryParam<>));
 #pragma warning disable IL2072 // Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
                 var newMapping = typeof(DummyQueryParam).GetInterfaceMap(interfaceType);
 #pragma warning restore IL2072

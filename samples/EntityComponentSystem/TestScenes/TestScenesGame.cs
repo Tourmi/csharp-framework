@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Tourmi.EntityComponentSystem.Queries.Parameters;
 using Tourmi.Monogame;
 using Tourmi.Samples.TestScenes.Components;
 using EcsEvents = Tourmi.EntityComponentSystem.Entities.Events;
@@ -24,7 +25,7 @@ internal sealed class TestScenesGame : Game
     private readonly NoiseGenerator _noiseGenerator = new();
 
     private uint _currentId;
-    private int _debugMode = 0;
+    private int _debugMode;
 
     private GraphicsDeviceManager? _graphicsDeviceManager;
     private Texture2D? _whitePixel;

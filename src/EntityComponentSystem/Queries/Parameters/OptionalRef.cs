@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Query Parameter that contains a reference to the component <typeparamref name="T"/>, 

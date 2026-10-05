@@ -1,4 +1,4 @@
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Interface for types that require special handling in queries.

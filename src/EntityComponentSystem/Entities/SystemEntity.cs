@@ -3,7 +3,7 @@
 /// <summary>
 /// An entity representing a system.
 /// </summary>
-public readonly ref struct SystemEntity(Identifier id, IEntityActions? entityActions) : IEntity<SystemEntity>, IQueryParam<SystemEntity>
+public readonly ref struct SystemEntity(Identifier id, IEntityActions? entityActions) : IEntity<SystemEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -34,14 +34,4 @@ public readonly ref struct SystemEntity(Identifier id, IEntityActions? entityAct
     /// Explicitely casts the entity to a system entity.
     /// </summary>
     public static explicit operator SystemEntity(Entity entity) => new(entity);
-
-    static QueryParamGlobalCache IQueryParam<SystemEntity>.GetGlobalCache(World world) => new(world.GetEntityActions());
-
-    static void IQueryParam<SystemEntity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
-        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
-
-    static SystemEntity IQueryParam<SystemEntity>.CreateFrom(QueryParamEntityInfo entry)
-        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
-
-    static void IQueryParam<SystemEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<SystemComponent>();
 }

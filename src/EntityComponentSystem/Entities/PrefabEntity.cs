@@ -3,7 +3,7 @@
 /// <summary>
 /// Hinted entity representing a prefab that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
-public readonly ref struct PrefabEntity(Identifier id, IEntityActions? entityActions) : IEntity<PrefabEntity>, IQueryParam<PrefabEntity>
+public readonly ref struct PrefabEntity(Identifier id, IEntityActions? entityActions) : IEntity<PrefabEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -34,14 +34,4 @@ public readonly ref struct PrefabEntity(Identifier id, IEntityActions? entityAct
     /// Explicitely casts the entity to a prefab entity.
     /// </summary>
     public static explicit operator PrefabEntity(Entity entity) => new(entity);
-
-    static QueryParamGlobalCache IQueryParam<PrefabEntity>.GetGlobalCache(World world) => new(world.GetEntityActions());
-
-    static void IQueryParam<PrefabEntity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
-        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
-
-    static PrefabEntity IQueryParam<PrefabEntity>.CreateFrom(QueryParamEntityInfo entry)
-        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
-
-    static void IQueryParam<PrefabEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Prefab>();
 }

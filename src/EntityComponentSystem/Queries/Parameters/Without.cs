@@ -1,4 +1,4 @@
-﻿namespace Tourmi.EntityComponentSystem.Queries;
+﻿namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Query Parameter that marks the component <typeparamref name="T"/> as excluded, 

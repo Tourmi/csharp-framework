@@ -1,13 +1,11 @@
-﻿using System.Diagnostics;
-
-namespace Tourmi.EntityComponentSystem.Entities;
+﻿namespace Tourmi.EntityComponentSystem.Entities;
 
 /// <summary>
 /// Entity representing a component that exists in an ecs <see cref="EntityComponentSystem.World" /> instance.
 /// </summary>
 [DebuggerTypeProxy(typeof(ComponentDebugView))]
 [DebuggerDisplay("{DebugView,nq}")]
-public readonly ref struct ComponentEntity(Identifier id, IEntityActions? world) : IEntity<ComponentEntity>, IQueryParam<ComponentEntity>
+public readonly ref struct ComponentEntity(Identifier id, IEntityActions? world) : IEntity<ComponentEntity>
 {
     /// <summary>
     /// Constructs an invalid entity.
@@ -40,16 +38,6 @@ public readonly ref struct ComponentEntity(Identifier id, IEntityActions? world)
     /// Explicitely casts the entity to a component entity.
     /// </summary>
     public static explicit operator ComponentEntity(Entity entity) => new(entity.Id, entity.Actions);
-
-    static QueryParamGlobalCache IQueryParam<ComponentEntity>.GetGlobalCache(World world) => new(world.GetEntityActions());
-
-    static void IQueryParam<ComponentEntity>.FreeGlobalCache(QueryParamGlobalCache cacheToFree, World world)
-        => world.ReturnQueuedActions(QueryParam.UnsafeCastCache<EntityActions>(cacheToFree));
-
-    static ComponentEntity IQueryParam<ComponentEntity>.CreateFrom(QueryParamEntityInfo entry)
-        => new(entry.Archetype.Entities[entry.EntityIndex], QueryParam.UnsafeCastCache<EntityActions>(entry.GlobalCache));
-
-    static void IQueryParam<ComponentEntity>.UpdateFilter(EntityFilter filter) => filter.Requires<Component>();
 
     [DebuggerDisplay("Id = { Id.Value }, Name = { Name }, DataType = { DataType }")]
     internal class ComponentDebugView(ComponentEntity entity)

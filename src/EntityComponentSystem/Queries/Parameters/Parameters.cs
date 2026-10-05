@@ -1,4 +1,4 @@
-﻿namespace Tourmi.EntityComponentSystem.Queries;
+﻿namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Placeholder for a query parameter that is determined at run-time.

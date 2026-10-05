@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 
-namespace Tourmi.EntityComponentSystem.Queries;
+namespace Tourmi.EntityComponentSystem.Queries.Parameters;
 
 /// <summary>
 /// Query parameter that provides a write-only reference to a value of type <typeparamref name="T"/>.
