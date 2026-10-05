@@ -1,4 +1,4 @@
-﻿using Tourmi.Framework.Collections.Generic;
+﻿using Tourmi.Framework.Collections;
 
 namespace Tourmi.Coroutines.Collections;
 

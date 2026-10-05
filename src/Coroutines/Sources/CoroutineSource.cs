@@ -35,7 +35,7 @@ public abstract class CoroutineSource<TSelf, TResult>
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Needed for implementations")]
     protected static TSelf Get(CancellationToken cancellationToken = default)
     {
-        if (!ThreadStaticPools<TSelf>.Get().TryTake(out var source))
+        if (!ThreadStaticPools<TSelf>.Get().TryPop(out var source))
         {
             source = new TSelf();
         }
@@ -142,7 +142,7 @@ public abstract class CoroutineSource<TSelf, TResult>
         _cancellationToken = default;
         _status = CoroutineStatus.Running;
 
-        ThreadStaticPools<TSelf>.Get().Return((TSelf)this);
+        ThreadStaticPools<TSelf>.Get().Push((TSelf)this);
     }
 
     private bool TrySetCompletion(CoroutineStatus status)
