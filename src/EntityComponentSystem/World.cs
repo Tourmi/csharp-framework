@@ -42,9 +42,14 @@ public sealed class World : IEntityActions
     private readonly Lock _threadLock = new();
 
     /// <summary>
+    /// The pooled entity action instances.
+    /// </summary>
+    private readonly AutoPool<EntityActions> _entityActionsPool;
+
+    /// <summary>
     /// The world's queued actions, which are executed once it is safe to do so.
     /// </summary>
-    private readonly Stack<EntityActions> _queuedActions = new();
+    private readonly Queue<EntityActions> _queuedEntityActions = new();
 
     /// <summary>
     /// The world's entity identifier collection.
@@ -64,6 +69,7 @@ public sealed class World : IEntityActions
     /// </summary>
     private World(WorldConfiguration configuration)
     {
+        _entityActionsPool = new(() => new EntityActions(this));
         Ids.Reserve(FixedIds.CoreRegion);
 
         foreach (var region in configuration.ReservedIdentifierRegions.EmptyIfNull())
@@ -435,36 +441,44 @@ public sealed class World : IEntityActions
 
     internal EntityActions GetEntityActions()
     {
+        EntityActions? actions;
         lock (_threadLock)
         {
-            if (!_queuedActions.TryPop(out var actions))
-            {
-                actions = new(this);
-            }
-
-            actions.DeferActions = true;
-
-            return actions;
+            actions = _entityActionsPool.Pop();
+            _queuedEntityActions.Enqueue(actions);
         }
+
+        actions.DeferActions = true;
+        return actions;
     }
 
     internal void ReturnQueuedActions(EntityActions actions)
     {
         lock (_threadLock)
         {
-            _queuedActions.Push(actions);
+            actions.DiscardActions();
+            _entityActionsPool.Push(actions);
         }
     }
 
     internal void RunQueuedActions()
     {
-        lock (_threadLock)
+        EntityActions? actions;
+
+        // TODO: Add infinite loop detection, in case systems are stuck
+        // in an event loop and keep queueing more and more actions.
+        while (true)
         {
-            foreach (var actions in _queuedActions)
+            lock (_threadLock)
             {
-                actions.DequeueActions();
-                actions.DeferActions = false;
+                if (!_queuedEntityActions.TryDequeue(out actions))
+                {
+                    return;
+                }
             }
+
+            actions.DequeueActions();
+            actions.DeferActions = false;
         }
     }
 

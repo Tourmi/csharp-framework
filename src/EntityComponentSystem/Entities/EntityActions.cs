@@ -191,6 +191,27 @@ public sealed class EntityActions : IEntityActions
     }
 
     /// <summary>
+    /// Discards all actions that have been queued.
+    /// </summary>
+    internal void DiscardActions()
+    {
+        _queuedActions.Clear();
+        _queuedAdds.Clear();
+        _queuedKills.Clear();
+        _queuedRemoves.Clear();
+        _queuedSets.Clear();
+
+        _componentValueOverrideIndexes.Clear();
+        _hasComponentOverrides.Clear();
+        _isAliveOverrides.Clear();
+
+        foreach (var collection in _componentValueOverrides.Values)
+        {
+            collection.Clear();
+        }
+    }
+
+    /// <summary>
     /// Dequeues all actions that have been queued.
     /// </summary>
     internal void DequeueActions()
