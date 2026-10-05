@@ -2,7 +2,7 @@
 
 namespace Tourmi.Samples.TestScenes;
 
-internal class PerlinNoise
+internal sealed class PerlinNoise
 {
     private byte[] _permutations = [.. Enumerable.Repeat(Enumerable.Range(0, 256).Shuffle().Select(i => (byte)i).ToArray(), 2).SelectMany(i => i)];
 

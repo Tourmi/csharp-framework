@@ -27,7 +27,6 @@ public static class PointExtensions
         /// <summary>
         /// Adds the given number to the point
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns>The new Point</returns>
         public Point Add(int nb) => new(p.X + nb, p.Y + nb);
@@ -35,7 +34,6 @@ public static class PointExtensions
         /// <summary>
         /// Adds the x and y values given to the Point's X and Y values.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns>The new Point</returns>
@@ -44,7 +42,6 @@ public static class PointExtensions
         /// <summary>
         /// Subtracts the given value from the Point.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns>The new Point</returns>
         public Point Sub(int nb) => p - new Point(nb);
@@ -52,7 +49,6 @@ public static class PointExtensions
         /// <summary>
         /// Multiplies the Point by the given value.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns>The new Point</returns>
         public Point Multiply(int nb) => new(p.X * nb, p.Y * nb);
@@ -60,7 +56,6 @@ public static class PointExtensions
         /// <summary>
         /// Multiplies each of the Point's components by the given point
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="other"></param>
         /// <returns>The new Point</returns>
         public Point Multiply(Point other) => new(p.X * other.X, p.Y * other.Y);
@@ -68,7 +63,6 @@ public static class PointExtensions
         /// <summary>
         /// Divides the Point by the given number.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns>The new Point</returns>
         public Point Divide(int nb) => p.Divide(nb, nb);
@@ -76,7 +70,6 @@ public static class PointExtensions
         /// <summary>
         /// Divides the Point's X and Y values by the other point's X and Y values
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns></returns>
         public Point Divide(Point nb) => p.Divide(nb.X, nb.Y);
@@ -84,7 +77,6 @@ public static class PointExtensions
         /// <summary>
         /// Divides the Point's X and Y values by the given x and y values
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
@@ -93,7 +85,6 @@ public static class PointExtensions
         /// <summary>
         /// Calls the Modulo function on both of the Point's attributes.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="nb"></param>
         /// <returns>The new Point</returns>
         public Point Modulo(int nb) => new(p.X.Modulo(nb), p.Y.Modulo(nb));
@@ -118,7 +109,6 @@ public static class PointExtensions
         /// <summary>
         /// Returns a list of point contained by the perimeter between the two given points.
         /// </summary>
-        /// <param name="p"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
         public IEnumerable<Point> PerimeterPoints(Point p2)

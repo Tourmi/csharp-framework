@@ -25,7 +25,7 @@ internal sealed class TestScenesGame : Game
     private readonly NoiseGenerator _noiseGenerator = new();
 
     private uint _currentId;
-    private int _debugMode = 0;
+    private int _debugMode;
 
     private GraphicsDeviceManager? _graphicsDeviceManager;
     private Texture2D? _whitePixel;

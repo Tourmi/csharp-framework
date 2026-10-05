@@ -38,7 +38,6 @@ public static class Vector2Extensions
         /// <summary>
         /// Rotates the Vector by the specified angle.
         /// </summary>
-        /// <param name="v">This vector</param>
         /// <param name="angle">should be between a number between -1 and 1, where 1 represents a full rotation</param>
         public Vector2 Rotate(float angle)
         {

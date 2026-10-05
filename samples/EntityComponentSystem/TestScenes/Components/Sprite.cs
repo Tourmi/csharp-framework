@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Tourmi.Samples.TestScenes.Components;
 
-internal class Sprite
+internal sealed class Sprite
 {
     public Texture2D? Texture { get; set; }
 

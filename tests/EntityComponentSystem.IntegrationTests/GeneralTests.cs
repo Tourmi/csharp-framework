@@ -170,7 +170,7 @@ internal class GeneralTests
     {
         var ecs = World.Create();
 
-        using var query = Query.FromQueryParam<Identifier>(ecs);
+        using var query = Query.FromDynamicParam<Identifier>(ecs);
 
         var entity1 = ecs.CreateEntity();
         var entity2 = ecs.CreateEntity();
@@ -242,7 +242,7 @@ internal class GeneralTests
     {
         var ecs = World.Create();
 
-        using var query = Query.FromQueryParam<Entity>(ecs);
+        using var query = Query.FromDynamicParam<Entity>(ecs);
 
         var entity = ecs.CreateEntity();
         var component = ecs.CreateTag();
@@ -260,7 +260,7 @@ internal class GeneralTests
     {
         var ecs = World.Create();
 
-        using var query = Query.FromQueryParam<ComponentEntity>(ecs);
+        using var query = Query.FromDynamicParam<ComponentEntity>(ecs);
 
         var entity = ecs.CreateEntity();
         var component = ecs.CreateTag();
@@ -278,7 +278,7 @@ internal class GeneralTests
     {
         var ecs = World.Create();
 
-        using var query = Query.FromQueryParam<PrefabEntity>(ecs);
+        using var query = Query.FromDynamicParam<PrefabEntity>(ecs);
 
         var entity = ecs.CreateEntity();
         var component = ecs.CreateTag();
