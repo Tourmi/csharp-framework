@@ -29,28 +29,26 @@ internal sealed class CoroutineRunner<TStateMachine, TResult> : ICoroutineRunner
 
     public Action Continuation { get; }
 
-    public static ICoroutineRunner<TResult> GetCoroutineRunner(in TStateMachine stateMachine)
+    public static void GetCoroutineRunner(in TStateMachine stateMachine, out ICoroutineRunner<TResult> runner)
     {
-        if (_runnerPool is null)
+        _runnerPool ??= new();
+        if (!_runnerPool.TryPop(out var result))
         {
-            _runnerPool = new();
+            result = new();
         }
 
-        if (!_runnerPool.TryPop(out var runner))
-        {
-            runner = new();
-        }
+        result._result = default;
+        result._exception = default;
+        result._cancellationToken = default;
+        result._isCompleted = false;
+        result._isDisposed = false;
+        result._postContinuation = null;
+        result._capturedContext = CoroutineContext.Current;
 
-        runner._result = default;
-        runner._exception = default;
-        runner._cancellationToken = default;
-        runner._isCompleted = false;
-        runner._isDisposed = false;
-        runner._stateMachine = stateMachine;
-        runner._postContinuation = null;
-        runner._capturedContext = CoroutineContext.Current;
-
-        return runner;
+        // The runner must be copied before the state machine gets set.
+        // No idea why that is.
+        runner = result;
+        result._stateMachine = stateMachine;
     }
 
     /// <inheritdoc/>

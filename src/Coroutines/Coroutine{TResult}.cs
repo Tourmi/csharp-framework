@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Tourmi.Coroutines.CompilerServices;
 using Tourmi.Coroutines.Sources;
 
@@ -42,6 +43,7 @@ public readonly struct Coroutine<TResult> : IEquatable<Coroutine<TResult>>
     /// <summary>
     /// Result of this coroutine.
     /// </summary>
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public TResult Result => GetResult();
 
     /// <summary>

@@ -24,8 +24,9 @@ public class CoroutineContext
     private CoroutineContext? _contextToRestore;
 
     /// <inheritdoc cref="CoroutineContext"/>
-    public CoroutineContext()
+    public CoroutineContext(string? name = null)
     {
+        Name = name ?? "";
         _exitContextDisposable = new(ExitInternal);
     }
 
@@ -33,6 +34,11 @@ public class CoroutineContext
     /// The currently running CoroutineContext.
     /// </summary>
     public static CoroutineContext Current => _current ?? throw new InvalidOperationException("Cannot fetch the current context, since no contexts were entered on the current thread.");
+
+    /// <summary>
+    /// Name of the context. Useful for debugging purposes
+    /// </summary>
+    public string Name { get; }
 
     /// <summary>
     /// Queues the given item to the context execution queue.
