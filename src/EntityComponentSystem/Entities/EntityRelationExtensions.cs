@@ -18,6 +18,16 @@ public static class EntityRelationExtensions
         public void AddRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Add(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
 
         /// <summary>
+        /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/>.
+        /// </summary>
+        public bool HasRelation<TRelation, TTarget>() => entity.Actions?.Has<Relation<TRelation, TTarget>>(entity) ?? false;
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <paramref name="relationType"/> with the <paramref name="targetEntity"/>.
+        /// </summary>
+        public bool HasRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Has(entity, new RelationComponentIdentifier(targetEntity.ShortId, relationType)) ?? false;
+
+        /// <summary>
         /// The entity is a <typeparamref name="TTarget"/>.
         /// </summary>
         public void IsA<TTarget>() => entity.AddRelation<IsA, TTarget>();

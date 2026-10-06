@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
 using MovedEntity = (Tourmi.EntityComponentSystem.Ids.Identifier Id, int NewIndex);
 
 namespace Tourmi.EntityComponentSystem.Archetypes;

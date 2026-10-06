@@ -54,7 +54,7 @@ internal class EntityArchetypeCollection
     }
 
     /// <summary>
-    /// Adds the component to the entity.
+    /// Removes the component from the entity.
     /// Note that this does not check if the entity has the component.
     /// </summary>
     public void RemoveComponent(Identifier entityId, Identifier componentId)

@@ -35,6 +35,29 @@ internal class GeneralTests
     }
 
     [Test]
+    public void KillComponent()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        var someEntity2 = ecs.CreateEntity();
+        var someEntity3 = ecs.CreateEntity();
+
+        someEntity1.Add(someEntity2);
+        someEntity1.AddRelation(BuiltInRelationType.ChildOf, someEntity3);
+
+        Assert.That(someEntity1.Has(someEntity2));
+        Assert.That(someEntity1.HasRelation(BuiltInRelationType.ChildOf, someEntity3));
+
+        someEntity2.Kill();
+        someEntity3.Kill();
+
+        Assert.That(someEntity1.IsAlive());
+        Assert.That(someEntity1.Has(someEntity2), Is.False);
+        Assert.That(someEntity1.HasRelation(BuiltInRelationType.ChildOf, someEntity3), Is.False);
+    }
+
+    [Test]
     public void GetSetAndAddComponent()
     {
         var ecs = World.Create();
@@ -442,7 +465,7 @@ internal class GeneralTests
         someEntity4.Set<Name>(new("SomeName4"));
         someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
 
-        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<ChildOf, Wildcard>, Without<Relation<ChildOf, Parameter1>>>>(ecs, someEntity2);
+        using var query = Query.FromQueryParam<ParamGroup<Relation<ChildOf, Wildcard>, Without<Relation<ChildOf, Parameter1>>>>(ecs, someEntity2);
         var entities = query.GetEntityIds().ToArray();
 
         Assert.That(entities, Does.Not.Contain(someEntity1.Id));
@@ -471,7 +494,7 @@ internal class GeneralTests
         someEntity4.Set<Name>(new("SomeName4"));
         someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
 
-        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<Wildcard, Parameter1>, Without<Relation<DependsOn, Wildcard>>>>(ecs, someEntity1);
+        using var query = Query.FromQueryParam<ParamGroup<Relation<Wildcard, Parameter1>, Without<Relation<DependsOn, Wildcard>>>>(ecs, someEntity1);
         var entities = query.GetEntityIds().ToArray();
 
         Assert.That(entities, Does.Not.Contain(someEntity1.Id));
@@ -500,7 +523,7 @@ internal class GeneralTests
         someEntity4.Set<Name>(new("SomeName4"));
         someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
 
-        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<Wildcard, Wildcard>, Without<Relation<DependsOn, Wildcard>>, Without<Relation<Wildcard, Parameter1>>>>(ecs, someEntity2);
+        using var query = Query.FromQueryParam<ParamGroup<Relation<Wildcard, Wildcard>, Without<Relation<DependsOn, Wildcard>>, Without<Relation<Wildcard, Parameter1>>>>(ecs, someEntity2);
         var entities = query.GetEntityIds().ToArray();
 
         Assert.That(entities, Does.Not.Contain(someEntity1.Id));
