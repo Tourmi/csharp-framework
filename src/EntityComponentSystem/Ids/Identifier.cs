@@ -7,7 +7,6 @@ namespace Tourmi.EntityComponentSystem.Ids;
 /// </summary>
 /// <param name="id">Id of the entity</param>
 [StructLayout(LayoutKind.Explicit, Size = 8)]
-[SuppressMessage("Design", "CA1036:Override methods on comparable types", Justification = "Comparison operators do not make sense")]
 [DebuggerDisplay("{ShortId}, Types = {Types}, Version = {Version}")]
 public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparable<Identifier>
 {
@@ -50,6 +49,16 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
     public const byte VersionBitOffset = 32;
 
     /// <summary>
+    /// Mask for the <see cref="UnusedByte"/> of the Id.
+    /// </summary>
+    public const ulong UnusedByteBitMask = 0x00FF_0000_0000_0000;
+
+    /// <summary>
+    /// Offset in bits where the <see cref="UnusedByte"/> starts.
+    /// </summary>
+    public const int UnusedByteBitOffset = 48;
+
+    /// <summary>
     /// Mask for the type of the entity.
     /// </summary>
     public const ulong TypesBitMask = 0xFF00_0000_0000_0000;
@@ -76,6 +85,12 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
     /// </summary>
     [field: FieldOffset(4)]
     public ushort Version { get; }
+
+    /// <summary>
+    /// Unused byte in the Id
+    /// </summary>
+    [field: FieldOffset(6)]
+    public byte UnusedByte { get; }
 
     /// <summary>
     /// Type flags of the identifier
@@ -109,6 +124,18 @@ public readonly struct Identifier(ulong id) : IEquatable<Identifier>, IComparabl
 
     /// <inheritdoc/>
     public static Identifier operator &(Identifier left, IdentifierTypes types) => left.Value & ((ulong)types << TypesBitOffset);
+
+    /// <inheritdoc/>
+    public static bool operator <(Identifier left, Identifier right) => left.Value < right.Value;
+
+    /// <inheritdoc/>
+    public static bool operator <=(Identifier left, Identifier right) => left.Value <= right.Value;
+
+    /// <inheritdoc/>
+    public static bool operator >(Identifier left, Identifier right) => left.Value > right.Value;
+
+    /// <inheritdoc/>
+    public static bool operator >=(Identifier left, Identifier right) => left.Value >= right.Value;
 
     /// <summary>
     /// Returns a new identifier with the version number incremented.

@@ -25,6 +25,16 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     public const int RelationTypeBitOffset = 32;
 
     /// <summary>
+    /// Mask for the <see cref="UnusedByte"/> of the Id.
+    /// </summary>
+    public const ulong UnusedByteBitMask = 0x00FF_0000_0000_0000;
+
+    /// <summary>
+    /// Offset in bits where the <see cref="UnusedByte"/> starts.
+    /// </summary>
+    public const int UnusedByteBitOffset = 48;
+
+    /// <summary>
     /// Mask for the types of the component.
     /// </summary>
     public const ulong TypesBitMask = 0xFF00_0000_0000_0000;
@@ -72,6 +82,12 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     /// </summary>
     [field: FieldOffset(4)]
     public ushort RelationType { get; }
+
+    /// <summary>
+    /// Unused byte in the Id
+    /// </summary>
+    [field: FieldOffset(6)]
+    public byte UnusedByte { get; }
 
     /// <summary>
     /// Type flags of the identifier

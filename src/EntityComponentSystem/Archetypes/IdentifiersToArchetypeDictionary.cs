@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace Tourmi.EntityComponentSystem.Archetypes;
 
+/// <summary>
+/// Dictionary taking a component <see cref="Identifier"/> key, and returns all archetypes containing said component.
+/// </summary>
 internal class IdentifiersToArchetypeDictionary
 {
     /// <summary>
@@ -43,6 +46,10 @@ internal class IdentifiersToArchetypeDictionary
     /// Returns the archetype represented by the given <paramref name="components"/>, 
     /// creating it if needed.
     /// </summary>
+    /// <param name="components">
+    /// A collection of components, who's key is they identifier, and their value, their storage datatype
+    /// TODO: Find a better data structure for passing in an unordered collection of components.
+    /// </param>
     public Archetype this[IEnumerable<KeyValuePair<Identifier, Type?>> components]
     {
         get
@@ -69,6 +76,11 @@ internal class IdentifiersToArchetypeDictionary
             return archetype;
         }
     }
+
+    /// <summary>
+    /// Returns all the component ids contained by the dictionary.
+    /// </summary>
+    public IReadOnlyCollection<Identifier> Components => _archetypeGroups.Keys;
 
     /// <summary>
     /// Returns all the archetypes contained by the dictionary.

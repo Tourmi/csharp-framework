@@ -1,6 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Archetypes.ComponentCollections;
-
-namespace Tourmi.EntityComponentSystem.Archetypes;
+﻿namespace Tourmi.EntityComponentSystem.Archetypes;
 
 /// <summary>
 /// Shared data between the archetypes of the graph.
@@ -12,7 +10,7 @@ internal class ArchetypeSharedData(IdentifiersToArchetypeDictionary identifierDi
     /// </summary>
     /// <remarks>
     /// C# does not actually support zero-width structs, and this will always take up one byte
-    /// of memory per entry. Need to find an alternate solution.
+    /// of memory per entry. An alternate solution might be warranted if it ends up being an issue.
     /// </remarks>
     private struct NoData;
 

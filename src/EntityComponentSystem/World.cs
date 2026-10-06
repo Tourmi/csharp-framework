@@ -254,17 +254,38 @@ public sealed class World : IEntityActions
             return;
         }
 
-        // Remove entity from entities (if it was used as a component)
-        foreach (var archetype in Archetypes.ComponentsToArchetypes[entity])
+        // Remove entity from entities
+        foreach (var componentId in Archetypes.ComponentsToArchetypes.Components)
         {
-            while (archetype.EntityCount > 0)
+            var shouldRemoveComponent = false;
+
+            if (componentId == entity)
             {
-                Remove(archetype.Entities[0], entity);
+                shouldRemoveComponent = true;
+            }
+
+            // Entity is part of a Relation<*, Entity>
+            if (componentId.IsRelationId && componentId.ShortId == entity.ShortId)
+            {
+                shouldRemoveComponent = true;
+            }
+
+            // TODO: Kill all relations where RelationType == entity
+
+            if (!shouldRemoveComponent)
+            {
+                continue;
+            }
+
+            foreach (var archetype in Archetypes.ComponentsToArchetypes[componentId])
+            {
+                while (archetype.EntityCount > 0)
+                {
+                    // Always remove last entity of archetype to save on swap operations.
+                    Remove(archetype.Entities[^1], componentId);
+                }
             }
         }
-
-        // TODO: Kill all relations where Target == entity
-        // TODO: Kill all relations where RelationType == entity
 
         Archetypes.Kill(entity);
 
