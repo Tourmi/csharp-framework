@@ -8,11 +8,11 @@
 /// </summary>
 public sealed class LazyPagedArray<T>
 {
-    private const byte MaximumPageSize = 32;
+    private const byte MaximumPageSize = 64;
 
     private readonly ulong _pageSize;
-    private readonly uint _pageIdMask;
-    private readonly uint _pageIndexMask;
+    private readonly ulong _pageIdMask;
+    private readonly ulong _pageIndexMask;
 
     private readonly Dictionary<PageId, T?[]> _pages = [];
 
@@ -21,42 +21,42 @@ public sealed class LazyPagedArray<T>
     /// </summary>
     /// <param name="pageSizePowerOf2">
     ///     The power of two to use for each page of the paged array. 
-    ///     Cannot be greater than 32, since the array is indexed with a <see cref="uint"/>.
+    ///     Cannot be greater than 64, since the array is indexed with a <see cref="ulong"/>.
     /// </param>
     public LazyPagedArray(byte pageSizePowerOf2 = 12)
     {
         _ = pageSizePowerOf2.ThrowIfGreaterThan(MaximumPageSize);
 
         _pageSize = 1ul << pageSizePowerOf2;
-        _pageIndexMask = unchecked((uint)(_pageSize - 1));
+        _pageIndexMask = unchecked(_pageSize - 1);
         _pageIdMask = ~_pageIndexMask;
     }
 
     /// <summary>
     /// Returns a reference to the index in the paged array, initializing pages if needed.
     /// </summary>
-    public ref T? this[uint index] => ref GetPage(index)[ToPageIndex(index).Index];
+    public ref T? this[ulong index] => ref GetPage(index)[ToPageIndex(index).Index];
 
     /// <summary>
     /// Inserts <paramref name="value"/> at the given <paramref name="index"/> in the paged array.
     /// </summary>
-    public void Insert(uint index, T value) => GetPage(index)[ToPageIndex(index).Index] = value;
+    public void Insert(ulong index, T value) => GetPage(index)[ToPageIndex(index).Index] = value;
 
     /// <summary>
     /// Ensures that the paged array is initialized for the given item count, starting at the given index.
     /// </summary>
-    public void EnsureCapacity(uint count, uint startIndex = 0)
+    public void EnsureCapacity(ulong count, ulong startIndex = 0)
     {
-        ulong currentIndex = startIndex & _pageIdMask;
-        var targetIndex = Math.Min(startIndex + (ulong)count, uint.MaxValue);
+        var currentIndex = startIndex & _pageIdMask;
+        var targetIndex = Math.Min(startIndex + (ulong)count, ulong.MaxValue);
         while (currentIndex <= targetIndex)
         {
-            _ = GetPage(checked((uint)currentIndex));
+            _ = GetPage(currentIndex);
             currentIndex += _pageSize;
         }
     }
 
-    private T?[] GetPage(uint index)
+    private T?[] GetPage(ulong index)
     {
         var pageId = ToPageId(index);
         if (!_pages.TryGetValue(pageId, out var page))
@@ -68,9 +68,9 @@ public sealed class LazyPagedArray<T>
         return page;
     }
 
-    private PageId ToPageId(uint index) => new(index & _pageIdMask);
-    private PageIndex ToPageIndex(uint index) => new(index & _pageIndexMask);
+    private PageId ToPageId(ulong index) => new(index & _pageIdMask);
+    private PageIndex ToPageIndex(ulong index) => new(index & _pageIndexMask);
 
-    private readonly record struct PageId(uint Id);
-    private readonly record struct PageIndex(uint Index);
+    private readonly record struct PageId(ulong Id);
+    private readonly record struct PageIndex(ulong Index);
 }

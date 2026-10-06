@@ -46,4 +46,10 @@ public enum BuiltInRelationType : byte
     /// Used by systems and schedules, marks what events a system or schedule is subscribed to.
     /// </summary>
     SubscribedTo = 6,
+
+    /// <summary>
+    /// Special Id which when used as the target of a Relation Id, will match any target.
+    /// When used as the relation type, will match any relation type having the specified target
+    /// </summary>
+    Wildcard = 255,
 }

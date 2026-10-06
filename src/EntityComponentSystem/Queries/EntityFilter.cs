@@ -50,15 +50,94 @@ public sealed class EntityFilter
 
         foreach (var componentId in archetype.Components)
         {
-            if (_excludedComponentIds.Contains(componentId))
+            foreach (var excludedComponent in _excludedComponentIds)
             {
-                return false;
+                if (componentId == excludedComponent)
+                {
+                    return false;
+                }
+
+                if (!componentId.IsRelationId || !excludedComponent.IsRelationId)
+                {
+                    continue;
+                }
+
+                var relationId = componentId.ToRelationId();
+                var excludedRelationId = excludedComponent.ToRelationId();
+
+                if (excludedRelationId.Target == FixedIds.Relations.Wildcard.ShortId)
+                {
+                    if (excludedRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+                    {
+                        return false;
+                    }
+
+                    if (excludedRelationId.RelationType == relationId.RelationType)
+                    {
+                        return false;
+                    }
+
+                    continue;
+                }
+
+                if (excludedRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+                {
+                    if (relationId.Target == excludedRelationId.Target)
+                    {
+                        return false;
+                    }
+                }
             }
         }
 
         foreach (var requiredComponentId in _requiredComponentIds)
         {
-            if (!archetype.Components.Contains(requiredComponentId))
+            var hasComponent = false;
+
+            foreach (var componentId in archetype.Components)
+            {
+                if (componentId == requiredComponentId)
+                {
+                    hasComponent = true;
+                    break;
+                }
+
+                if (!componentId.IsRelationId || !requiredComponentId.IsRelationId)
+                {
+                    continue;
+                }
+
+                var relationId = componentId.ToRelationId();
+                var requiredRelationId = requiredComponentId.ToRelationId();
+
+                if (requiredRelationId.Target == FixedIds.Relations.Wildcard.ShortId)
+                {
+                    if (requiredRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+                    {
+                        hasComponent = true;
+                        break;
+                    }
+
+                    if (requiredRelationId.RelationType == relationId.RelationType)
+                    {
+                        hasComponent = true;
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if (requiredRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+                {
+                    if (relationId.Target == requiredRelationId.Target)
+                    {
+                        hasComponent = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasComponent)
             {
                 return false;
             }
