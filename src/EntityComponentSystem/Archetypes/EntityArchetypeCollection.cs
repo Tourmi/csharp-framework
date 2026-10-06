@@ -1,5 +1,4 @@
-﻿using Tourmi.Framework.Collections;
-using MovedEntity = (Tourmi.EntityComponentSystem.Ids.Identifier Id, int NewIndex);
+﻿using MovedEntity = (Tourmi.EntityComponentSystem.Ids.Identifier Id, int NewIndex);
 
 namespace Tourmi.EntityComponentSystem.Archetypes;
 
@@ -28,19 +27,19 @@ internal class EntityArchetypeCollection
     /// <summary>
     /// Creates a new entity and inserts it into the empty archetype
     /// </summary>
-    public void Create(Identifier id) => _entities[id.ShortId] = _archetypes.EmptyArchetype.AddEntity(id);
+    public void Create(Identifier id) => _entities[id] = _archetypes.EmptyArchetype.AddEntity(id);
 
     /// <summary>
     /// Returns <see langword="true"/> if the entity associated to the given <paramref name="id"/> is alive.
     /// </summary>
-    public bool IsAlive(Identifier id) => _entities[id.ShortId].Archetype is not null;
+    public bool IsAlive(Identifier id) => _entities[id].Archetype is not null;
 
     /// <summary>
     /// Kills the entity with the given <paramref name="entityId"/>
     /// </summary>
     public void Kill(Identifier entityId)
     {
-        var movedEntity = _entities[entityId.ShortId].Remove();
+        var movedEntity = _entities[entityId].Remove();
         ProcessMovedEntity(movedEntity);
     }
 
@@ -50,7 +49,7 @@ internal class EntityArchetypeCollection
     /// </summary>
     public void AddComponent(Identifier entityId, Identifier componentId, Type? dataType)
     {
-        var movedEntity = _entities[entityId.ShortId].AddComponent(componentId, dataType);
+        var movedEntity = _entities[entityId].AddComponent(componentId, dataType);
         ProcessMovedEntity(movedEntity);
     }
 
@@ -60,7 +59,7 @@ internal class EntityArchetypeCollection
     /// </summary>
     public void RemoveComponent(Identifier entityId, Identifier componentId)
     {
-        var movedEntity = _entities[entityId.ShortId].RemoveComponent(componentId);
+        var movedEntity = _entities[entityId].RemoveComponent(componentId);
         ProcessMovedEntity(movedEntity);
     }
 
@@ -68,25 +67,25 @@ internal class EntityArchetypeCollection
     /// Checks whether or not the entity has the given component
     /// </summary>
     public bool HasComponent(Identifier entityId, Identifier componentId)
-        => _entities[entityId.ShortId].Archetype.HasComponent(componentId);
+        => _entities[entityId].Archetype.HasComponent(componentId);
 
     /// <summary>
     /// Returns the value of the component.
     /// </summary>
     public T? GetComponent<T>(Identifier entityId, Identifier componentId)
-        => _entities[entityId.ShortId].GetValue<T>(componentId);
+        => _entities[entityId].GetValue<T>(componentId);
 
     /// <summary>
     /// Returns a reference to the value of the component.
     /// </summary>
     public ref T? GetRefComponent<T>(Identifier entityId, Identifier componentId)
-        => ref _entities[entityId.ShortId].GetValueRef<T>(componentId);
+        => ref _entities[entityId].GetValueRef<T>(componentId);
 
     /// <summary>
     /// Sets the value of the component.
     /// </summary>
     public void SetComponent<T>(Identifier entityId, Identifier componentId, T value)
-        => _entities[entityId.ShortId].SetValue(componentId, value);
+        => _entities[entityId].SetValue(componentId, value);
 
     /// <summary>
     /// Returns all archetypes
@@ -104,14 +103,14 @@ internal class EntityArchetypeCollection
     /// Used for debugging purposes
     /// </summary>
     internal Archetype? GetEntityArchetype(Identifier entityId)
-        => _entities[entityId.ShortId].Archetype;
+        => _entities[entityId].Archetype;
 
     /// <summary>
     /// Used for debugging purposes
     /// </summary>
     internal ArchetypeEntityEntry? GetArchetypeEntry(Identifier entityId)
     {
-        var entry = _entities[entityId.ShortId];
+        var entry = _entities[entityId];
         return entry.Archetype is null ? null : entry;
     }
 
@@ -123,6 +122,6 @@ internal class EntityArchetypeCollection
         }
 
         var (entityToUpdate, entityNewIndex) = entity.Get();
-        _entities[entityToUpdate.ShortId].Index = entityNewIndex;
+        _entities[entityToUpdate].Index = entityNewIndex;
     }
 }

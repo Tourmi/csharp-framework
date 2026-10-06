@@ -47,11 +47,6 @@ public static class FixedIds
         public const uint RegionEnd = RegionStart + RegionSize;
 
         /// <summary>
-        /// Special Id which when used as the target of a Relation Id, will match any target.
-        /// </summary>
-        public static readonly Identifier Wildcard = new Identifier(RegionStart + 0x00) | IdentifierTypes.Relation;
-
-        /// <summary>
         /// Special Id that acts as a placeholder for a query parameter determined at runtime.
         /// </summary>
         public static readonly Identifier Parameter1 = RegionStart + 0x01;
@@ -132,6 +127,9 @@ public static class FixedIds
 
         /// <inheritdoc cref="BuiltInRelationType.SubscribedTo"/>
         public static readonly Identifier SubscribedTo = RegionStart + (byte)BuiltInRelationType.SubscribedTo;
+
+        /// <inheritdoc cref="BuiltInRelationType.Wildcard"/>
+        public static readonly Identifier Wildcard = RegionStart + (byte)BuiltInRelationType.Wildcard;
     }
 
     /// <summary>

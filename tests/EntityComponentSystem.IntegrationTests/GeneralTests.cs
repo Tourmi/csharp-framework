@@ -421,4 +421,128 @@ internal class GeneralTests
         var queryRemainingEntities = entityQuery.GetEntityEntries().ToArray();
         Assert.That(queryRemainingEntities, Is.Empty);
     }
+
+    [Test]
+    public void QueryWildcardTarget()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.AddRelation(BuiltInRelationType.ChildOf, someEntity1);
+
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("SomeName3"));
+        someEntity3.AddRelation(BuiltInRelationType.DependsOn, someEntity1);
+
+        var someEntity4 = ecs.CreateEntity();
+        someEntity4.Set<Name>(new("SomeName4"));
+        someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
+
+        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<ChildOf, Wildcard>, Without<Relation<ChildOf, Parameter1>>>>(ecs, someEntity2);
+        var entities = query.GetEntityIds().ToArray();
+
+        Assert.That(entities, Does.Not.Contain(someEntity1.Id));
+        Assert.That(entities, Contains.Item(someEntity2.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity3.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity4.Id));
+    }
+
+    [Test]
+    public void QueryWildcardRelationType()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.AddRelation(BuiltInRelationType.ChildOf, someEntity1);
+
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("SomeName3"));
+        someEntity3.AddRelation(BuiltInRelationType.DependsOn, someEntity1);
+
+        var someEntity4 = ecs.CreateEntity();
+        someEntity4.Set<Name>(new("SomeName4"));
+        someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
+
+        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<Wildcard, Parameter1>, Without<Relation<DependsOn, Wildcard>>>>(ecs, someEntity1);
+        var entities = query.GetEntityIds().ToArray();
+
+        Assert.That(entities, Does.Not.Contain(someEntity1.Id));
+        Assert.That(entities, Contains.Item(someEntity2.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity3.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity4.Id));
+    }
+
+    [Test]
+    public void QueryWildcardWildcard()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.AddRelation(BuiltInRelationType.ChildOf, someEntity1);
+
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("SomeName3"));
+        someEntity3.AddRelation(BuiltInRelationType.DependsOn, someEntity1);
+
+        var someEntity4 = ecs.CreateEntity();
+        someEntity4.Set<Name>(new("SomeName4"));
+        someEntity4.AddRelation(BuiltInRelationType.ChildOf, someEntity2);
+
+        using var query = Query.FromQueryParam<ParamGroup<Identifier, Relation<Wildcard, Wildcard>, Without<Relation<DependsOn, Wildcard>>, Without<Relation<Wildcard, Parameter1>>>>(ecs, someEntity2);
+        var entities = query.GetEntityIds().ToArray();
+
+        Assert.That(entities, Does.Not.Contain(someEntity1.Id));
+        Assert.That(entities, Contains.Item(someEntity2.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity3.Id));
+        Assert.That(entities, Does.Not.Contain(someEntity4.Id));
+    }
+
+    [Test]
+    public void SystemWildcardWildcard()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.Set<Name>(new("SomeName1"));
+        someEntity1.Set<Position>(new(1, 1));
+
+        var someEntity2 = ecs.CreateEntity();
+        someEntity2.Set<Name>(new("SomeName2"));
+        someEntity2.Set<Position>(new(1, 1));
+        someEntity2.AddRelation(BuiltInRelationType.ChildOf, someEntity1);
+
+        var someEntity3 = ecs.CreateEntity();
+        someEntity3.Set<Name>(new("SomeName3"));
+        someEntity3.Set<Position>(new(1, 1));
+        someEntity3.AddRelation(BuiltInRelationType.DependsOn, someEntity1);
+
+        var someEntity4 = ecs.CreateEntity();
+        someEntity4.Set<Name>(new("SomeName4"));
+        someEntity4.Set<Position>(new(1, 1));
+        someEntity4.AddRelation<ChildOf, Speed>();
+
+        _ = ecs.AddSystem((ParamGroup<Ref<Position>, With<Relation<Wildcard, Wildcard>>, Without<Relation<DependsOn, Wildcard>>, Without<Relation<Wildcard, Speed>>> p) =>
+        {
+            p.Value1.Reference = new Position(2, 2);
+        });
+
+        ecs.Tick();
+
+        Assert.That(someEntity1.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+        Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(2, 2)));
+        Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+        Assert.That(someEntity4.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+    }
 }

@@ -23,6 +23,7 @@ public sealed class World : IEntityActions
         [typeof(Requires)] = FixedIds.Relations.Requires,
         [typeof(DependsOn)] = FixedIds.Relations.DependsOn,
         [typeof(SubscribedTo)] = FixedIds.Relations.SubscribedTo,
+        [typeof(Wildcard)] = FixedIds.Relations.Wildcard,
         [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
         [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
@@ -126,7 +127,7 @@ public sealed class World : IEntityActions
                     continue;
                 }
 
-                var relation = CreateEntityFixedId(new Identifier(FixedIds.Relations.RegionStart + i) | IdentifierTypes.Relation);
+                var relation = CreateEntityFixedId(FixedIds.Relations.RegionStart + i);
                 this.Add<Component>(relation);
                 this.Set<Name>(relation, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
                 this.Set<RelationDefinition>(relation, new(i));
@@ -237,7 +238,7 @@ public sealed class World : IEntityActions
             return false;
         }
 
-        if (relationId.Target == FixedIds.Special.Wildcard.ShortId)
+        if (relationId.Target == FixedIds.Relations.Wildcard.ShortId)
         {
             return true;
         }
@@ -532,6 +533,11 @@ public sealed class World : IEntityActions
         if (component.Types.HasFlag(IdentifierTypes.Relation))
         {
             var relationId = new RelationComponentIdentifier(component);
+            if (relationId.Target == FixedIds.Relations.Wildcard.ShortId || relationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+            {
+                throw new IdentifierInvalidException(relationId, "Cannot have a wildcard component in a relation component on an entity.");
+            }
+
             if (relationId.BuiltInRelationTypeOrNull != null)
             {
                 datatypeId = ToId(relationId.BuiltInRelationTypeOrNull.Value);
