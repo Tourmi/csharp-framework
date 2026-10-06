@@ -445,7 +445,6 @@ public sealed class World : IEntityActions
         lock (_threadLock)
         {
             actions = _entityActionsPool.Pop();
-            _queuedEntityActions.Enqueue(actions);
         }
 
         actions.DeferActions = true;
@@ -456,8 +455,7 @@ public sealed class World : IEntityActions
     {
         lock (_threadLock)
         {
-            actions.DiscardActions();
-            _entityActionsPool.Push(actions);
+            _queuedEntityActions.Enqueue(actions);
         }
     }
 
@@ -479,6 +477,10 @@ public sealed class World : IEntityActions
 
             actions.DequeueActions();
             actions.DeferActions = false;
+            lock (_threadLock)
+            {
+                _entityActionsPool.Push(actions);
+            }
         }
     }
 
