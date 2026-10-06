@@ -38,6 +38,7 @@ internal class CoroutineWhenUnitTests
 
         NextFrame();
         Assert.That(coroutine.Status, Is.EqualTo(CoroutineStatus.Succeeded));
+        Assert.That(coroutine.GetResult, Throws.Nothing);
     }
 
     [Test]

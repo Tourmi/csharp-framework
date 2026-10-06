@@ -7,8 +7,8 @@ internal class ContextSwitchingTests
     [Test]
     public void SingleThreadContextSwitching()
     {
-        var startingContext = new CoroutineContext();
-        var continueContext = new CoroutineContext();
+        var startingContext = new CoroutineContext("1");
+        var continueContext = new CoroutineContext("2");
 
         Coroutine coroutine;
         using (startingContext.Enter())

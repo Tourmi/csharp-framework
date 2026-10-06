@@ -82,7 +82,10 @@ public struct AsyncCoroutineMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        _runner ??= CoroutineRunner<TStateMachine, CoroutineUnit>.GetCoroutineRunner(in stateMachine);
+        if (_runner is null)
+        {
+            CoroutineRunner<TStateMachine, CoroutineUnit>.GetCoroutineRunner(in stateMachine, out _runner);
+        }
 
         awaiter.OnCompleted(_runner.Continuation);
     }
@@ -94,7 +97,10 @@ public struct AsyncCoroutineMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        _runner ??= CoroutineRunner<TStateMachine, CoroutineUnit>.GetCoroutineRunner(in stateMachine);
+        if (_runner is null)
+        {
+            CoroutineRunner<TStateMachine, CoroutineUnit>.GetCoroutineRunner(in stateMachine, out _runner);
+        }
 
         awaiter.UnsafeOnCompleted(_runner.Continuation);
     }

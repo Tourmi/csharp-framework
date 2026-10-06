@@ -11,7 +11,7 @@ internal abstract class CoroutineBaseTest
     [SetUp]
     public virtual void SetUp()
     {
-        _context = new CoroutineContext();
+        _context = new CoroutineContext("Default Test Context");
 
         Context.Enter();
         Context.ProvideDeltaTime(TimeSpan.FromSeconds(1));
