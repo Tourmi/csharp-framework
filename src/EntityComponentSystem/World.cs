@@ -38,7 +38,7 @@ public sealed class World : IEntityActions
     };
     private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
-    private readonly Dictionary<(Type, Identifier), Query> _parametrized1Queries = [];
+    private readonly Dictionary<(Type, ulong), Query> _parametrized1Queries = [];
 
     private readonly Lock _threadLock = new();
 
@@ -530,7 +530,7 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Returns the cached query for the given type <typeparamref name="T"/>.
     /// </summary>
-    public Query GetCachedQueryFor<T>(Identifier parameter1)
+    public Query GetCachedQueryFor<T>(ulong parameter1)
         where T : IQueryParam<T>, allows ref struct
     {
         var queryType = typeof(T);
