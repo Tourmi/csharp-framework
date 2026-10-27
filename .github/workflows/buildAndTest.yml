@@ -32,6 +32,8 @@ jobs:
       run: dotnet --version
     - name: Restore dependencies
       run: dotnet restore --packages ${{ github.workspace }}/.nuget/packages
+    - name: Restore dotnet tools
+      run: dotnet tool restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
