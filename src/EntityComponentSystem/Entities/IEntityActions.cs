@@ -44,7 +44,13 @@ public interface IEntityActions
     /// If the <paramref name="id"/> is a relation between two entities,
     ///     returns <see langword="true"/> if the target entity is alive, and the relation exists.
     /// </summary>
-    bool IsValid(Identifier id);
+    /// <param name="id">
+    /// Id to verify
+    /// </param>
+    /// <param name="allowWildcard">
+    /// Whether or not to allow wildcards in relation ids.
+    /// </param>
+    bool IsValid(Identifier id, bool allowWildcard = true);
 
     /// <summary>
     /// Kills the given entity.

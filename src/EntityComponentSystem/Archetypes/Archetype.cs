@@ -17,6 +17,7 @@ internal partial class Archetype
     private readonly ImmutableSortedDictionary<Identifier, Type?> _componentDataTypes;
     private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
     private readonly Identifier[] _components;
+    private readonly Identifier[] _wildcardRelations;
     private readonly IComponentCollection[] _data;
 
     internal Archetype(ArchetypeSharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
@@ -25,6 +26,27 @@ internal partial class Archetype
         _componentDataTypes = componentTypes.ToImmutableSortedDictionary();
         _componentsData = _componentDataTypes.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
         _components = [.. _componentDataTypes.Keys];
+
+        HashSet<Identifier> wildcardRelations = [];
+        var hasAnyRelations = false;
+        for (var i = 0; i < _components.Length; i++)
+        {
+            var component = _components[i];
+            if (!component.IsRelationId)
+            {
+                continue;
+            }
+
+            var targetWildcard = new RelationComponentIdentifier((component & ~RelationComponentIdentifier.TargetBitMask) | FixedIds.Relations.Wildcard);
+            _ = wildcardRelations.Add(targetWildcard);
+
+            var relationTypeWildcard = new RelationComponentIdentifier((component & ~RelationComponentIdentifier.RelationTypeBitMask) | (((ulong)BuiltInRelationType.Wildcard) << RelationComponentIdentifier.RelationTypeBitOffset));
+            _ = wildcardRelations.Add(relationTypeWildcard);
+
+            hasAnyRelations = true;
+        }
+
+        _wildcardRelations = hasAnyRelations ? [new RelationComponentIdentifier(FixedIds.Relations.Wildcard.ShortId, BuiltInRelationType.Wildcard), .. wildcardRelations] : [];
         _data = [.. _componentsData.Values];
     }
 
@@ -34,6 +56,7 @@ internal partial class Archetype
         _componentDataTypes = ImmutableSortedDictionary<Identifier, Type?>.Empty;
         _componentsData = ImmutableSortedDictionary<Identifier, IComponentCollection>.Empty;
         _components = [];
+        _wildcardRelations = [];
         _data = [];
     }
 
@@ -65,9 +88,10 @@ internal partial class Archetype
         => (IComponentCollection<T>)GetComponentCollection(componentId);
 
     /// <summary>
-    /// Returns whether or not the archetype contains the given component
+    /// Returns whether or not the archetype contains the given component.
     /// </summary>
-    public bool HasComponent(Identifier componentId) => _components.Contains(componentId);
+    public bool HasComponent(Identifier componentId)
+        => _components.Contains(componentId) || (componentId.IsRelationId && _wildcardRelations.Contains(componentId));
 
     /// <summary>
     /// Adds the entity to the archetype and returns the index it has in the archetype
