@@ -207,7 +207,7 @@ public sealed class World : IEntityActions
     public bool IsAlive(Identifier entity) => Archetypes.IsAlive(entity);
 
     /// <inheritdoc/>
-    public bool IsValid(Identifier id)
+    public bool IsValid(Identifier id, bool allowWildcard = true)
     {
         if (!id.Types.HasFlag(IdentifierTypes.Relation))
         {
@@ -222,25 +222,35 @@ public sealed class World : IEntityActions
             return false;
         }
 
-        Identifier relationEntity;
-        if (relationIndex < _builtInRelationIds.Length)
+        if (relationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
         {
-            relationEntity = _builtInRelationIds[relationIndex];
+            if (!allowWildcard)
+            {
+                return false;
+            }
         }
         else
         {
-            // TODO: Get user-defined relations as well
-            throw new NotImplementedException();
-        }
+            Identifier relationDefinition;
+            if (relationIndex < _builtInRelationIds.Length)
+            {
+                relationDefinition = _builtInRelationIds[relationIndex];
+            }
+            else
+            {
+                // TODO: Get user-defined relations as well
+                throw new NotImplementedException();
+            }
 
-        if (!Archetypes.IsAlive(relationEntity))
-        {
-            return false;
+            if (!Archetypes.IsAlive(relationDefinition))
+            {
+                return false;
+            }
         }
 
         if (relationId.Target == FixedIds.Relations.Wildcard.ShortId)
         {
-            return true;
+            return allowWildcard;
         }
 
         return Archetypes.IsAlive(relationId.Target);
@@ -300,7 +310,7 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public bool Has(Identifier entity, Identifier componentId)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(componentId))
+        if (!IsValid(componentId, allowWildcard: true))
         {
             return false;
         }
@@ -311,7 +321,7 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public T? Get<T>(Identifier entity, Identifier component)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
         {
             return default;
         }
@@ -332,7 +342,7 @@ public sealed class World : IEntityActions
             EntityInvalidException.ThrowEntityInvalid(entity);
         }
 
-        if (!IsValid(component))
+        if (!IsValid(component, allowWildcard: false))
         {
             EntityInvalidException.ThrowComponentInvalid(component);
         }
@@ -348,7 +358,7 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public void Add(Identifier entity, Identifier component)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
         {
             return;
         }
@@ -359,7 +369,7 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public void Set<T>(Identifier entity, Identifier component, T value)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
         {
             return;
         }
@@ -372,7 +382,7 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public void Remove(Identifier entity, Identifier component)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component))
+        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
         {
             return;
         }
@@ -390,9 +400,8 @@ public sealed class World : IEntityActions
     /// </summary>
     public Entity GetComponentForType(Type type)
     {
-        if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsAlive(entityId))
+        if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsValid(entityId, allowWildcard: true))
         {
-            Entity entity;
             if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
             {
                 var genericArguments = type.GetGenericArguments();
@@ -405,25 +414,20 @@ public sealed class World : IEntityActions
                 var targetId = targetEntity.Id;
 
                 entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
-                entity = CreateEntityFixedId(entityId);
-                entity.Set(new Name($"({relationDefinition.DisplayName} - {targetEntity.DisplayName})"));
-                lock (_threadLock)
-                {
-                    _typesToEntityIds[type] = entity;
-                }
-
-                // Remaining setup is based on the relation definition.
-                type = relationDefinitionType;
-            }
-            else
-            {
-                entity = _typesToEntityIds.TryGetValue(type, out var predefinedId) ? CreateEntityFixedId(predefinedId) : CreateEntity();
-                entityId = entity.Id;
-                entity.Set(new Name(type.Name));
                 lock (_threadLock)
                 {
                     _typesToEntityIds[type] = entityId;
                 }
+
+                return new Entity(entityId, this);
+            }
+
+            var entity = entityId.ShortId != 0 ? CreateEntityFixedId(entityId) : CreateEntity();
+            entityId = entity.Id;
+            entity.Set(new Name(type.Name));
+            lock (_threadLock)
+            {
+                _typesToEntityIds[type] = entityId;
             }
 
             entity.Add<Component>();

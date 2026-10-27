@@ -118,14 +118,14 @@ public sealed class EntityActions : IEntityActions
     }
 
     /// <inheritdoc/>
-    public bool IsValid(Identifier id)
+    public bool IsValid(Identifier id, bool allowWildcard = true)
     {
         if (_isAliveOverrides.TryGetValue(id, out var isAlive))
         {
             return isAlive;
         }
 
-        return World.IsValid(id);
+        return World.IsValid(id, allowWildcard);
     }
 
     /// <inheritdoc/>

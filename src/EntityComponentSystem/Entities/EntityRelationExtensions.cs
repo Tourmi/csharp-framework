@@ -8,14 +8,19 @@ public static class EntityRelationExtensions
     extension(Entity entity)
     {
         /// <summary>
-        /// Adds the given <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/> to the entity.
+        /// Adds the given <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/> to the <paramref name="entity"/>.
         /// </summary>
         public void AddRelation<TRelation, TTarget>() => entity.Actions?.Add<Relation<TRelation, TTarget>>(entity.Id);
 
         /// <summary>
-        /// Adds the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> to the entity.
+        /// Adds the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> to the <paramref name="entity"/>.
         /// </summary>
         public void AddRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Add(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
+
+        /// <summary>
+        /// Adds the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> to the <paramref name="entity"/>.
+        /// </summary>
+        public void AddRelation(ushort relationType, Identifier targetEntity) => entity.Actions?.Add(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
 
         /// <summary>
         /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/>.

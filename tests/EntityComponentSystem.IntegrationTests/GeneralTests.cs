@@ -77,7 +77,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestRefs()
+    public void Refs()
     {
         var ecs = World.Create();
 
@@ -97,7 +97,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestRelation()
+    public void Relations()
     {
         var ecs = World.Create();
 
@@ -130,7 +130,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestStronglyTypedRelations()
+    public void StronglyTypedRelations()
     {
         var ecs = World.Create();
 
@@ -315,7 +315,7 @@ internal class GeneralTests
     }
 
     [Test]
-    public void TestSystems()
+    public void Systems()
     {
         var ecs = World.Create();
         _ = ecs.AddSystem((Identifier id, RefReadonly<Name> name, Ref<Position> position, Ref<Speed> speedRef) =>
@@ -567,5 +567,32 @@ internal class GeneralTests
         Assert.That(someEntity2.Get<Position>(), Is.EqualTo(new Position(2, 2)));
         Assert.That(someEntity3.Get<Position>(), Is.EqualTo(new Position(1, 1)));
         Assert.That(someEntity4.Get<Position>(), Is.EqualTo(new Position(1, 1)));
+    }
+
+    [Test]
+    public void HasWildcardComponent()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.ChildOf<Speed>();
+
+        Assert.That(someEntity1.HasRelation<ChildOf, Speed>());
+        Assert.That(someEntity1.HasRelation<ChildOf, Wildcard>());
+        Assert.That(someEntity1.HasRelation<Wildcard, Speed>());
+        Assert.That(someEntity1.HasRelation<Wildcard, Wildcard>());
+    }
+
+    [Test]
+    public void CannotAddWildcardRelation()
+    {
+        var ecs = World.Create();
+
+        var someEntity1 = ecs.CreateEntity();
+        someEntity1.ChildOf<Wildcard>();
+        someEntity1.AddRelation<Wildcard, Speed>();
+
+        Assert.That(someEntity1.HasRelation<ChildOf, Wildcard>(), Is.False);
+        Assert.That(someEntity1.HasRelation<Wildcard, Speed>(), Is.False);
     }
 }
