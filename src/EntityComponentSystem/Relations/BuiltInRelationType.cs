@@ -32,7 +32,7 @@ public enum BuiltInRelationType : byte
     /// <summary>
     /// Defines that X requires the component Y. 
     /// Has configurable behavior (<see cref="Components.Relations.Requires"/>) if Y is missing or removed from the entity.
-    /// <para />ie: Speed component depends on Position component.
+    /// <para />ie: Speed component requires Position component.
     /// </summary>
     Requires = 4,
 
