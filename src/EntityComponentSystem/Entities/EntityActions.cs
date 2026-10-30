@@ -190,6 +190,10 @@ public sealed class EntityActions : IEntityActions
         _queuedSets.Enqueue((entity, component));
     }
 
+    /// <inheritdoc/>
+    public Identifier GetRelationTarget(Identifier entity, ushort relationType)
+        => World.GetRelationTarget(entity, relationType);
+
     /// <summary>
     /// Discards all actions that have been queued.
     /// </summary>

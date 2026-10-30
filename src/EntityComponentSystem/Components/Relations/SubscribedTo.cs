@@ -4,5 +4,5 @@
 /// <inheritdoc cref="BuiltInRelationType.SubscribedTo"/>
 /// </summary>
 [TagComponent]
-[ComponentRelationType]
+[ComponentRelationType((byte)BuiltInRelationType.SubscribedTo)]
 public readonly record struct SubscribedTo;

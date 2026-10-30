@@ -20,6 +20,11 @@ public static class EntityExtensions
         public string DisplayName => entity.Name ?? entity.Id.ToString();
 
         /// <summary>
+        /// Returns <see langword="true"/> if the entity is alive.
+        /// </summary>
+        public bool IsAlive => entity.Actions?.IsAlive(entity) ?? false;
+
+        /// <summary>
         /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.
         /// Does nothing if the entity already has the component.
         /// </summary>
@@ -103,11 +108,6 @@ public static class EntityExtensions
         /// Sets the component with <paramref name="componentId"/> for the entity, adding it if the entity did not contain it.
         /// </summary>
         public void Set<TComponent>(Identifier componentId, TComponent component) => entity.Actions?.Set(entity, componentId, component);
-
-        /// <summary>
-        /// Returns <see langword="true"/> if the entity is alive.
-        /// </summary>
-        public bool IsAlive() => entity.Actions?.IsAlive(entity) ?? false;
 
         /// <summary>
         /// Kills the entity, deleting its components.

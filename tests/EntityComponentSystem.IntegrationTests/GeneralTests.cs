@@ -1,4 +1,6 @@
-﻿using Tourmi.EntityComponentSystem.Components;
+﻿using Tourmi.EntityComponentSystem.Attributes;
+using Tourmi.EntityComponentSystem.Components;
+using Tourmi.EntityComponentSystem.Components.Metacomponents;
 using Tourmi.EntityComponentSystem.Components.Relations;
 using Tourmi.EntityComponentSystem.Entities;
 using Tourmi.EntityComponentSystem.Ids;
@@ -14,6 +16,9 @@ internal class GeneralTests
     private record struct Position(int X, int Y);
     private record struct Speed(int X, int Y);
     private record struct SomeComponent(float SomeValue);
+    [TagComponent]
+    [ComponentRelationType(256)]
+    private record struct SomeCustomRelation();
 
     [Test]
     public void CreateKillAndIdRecycling()
@@ -21,10 +26,10 @@ internal class GeneralTests
         var ecs = World.Create();
 
         var someEntity = ecs.CreateEntity();
-        Assert.That(someEntity.IsAlive());
+        Assert.That(someEntity.IsAlive);
 
         someEntity.Kill();
-        Assert.That(someEntity.IsAlive(), Is.False);
+        Assert.That(someEntity.IsAlive, Is.False);
 
         var newEntity = ecs.CreateEntity();
         Assert.That(newEntity.Id.ShortId, Is.EqualTo(someEntity.Id.ShortId));
@@ -44,17 +49,17 @@ internal class GeneralTests
         var someEntity3 = ecs.CreateEntity();
 
         someEntity1.Add(someEntity2);
-        someEntity1.AddRelation(BuiltInRelationType.ChildOf, someEntity3);
+        someEntity1.AddRelation(BuiltInRelationType.SubscribedTo, someEntity3);
 
         Assert.That(someEntity1.Has(someEntity2));
-        Assert.That(someEntity1.HasRelation(BuiltInRelationType.ChildOf, someEntity3));
+        Assert.That(someEntity1.HasRelation(BuiltInRelationType.SubscribedTo, someEntity3));
 
         someEntity2.Kill();
         someEntity3.Kill();
 
-        Assert.That(someEntity1.IsAlive());
+        Assert.That(someEntity1.IsAlive);
         Assert.That(someEntity1.Has(someEntity2), Is.False);
-        Assert.That(someEntity1.HasRelation(BuiltInRelationType.ChildOf, someEntity3), Is.False);
+        Assert.That(someEntity1.HasRelation(BuiltInRelationType.SubscribedTo, someEntity3), Is.False);
     }
 
     [Test]
@@ -417,9 +422,9 @@ internal class GeneralTests
 
         ecs.Tick();
 
-        Assert.That(someEntity1.IsAlive(), Is.False);
-        Assert.That(someEntity2.IsAlive(), Is.False);
-        Assert.That(someEntity3.IsAlive(), Is.False);
+        Assert.That(someEntity1.IsAlive, Is.False);
+        Assert.That(someEntity2.IsAlive, Is.False);
+        Assert.That(someEntity3.IsAlive, Is.False);
 
         var childEntityEntries = entityQuery.GetEntityEntries().ToArray();
         Assert.That(childEntityEntries, Has.Length.EqualTo(3));
@@ -594,5 +599,59 @@ internal class GeneralTests
 
         Assert.That(someEntity1.HasRelation<ChildOf, Wildcard>(), Is.False);
         Assert.That(someEntity1.HasRelation<Wildcard, Speed>(), Is.False);
+    }
+
+    [Test]
+    public void ChildOfKill()
+    {
+        var ecs = World.Create();
+
+        var child = ecs.CreateEntity();
+        var parent = ecs.CreateEntity();
+        child.ChildOf(parent);
+
+        var grandParent = ecs.CreateEntity();
+        parent.ChildOf(grandParent);
+
+        Assert.That(grandParent.IsAlive);
+        Assert.That(parent.IsAlive);
+        Assert.That(child.IsAlive);
+
+        grandParent.Kill();
+
+        Assert.That(grandParent.IsAlive, Is.False);
+        Assert.That(parent.IsAlive, Is.False);
+        Assert.That(child.IsAlive, Is.False);
+    }
+
+    [Test]
+    public void PanicOnKill()
+    {
+        var ecs = World.Create();
+
+        var child = ecs.CreateEntity();
+        var component = ecs.CreateEntity();
+        component.AddRelation<OnKill, Panic>();
+        child.Add(component);
+
+        var componentId = component.Id;
+
+        Assert.That(() => ecs.Kill(componentId), Throws.Exception);
+    }
+
+    [Test]
+    public void PanicOnTargetKill()
+    {
+        var ecs = World.Create();
+
+        var child = ecs.CreateEntity();
+        var target = ecs.CreateEntity();
+        var relationDefinition = ecs.GetEntityForType<SomeCustomRelation>();
+        relationDefinition.AddRelation<OnTargetKill, Panic>();
+        child.AddRelation(256, target);
+
+        var targetId = target.Id;
+
+        Assert.That(() => ecs.Kill(targetId), Throws.Exception);
     }
 }

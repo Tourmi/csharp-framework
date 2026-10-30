@@ -4,5 +4,5 @@
 /// <see cref="BuiltInRelationType.IsA"/>
 /// </summary>
 [TagComponent]
-[ComponentRelationType]
+[ComponentRelationType((byte)BuiltInRelationType.IsA)]
 public readonly struct IsA;

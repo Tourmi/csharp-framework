@@ -15,7 +15,7 @@ public static class EntityRelationExtensions
         /// <summary>
         /// Adds the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> to the <paramref name="entity"/>.
         /// </summary>
-        public void AddRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Add(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
+        public void AddRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.AddRelation((ushort)relationType, targetEntity);
 
         /// <summary>
         /// Adds the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> to the <paramref name="entity"/>.
@@ -31,6 +31,24 @@ public static class EntityRelationExtensions
         /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <paramref name="relationType"/> with the <paramref name="targetEntity"/>.
         /// </summary>
         public bool HasRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Has(entity, new RelationComponentIdentifier(targetEntity.ShortId, relationType)) ?? false;
+
+        /// <summary>
+        /// Returns the Id of the target of the relation of type <typeparamref name="TRelation"/> for the <paramref name="entity"/>, if it has such a relation.
+        /// Otherwise returns an invalid Id.
+        /// </summary>
+        public Identifier GetRelationTarget<TRelation>() => entity.GetRelationTarget(entity.Actions?.GetEntityForType<TRelation>().Get<RelationDefinition>().RelationType ?? default);
+
+        /// <summary>
+        /// Returns the Id of the target of the relation of type <paramref name="relationType"/> for the <paramref name="entity"/>, if it has such a relation.
+        /// Otherwise returns an invalid Id.
+        /// </summary>
+        public Identifier GetRelationTarget(BuiltInRelationType relationType) => entity.GetRelationTarget((byte)relationType);
+
+        /// <summary>
+        /// Returns the Id of the target of the relation of type <paramref name="relationType"/> for the <paramref name="entity"/>, if it has such a relation.
+        /// Otherwise returns an invalid Id.
+        /// </summary>
+        public Identifier GetRelationTarget(ushort relationType) => entity.Actions?.GetRelationTarget(entity, relationType) ?? default;
 
         /// <summary>
         /// The entity is a <typeparamref name="TTarget"/>.

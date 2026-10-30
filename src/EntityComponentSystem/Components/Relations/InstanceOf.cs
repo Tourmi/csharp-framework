@@ -4,5 +4,5 @@
 /// <see cref="BuiltInRelationType.InstanceOf"/>
 /// </summary>
 [TagComponent]
-[ComponentRelationType(Unique = true)]
+[ComponentRelationType((byte)BuiltInRelationType.InstanceOf, IsUnique = true)]
 public readonly struct InstanceOf;

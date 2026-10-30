@@ -4,5 +4,5 @@
 /// <inheritdoc cref="BuiltInRelationType.Wildcard"/>
 /// </summary>
 [TagComponent]
-[ComponentRelationType]
+[ComponentRelationType((byte)BuiltInRelationType.Wildcard)]
 public readonly record struct Wildcard;
