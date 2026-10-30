@@ -48,6 +48,18 @@ public enum BuiltInRelationType : byte
     SubscribedTo = 6,
 
     /// <summary>
+    /// Used by components as a relation meta-component. When the component is killed, 
+    /// the second part of the relation determines what action to take on the entity containing the component.
+    /// </summary>
+    OnKill = 7,
+
+    /// <summary>
+    /// Used by components as a relation meta-component. When the component's target is killed,
+    /// the second part of the relation determines what action to take on the entity containing the component.
+    /// </summary>
+    OnTargetKill = 8,
+
+    /// <summary>
     /// Special Id which when used as the target of a Relation Id, will match any target.
     /// When used as the relation type, will match any relation type having the specified target
     /// </summary>

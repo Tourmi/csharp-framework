@@ -49,8 +49,8 @@ public static class EntityActionsExtensions
         public void Remove<T>(Identifier entity) => actions.ThrowIfNull().Remove(entity, actions.GetEntityForType<T>());
 
         /// <summary>
-        /// Returns the entity mapped to the given <typeparamref name="TComponent"/> type.
+        /// Returns the entity mapped to the given <typeparamref name="T"/> type.
         /// </summary>
-        public Entity GetEntityForType<TComponent>() => actions.ThrowIfNull().World.GetComponentForType(typeof(TComponent));
+        public Entity GetEntityForType<T>() => actions.ThrowIfNull().World.GetEntityForType(typeof(T));
     }
 }

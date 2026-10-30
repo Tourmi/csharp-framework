@@ -89,4 +89,10 @@ public interface IEntityActions
     /// Removes the given <paramref name="component"/> from the <paramref name="entity"/>.
     /// </summary>
     void Remove(Identifier entity, Identifier component);
+
+    /// <summary>
+    /// Returns the target of the relation represented by the given <paramref name="relationType"/> for the <paramref name="entity"/>.
+    /// Returns an invalid id if the relation type is not present on the entity.
+    /// </summary>
+    Identifier GetRelationTarget(Identifier entity, ushort relationType);
 }

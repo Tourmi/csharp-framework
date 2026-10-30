@@ -54,7 +54,7 @@ public readonly ref struct Entity(Identifier id, IEntityActions? entityActions) 
 
         public Identifier Id => _id;
 
-        public bool IsAlive => Entity.IsAlive();
+        public bool IsAlive => Entity.IsAlive;
 
         public string Name => Entity.Get<Name>().Value;
 

@@ -4,5 +4,5 @@
 /// <see cref="BuiltInRelationType.ChildOf"/>
 /// </summary>
 [TagComponent]
-[ComponentRelationType(Unique = true)]
+[ComponentRelationType((byte)BuiltInRelationType.ChildOf, IsUnique = true)]
 public readonly struct ChildOf;

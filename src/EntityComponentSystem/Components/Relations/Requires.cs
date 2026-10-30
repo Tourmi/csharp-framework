@@ -5,7 +5,7 @@
 /// </summary>
 /// <param name="MissingBehavior">Behavior to use when the dependency is missing from the entity</param>
 /// <param name="RemovedBehavior">Behavior to use when the dependency is removed from the entity</param>
-[ComponentRelationType]
+[ComponentRelationType((byte)BuiltInRelationType.Requires)]
 public readonly record struct Requires(
     Requires.DependencyMissingBehavior MissingBehavior = default,
     Requires.DependencyRemovedBehavior RemovedBehavior = default)

@@ -253,6 +253,67 @@ public static class FixedIds
         /// Event that is raised after a <see cref="Tick"/> event.
         /// </summary>
         public static readonly Identifier PostTick = RegionStart + 0x02;
+
+        /// <summary>
+        /// Entity event raised upon adding a component (or removing a component when using a Not filter)
+        /// </summary>
+        public static readonly Identifier OnAdd = RegionStart + 0x03;
+
+        /// <summary>
+        /// Entity event raised upon any modifications to its filtered components.
+        /// </summary>
+        public static readonly Identifier OnModified = RegionStart + 0x04;
+
+        /// <summary>
+        /// Entity event raised upon removing a component (or adding a component when using a Not filter)
+        /// </summary>
+        public static readonly Identifier OnRemove = RegionStart + 0x05;
+
+        /// <summary>
+        /// Event raised when an entity is killed.
+        /// </summary>
+        public static readonly Identifier OnKill = RegionStart + 0x06;
+
+        /// <summary>
+        /// Event raised when the target of a relation is killed.
+        /// </summary>
+        public static readonly Identifier OnTargetKill = RegionStart + 0x07;
+    }
+
+    /// <summary>
+    /// Entity Ids of built-in actions.
+    /// </summary>
+    public static class Actions
+    {
+        /// <summary>
+        /// Start of the Id region.
+        /// </summary>
+        public const uint RegionStart = Events.RegionEnd;
+
+        /// <summary>
+        /// Size of the Id region.
+        /// </summary>
+        public const uint RegionSize = 0x100;
+
+        /// <summary>
+        /// End of the id region, exclusive bound.
+        /// </summary>
+        public const uint RegionEnd = RegionStart + RegionSize;
+
+        /// <summary>
+        /// Action that removes the component upon an event such as OnKill or OnTargetKill
+        /// </summary>
+        public static readonly Identifier Remove = RegionStart + 0x00;
+
+        /// <summary>
+        /// Action that kills the entity with the component upon an event such as OnKill or OnTargetKill
+        /// </summary>
+        public static readonly Identifier Kill = RegionStart + 0x01;
+
+        /// <summary>
+        /// Action that crashes the application upon an event such as OnKill or OnTargetKill
+        /// </summary>
+        public static readonly Identifier Panic = RegionStart + 0x02;
     }
 
     /// <summary>
@@ -263,7 +324,7 @@ public static class FixedIds
     /// <summary>
     /// End of the region of Core Ids, exclusive. New entities may be created starting from this Id.
     /// </summary>
-    public const uint CoreRegionEnd = Events.RegionEnd;
+    public const uint CoreRegionEnd = Actions.RegionEnd;
 
     /// <summary>
     /// Size of the region of Core Ids.

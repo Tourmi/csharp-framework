@@ -27,6 +27,14 @@ public sealed class World : IEntityActions
         [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
         [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
+        [typeof(Events.OnAdd)] = FixedIds.Events.OnAdd,
+        [typeof(Events.OnModified)] = FixedIds.Events.OnModified,
+        [typeof(Events.OnRemove)] = FixedIds.Events.OnRemove,
+        [typeof(Events.OnKill)] = FixedIds.Events.OnKill,
+        [typeof(Events.OnTargetKill)] = FixedIds.Events.OnTargetKill,
+        [typeof(Remove)] = FixedIds.Actions.Remove,
+        [typeof(Kill)] = FixedIds.Actions.Kill,
+        [typeof(Panic)] = FixedIds.Actions.Panic,
         [typeof(Parameter1)] = FixedIds.Special.Parameter1,
         [typeof(Parameter2)] = FixedIds.Special.Parameter2,
         [typeof(Parameter3)] = FixedIds.Special.Parameter3,
@@ -36,7 +44,7 @@ public sealed class World : IEntityActions
         [typeof(Parameter7)] = FixedIds.Special.Parameter7,
         [typeof(Parameter8)] = FixedIds.Special.Parameter8,
     };
-    private readonly Identifier[] _builtInRelationIds = new Identifier[FixedIds.Relations.RegionSize];
+    private readonly LazyPagedArray<Identifier> _relationDefinitionIds = new(pageSizePowerOf2: 10);
     private readonly Dictionary<Type, Query> _queryParamsToQuery = [];
     private readonly Dictionary<(Type, ulong), Query> _parametrized1Queries = [];
 
@@ -51,6 +59,8 @@ public sealed class World : IEntityActions
     /// The world's queued actions, which are executed once it is safe to do so.
     /// </summary>
     private readonly Queue<EntityActions> _queuedEntityActions = new();
+
+    private ushort _currentRelationId = 256;
 
     /// <summary>
     /// The world's entity identifier collection.
@@ -82,8 +92,6 @@ public sealed class World : IEntityActions
         InitializeRelations();
         InitializeSystems();
 
-        // todo: initialize rest of built-in features here
-
         return;
 
         void InitializeBaseComponents()
@@ -110,6 +118,7 @@ public sealed class World : IEntityActions
 
             var world = CreateEntityFixedId(FixedIds.Entities.World);
             this.Add<Singleton>(world);
+            this.Add(world, FixedIds.Entities.World);
             this.Set<Name>(world, new(nameof(World)));
         }
 
@@ -120,7 +129,7 @@ public sealed class World : IEntityActions
             this.Set<Name>(relationDefinition, new(nameof(RelationDefinition)));
             this.Set<DataComponent>(relationDefinition, new(typeof(RelationDefinition)));
 
-            for (ushort i = 0; i < _builtInRelationIds.Length; i++)
+            for (ushort i = 0; i < FixedIds.Relations.RegionSize; i++)
             {
                 if (!Enum.IsDefined((BuiltInRelationType)(i)))
                 {
@@ -131,11 +140,14 @@ public sealed class World : IEntityActions
                 this.Add<Component>(relation);
                 this.Set<Name>(relation, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
                 this.Set<RelationDefinition>(relation, new(i));
-                _builtInRelationIds[i] = relation;
+                _relationDefinitionIds[i] = relation;
             }
 
             // For now, configure relations manually.
             this.Set<DataComponent>(FixedIds.Relations.Requires, new(typeof(Requires)));
+
+            this.Add<Unique>(FixedIds.Relations.InstanceOf);
+            this.Add<Unique>(FixedIds.Relations.ChildOf);
         }
 
         void InitializeSystems()
@@ -149,6 +161,38 @@ public sealed class World : IEntityActions
             this.Add<Component>(scheduleComponent);
             this.Set<DataComponent>(scheduleComponent, new(typeof(Schedule)));
             this.Set<Name>(scheduleComponent, new(nameof(Schedule)));
+
+            var removeSystem = CreateEntityFixedId(FixedIds.Actions.Remove);
+            this.Set<Name>(removeSystem, new("Remove Component action"));
+            this.Set<EventActionSystem>(removeSystem, new((world, eventId, entityId, componentId) =>
+            {
+                world.Remove(entityId, componentId);
+            }));
+
+            var killSystem = CreateEntityFixedId(FixedIds.Actions.Kill);
+            this.Set<Name>(killSystem, new("Kill action"));
+            this.Set<EventActionSystem>(killSystem, new((world, eventId, entityId, componentId) =>
+            {
+                world.Kill(entityId);
+            }));
+
+            var panicSystem = CreateEntityFixedId(FixedIds.Actions.Panic);
+            this.Set<Name>(panicSystem, new("Panic action"));
+            this.Set<EventActionSystem>(panicSystem, new((world, eventId, entityId, componentId) =>
+            {
+                var eventEntity = new Entity(eventId, world);
+                var entity = new Entity(entityId, world);
+                var component = new Entity(componentId, world);
+
+                throw new InvalidOperationException(
+                    $"An invalid action ({eventEntity.DisplayName}) " +
+                    $"was performed on the component {component.DisplayName}, " +
+                    $"panicking due to entity {entity.DisplayName}.");
+            }));
+
+            this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.ChildOf);
+            this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.IsA);
+            this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.InstanceOf);
         }
     }
 
@@ -216,8 +260,8 @@ public sealed class World : IEntityActions
 
         var relationId = new RelationComponentIdentifier(id);
 
-        var relationIndex = relationId.RelationType;
-        if (relationIndex == 0)
+        var relationType = relationId.RelationType;
+        if (relationType == 0)
         {
             return false;
         }
@@ -231,17 +275,7 @@ public sealed class World : IEntityActions
         }
         else
         {
-            Identifier relationDefinition;
-            if (relationIndex < _builtInRelationIds.Length)
-            {
-                relationDefinition = _builtInRelationIds[relationIndex];
-            }
-            else
-            {
-                // TODO: Get user-defined relations as well
-                throw new NotImplementedException();
-            }
-
+            var relationDefinition = _relationDefinitionIds[relationType];
             if (!Archetypes.IsAlive(relationDefinition))
             {
                 return false;
@@ -267,32 +301,43 @@ public sealed class World : IEntityActions
         // Remove entity from entities
         foreach (var componentId in Archetypes.ComponentsToArchetypes.Components)
         {
-            var shouldRemoveComponent = false;
-
+            Identifier eventId = default;
+            Identifier actionId = default;
             if (componentId == entity)
             {
-                shouldRemoveComponent = true;
-            }
+                var component = new Entity(componentId, this);
+                eventId = FixedIds.Events.OnKill;
+                actionId = component.GetRelationTarget<OnKill>();
 
-            // Entity is part of a Relation<*, Entity>
-            if (componentId.IsRelationId && componentId.ShortId == entity.ShortId)
+            }
+            else if (componentId.IsRelationId && componentId.ShortId == entity.ShortId)
             {
-                shouldRemoveComponent = true;
+                // Entity is part of a Relation<*, Entity>
+                var relationId = new RelationComponentIdentifier(componentId);
+                eventId = FixedIds.Events.OnTargetKill;
+
+                var relationDefinition = new Entity(_relationDefinitionIds[relationId.RelationType], this);
+                actionId = relationDefinition.GetRelationTarget<OnTargetKill>();
             }
-
-            // TODO: Kill all relations where RelationType == entity
-
-            if (!shouldRemoveComponent)
+            else
             {
                 continue;
             }
 
+            if (!IsValid(actionId))
+            {
+                actionId = FixedIds.Actions.Remove;
+            }
+
+            var actionEntity = new Entity(actionId, this);
+            var cleanupAction = actionEntity.Get<EventActionSystem>().Action;
+
             foreach (var archetype in Archetypes.ComponentsToArchetypes[componentId])
             {
-                while (archetype.EntityCount > 0)
+                // Always process entities of archetype in reverse order to save on swap operations.
+                for (var i = archetype.EntityCount - 1; i >= 0; i = archetype.EntityCount - 1)
                 {
-                    // Always remove last entity of archetype to save on swap operations.
-                    Remove(archetype.Entities[^1], componentId);
+                    cleanupAction(this, eventId, archetype.Entities[i], componentId);
                 }
             }
         }
@@ -396,10 +441,48 @@ public sealed class World : IEntityActions
     }
 
     /// <summary>
+    /// Returns the id of the definition of the given <paramref name="relationType"/>.
+    /// </summary>
+    public Identifier GetRelationDefinitionId(ushort relationType) => _relationDefinitionIds[relationType];
+
+    /// <inheritdoc/>
+    public Identifier GetRelationTarget(Identifier entity, ushort relationType)
+    {
+        if (!Archetypes.IsAlive(entity))
+        {
+            return default;
+        }
+
+        var archetype = Archetypes.GetEntityArchetype(entity);
+        if (archetype is null)
+        {
+            return default;
+        }
+
+        foreach (var component in archetype.Components)
+        {
+            if (component.IsRelationId && new RelationComponentIdentifier(component).RelationType == relationType)
+            {
+                var id = Ids.GetCurrentId(component);
+                if (id.Value == 0)
+                {
+                    id = new Identifier(component.ShortId);
+                }
+
+                return id;
+            }
+        }
+
+        return default;
+    }
+
+    /// <summary>
     /// Returns the entity mapped to the given <paramref name="type"/>.
     /// </summary>
-    public Entity GetComponentForType(Type type)
+    public Entity GetEntityForType(Type type)
     {
+        _ = type.ThrowIfNull();
+
         if (!_typesToEntityIds.TryGetValue(type, out var entityId) || !IsValid(entityId, allowWildcard: true))
         {
             if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Relation<,>))
@@ -408,45 +491,18 @@ public sealed class World : IEntityActions
                 var relationDefinitionType = genericArguments[0];
                 var targetType = genericArguments[1];
 
-                var relationDefinition = GetComponentForType(relationDefinitionType);
-                var targetEntity = GetComponentForType(targetType);
+                var relationDefinition = GetEntityForType(relationDefinitionType);
+                var targetEntity = GetEntityForType(targetType);
                 var relationType = relationDefinition.Get<RelationDefinition>().RelationType;
                 var targetId = targetEntity.Id;
 
                 entityId = new RelationComponentIdentifier(targetId.ShortId, relationType);
-                lock (_threadLock)
-                {
-                    _typesToEntityIds[type] = entityId;
-                }
+                AttachEntityToType(type, entityId);
 
                 return new Entity(entityId, this);
             }
 
-            var entity = entityId.ShortId != 0 ? CreateEntityFixedId(entityId) : CreateEntity();
-            entityId = entity.Id;
-            entity.Set(new Name(type.Name));
-            lock (_threadLock)
-            {
-                _typesToEntityIds[type] = entityId;
-            }
-
-            entity.Add<Component>();
-
-            if (type.GetCustomAttribute<TagComponentAttribute>() is null)
-            {
-                entity.Set(new DataComponent(type));
-            }
-
-            if (type.GetCustomAttribute<ComponentRelationTypeAttribute>() is not null)
-            {
-                entity.Add<RelationDefinition>();
-            }
-
-            if (type.GetCustomAttribute<SingletonAttribute>() is not null)
-            {
-                entity.Add<Singleton>();
-                entity.Add(entity.Id);
-            }
+            entityId = InitializeComponentForType(entityId, type);
         }
 
         return new(entityId, this);
@@ -455,13 +511,13 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Attaches an existing entity to a type,
     /// such as when the <paramref name="type"/> is requested,
-    /// the given <paramref name="entity"/> will be filled in.
+    /// the given <paramref name="entityId"/> will be filled in.
     /// </summary>
-    public void AttachEntityToType(Type type, Identifier entity)
+    public void AttachEntityToType(Type type, Identifier entityId)
     {
         lock (_threadLock)
         {
-            _typesToEntityIds[type] = entity;
+            _typesToEntityIds[type] = entityId;
         }
     }
 
@@ -528,7 +584,7 @@ public sealed class World : IEntityActions
     }
 
     /// <summary>
-    /// Returns the cached query for the given type <typeparamref name="T"/>.
+    /// Returns the cached query for the given type <typeparamref name="T"/> and <paramref name="parameter1"/> value.
     /// </summary>
     public Query GetCachedQueryFor<T>(ulong parameter1)
         where T : IQueryParam<T>, allows ref struct
@@ -542,6 +598,57 @@ public sealed class World : IEntityActions
         }
 
         return query;
+    }
+
+    private Identifier InitializeComponentForType(Identifier entityId, Type type)
+    {
+        var entity = entityId.ShortId != 0 ? CreateEntityFixedId(entityId) : CreateEntity();
+        entityId = entity.Id;
+        entity.Set(new Name(type.Name));
+        AttachEntityToType(type, entityId);
+
+        entity.Add<Component>();
+
+        if (type.GetCustomAttribute<TagComponentAttribute>() is null)
+        {
+            entity.Set(new DataComponent(type));
+        }
+
+        var relationTypeAttribute = type.GetCustomAttribute<ComponentRelationTypeAttribute>();
+        if (relationTypeAttribute is not null)
+        {
+            var relationType = relationTypeAttribute.RelationType;
+            while (relationType == 0)
+            {
+                if (_currentRelationId == 0)
+                {
+                    throw new InvalidOperationException("Cannot create new relation type, ran out of ids");
+                }
+
+                if (_relationDefinitionIds[_currentRelationId] == default)
+                {
+                    relationType = _currentRelationId;
+                }
+
+                _currentRelationId++;
+            }
+
+            entity.Set(new RelationDefinition(relationType));
+            _relationDefinitionIds[relationType] = entity;
+
+            if (relationTypeAttribute.IsUnique)
+            {
+                entity.Add<Unique>();
+            }
+        }
+
+        if (type.GetCustomAttribute<SingletonAttribute>() is not null)
+        {
+            entity.Add<Singleton>();
+            entity.Add(entity.Id);
+        }
+
+        return entityId;
     }
 
     /// <summary>
@@ -558,20 +665,7 @@ public sealed class World : IEntityActions
         if (component.Types.HasFlag(IdentifierTypes.Relation))
         {
             var relationId = new RelationComponentIdentifier(component);
-            if (relationId.Target == FixedIds.Relations.Wildcard.ShortId || relationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
-            {
-                throw new IdentifierInvalidException(relationId, "Cannot have a wildcard component in a relation component on an entity.");
-            }
-
-            if (relationId.BuiltInRelationTypeOrNull != null)
-            {
-                datatypeId = ToId(relationId.BuiltInRelationTypeOrNull.Value);
-            }
-            else
-            {
-                // TODO: Also process user-created relations.
-                throw new NotImplementedException();
-            }
+            datatypeId = _relationDefinitionIds[relationId.RelationType];
         }
 
         var dataType = this.Get<DataComponent>(datatypeId);
@@ -583,6 +677,4 @@ public sealed class World : IEntityActions
         Archetypes.Create(id);
         return new(id, this);
     }
-
-    private Identifier ToId(BuiltInRelationType relationType) => _builtInRelationIds[(int)relationType];
 }
