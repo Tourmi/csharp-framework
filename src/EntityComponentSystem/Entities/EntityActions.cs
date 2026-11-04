@@ -10,6 +10,7 @@ public sealed class EntityActions : IEntityActions
         Add,
         Remove,
         Set,
+        Modified,
         Kill,
     }
 
@@ -17,6 +18,7 @@ public sealed class EntityActions : IEntityActions
     private readonly Queue<(Identifier Entity, Identifier Component)> _queuedAdds = [];
     private readonly Queue<(Identifier Entity, Identifier Component)> _queuedRemoves = [];
     private readonly Queue<(Identifier Entity, Identifier Component)> _queuedSets = [];
+    private readonly Queue<(Identifier Entity, Identifier Component)> _queuedModified = [];
     private readonly Queue<Identifier> _queuedKills = [];
 
     private readonly Dictionary<(Identifier Entity, Identifier Component), bool> _hasComponentOverrides = [];
@@ -191,6 +193,24 @@ public sealed class EntityActions : IEntityActions
     }
 
     /// <inheritdoc/>
+    public void Modified(Identifier entity, Identifier component)
+    {
+        if (!DeferActions)
+        {
+            World.Modified(entity, component);
+            return;
+        }
+
+        if (!Has(entity, component))
+        {
+            return;
+        }
+
+        _queuedActions.Enqueue(ActionType.Modified);
+        _queuedModified.Enqueue((entity, component));
+    }
+
+    /// <inheritdoc/>
     public Identifier GetRelationTarget(Identifier entity, ushort relationType)
         => World.GetRelationTarget(entity, relationType);
 
@@ -204,6 +224,7 @@ public sealed class EntityActions : IEntityActions
         _queuedKills.Clear();
         _queuedRemoves.Clear();
         _queuedSets.Clear();
+        _queuedModified.Clear();
 
         _componentValueOverrideIndexes.Clear();
         _hasComponentOverrides.Clear();
@@ -232,6 +253,9 @@ public sealed class EntityActions : IEntityActions
                     break;
                 case ActionType.Set:
                     OnSet();
+                    break;
+                case ActionType.Modified:
+                    OnModified();
                     break;
                 case ActionType.Kill:
                     OnKill();
@@ -277,6 +301,12 @@ public sealed class EntityActions : IEntityActions
 
             var targetCollection = entry.Value.Archetype.GetComponentCollection(action.Component);
             targetCollection.CopyValueFrom(sourceCollection, sourceIndex, targetIndex: entry.Value.Index);
+        }
+
+        void OnModified()
+        {
+            var action = _queuedModified.Dequeue();
+            World.Modified(action.Entity, action.Component);
         }
 
         void OnKill()

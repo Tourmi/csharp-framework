@@ -11,12 +11,19 @@ public sealed class World : IEntityActions
 {
     private readonly Dictionary<Type, Identifier> _typesToEntityIds = new()
     {
+        [typeof(World)] = FixedIds.Entities.World,
+
         [typeof(Component)] = FixedIds.ComponentIds.Component,
         [typeof(DataComponent)] = FixedIds.ComponentIds.DataComponent,
         [typeof(Name)] = FixedIds.ComponentIds.Name,
-        [typeof(SystemComponent)] = FixedIds.ComponentIds.SystemComponent,
-        [typeof(Schedule)] = FixedIds.ComponentIds.Schedule,
         [typeof(RelationDefinition)] = FixedIds.ComponentIds.RelationDefinition,
+        [typeof(Singleton)] = FixedIds.ComponentIds.Singleton,
+        [typeof(Prefab)] = FixedIds.ComponentIds.Prefab,
+        [typeof(Schedule)] = FixedIds.ComponentIds.Schedule,
+        [typeof(SystemComponent)] = FixedIds.ComponentIds.SystemComponent,
+        [typeof(Unique)] = FixedIds.ComponentIds.Unique,
+        [typeof(EventActionSystem)] = FixedIds.ComponentIds.EventActionSystem,
+
         [typeof(ChildOf)] = FixedIds.Relations.ChildOf,
         [typeof(IsA)] = FixedIds.Relations.IsA,
         [typeof(InstanceOf)] = FixedIds.Relations.InstanceOf,
@@ -24,6 +31,7 @@ public sealed class World : IEntityActions
         [typeof(DependsOn)] = FixedIds.Relations.DependsOn,
         [typeof(SubscribedTo)] = FixedIds.Relations.SubscribedTo,
         [typeof(Wildcard)] = FixedIds.Relations.Wildcard,
+
         [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
         [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
@@ -32,9 +40,11 @@ public sealed class World : IEntityActions
         [typeof(Events.OnRemove)] = FixedIds.Events.OnRemove,
         [typeof(Events.OnKill)] = FixedIds.Events.OnKill,
         [typeof(Events.OnTargetKill)] = FixedIds.Events.OnTargetKill,
+
         [typeof(Remove)] = FixedIds.Actions.Remove,
         [typeof(Kill)] = FixedIds.Actions.Kill,
         [typeof(Panic)] = FixedIds.Actions.Panic,
+
         [typeof(Parameter1)] = FixedIds.Special.Parameter1,
         [typeof(Parameter2)] = FixedIds.Special.Parameter2,
         [typeof(Parameter3)] = FixedIds.Special.Parameter3,
@@ -118,7 +128,7 @@ public sealed class World : IEntityActions
 
             var world = CreateEntityFixedId(FixedIds.Entities.World);
             this.Add<Singleton>(world);
-            this.Add(world, FixedIds.Entities.World);
+            this.Add(world, world);
             this.Set<Name>(world, new(nameof(World)));
         }
 
@@ -189,6 +199,59 @@ public sealed class World : IEntityActions
                     $"was performed on the component {component.DisplayName}, " +
                     $"panicking due to entity {entity.DisplayName}.");
             }));
+
+            var relationDefinitionSystem = CreateEntityFixedId(FixedIds.Actions.RelationDefinitionSystem);
+            this.Set<Name>(relationDefinitionSystem, new("RelationDefinition OnAdd/OnRemove action"));
+            this.Set<EventActionSystem>(relationDefinitionSystem, new((world, eventId, entityId, componentId) =>
+            {
+                if (eventId != FixedIds.Events.OnAdd)
+                {
+                    return;
+                }
+
+                ref var relationDefinition = ref world.GetMutable<RelationDefinition>(entityId);
+
+                var relationType = relationDefinition.RelationType;
+                while (relationType == 0)
+                {
+                    if (_currentRelationId == 0)
+                    {
+                        throw new InvalidOperationException("Cannot create new relation type, ran out of ids");
+                    }
+
+                    if (_relationDefinitionIds[_currentRelationId] == default)
+                    {
+                        relationType = _currentRelationId;
+                    }
+
+                    _currentRelationId++;
+                }
+
+                relationDefinition = new(relationType);
+                _relationDefinitionIds[relationDefinition.RelationType] = entityId;
+            }));
+
+            var relationDefinitionComponent = new Entity(FixedIds.ComponentIds.RelationDefinition, this);
+            relationDefinitionComponent.AddRelation(BuiltInRelationType.OnAdd, relationDefinitionSystem);
+
+            var singletonSystem = CreateEntityFixedId(FixedIds.Actions.SingletonSystem);
+            this.Set<Name>(singletonSystem, new("Singleton OnAdd/OnRemove action"));
+            this.Set<EventActionSystem>(singletonSystem, new((world, eventId, entityId, componentId) =>
+            {
+                var entity = new Entity(entityId, world);
+                if (eventId == FixedIds.Events.OnAdd)
+                {
+                    entity.Add(entity);
+                }
+                else if (eventId == FixedIds.Events.OnRemove)
+                {
+                    entity.Remove(entity);
+                }
+            }));
+
+            var singletonComponent = new Entity(FixedIds.ComponentIds.Singleton, this);
+            singletonComponent.AddRelation(BuiltInRelationType.OnAdd, singletonSystem);
+            singletonComponent.AddRelation(BuiltInRelationType.OnRemove, singletonSystem);
 
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.ChildOf);
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.IsA);
@@ -408,7 +471,10 @@ public sealed class World : IEntityActions
             return;
         }
 
-        AddComponentIfMissing(entity, component);
+        if (AddComponentIfMissing(entity, component))
+        {
+            OnAdd(entity, component);
+        }
     }
 
     /// <inheritdoc/>
@@ -419,9 +485,33 @@ public sealed class World : IEntityActions
             return;
         }
 
-        AddComponentIfMissing(entity, component);
+        var wasAdded = AddComponentIfMissing(entity, component);
 
         Archetypes.SetComponent(entity, component, value);
+        if (wasAdded)
+        {
+            OnAdd(entity, component);
+        }
+        else
+        {
+            OnModified(entity, component);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Modified(Identifier entity, Identifier component)
+    {
+        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        {
+            return;
+        }
+
+        if (!Has(entity, component))
+        {
+            return;
+        }
+
+        OnModified(entity, component);
     }
 
     /// <inheritdoc/>
@@ -435,6 +525,23 @@ public sealed class World : IEntityActions
         if (!Archetypes.HasComponent(entity, component))
         {
             return;
+        }
+
+        var componentDefinitionId = component;
+        if (component.IsRelationId)
+        {
+            var relationId = new RelationComponentIdentifier(component);
+            componentDefinitionId = _relationDefinitionIds[relationId.RelationType];
+        }
+
+        var onRemoveActionId = GetRelationTarget(componentDefinitionId, (ushort)BuiltInRelationType.OnRemove);
+        if (onRemoveActionId != default)
+        {
+            var action = Get<EventActionSystem>(onRemoveActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            if (action is not null)
+            {
+                action(this, FixedIds.Events.OnRemove, entity, component);
+            }
         }
 
         Archetypes.RemoveComponent(entity, component);
@@ -617,24 +724,7 @@ public sealed class World : IEntityActions
         var relationTypeAttribute = type.GetCustomAttribute<ComponentRelationTypeAttribute>();
         if (relationTypeAttribute is not null)
         {
-            var relationType = relationTypeAttribute.RelationType;
-            while (relationType == 0)
-            {
-                if (_currentRelationId == 0)
-                {
-                    throw new InvalidOperationException("Cannot create new relation type, ran out of ids");
-                }
-
-                if (_relationDefinitionIds[_currentRelationId] == default)
-                {
-                    relationType = _currentRelationId;
-                }
-
-                _currentRelationId++;
-            }
-
-            entity.Set(new RelationDefinition(relationType));
-            _relationDefinitionIds[relationType] = entity;
+            entity.Set(new RelationDefinition(relationTypeAttribute.RelationType));
 
             if (relationTypeAttribute.IsUnique)
             {
@@ -645,7 +735,6 @@ public sealed class World : IEntityActions
         if (type.GetCustomAttribute<SingletonAttribute>() is not null)
         {
             entity.Add<Singleton>();
-            entity.Add(entity.Id);
         }
 
         return entityId;
@@ -654,11 +743,11 @@ public sealed class World : IEntityActions
     /// <summary>
     /// Adds the <paramref name="component"/> to the <paramref name="entity"/> if it is missing.
     /// </summary>
-    private void AddComponentIfMissing(Identifier entity, Identifier component)
+    private bool AddComponentIfMissing(Identifier entity, Identifier component)
     {
         if (Archetypes.HasComponent(entity, component))
         {
-            return;
+            return false;
         }
 
         var datatypeId = component;
@@ -666,10 +755,57 @@ public sealed class World : IEntityActions
         {
             var relationId = new RelationComponentIdentifier(component);
             datatypeId = _relationDefinitionIds[relationId.RelationType];
+            if (Has(datatypeId, FixedIds.ComponentIds.Unique) && Has(entity, relationId.WithTarget(FixedIds.Relations.Wildcard.ShortId)))
+            {
+                var target = GetRelationTarget(entity, relationId.RelationType);
+                Remove(entity, relationId.WithTarget(target.ShortId));
+            }
         }
 
         var dataType = this.Get<DataComponent>(datatypeId);
         Archetypes.AddComponent(entity, component, dataType.DataType);
+
+        return true;
+    }
+
+    private void OnAdd(Identifier entity, Identifier component)
+    {
+        var datatypeId = component;
+        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        {
+            var relationId = new RelationComponentIdentifier(component);
+            datatypeId = _relationDefinitionIds[relationId.RelationType];
+        }
+
+        var onAddActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnAdd);
+        if (onAddActionId != default)
+        {
+            var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            if (action is not null)
+            {
+                action(this, FixedIds.Events.OnAdd, entity, datatypeId);
+            }
+        }
+    }
+
+    private void OnModified(Identifier entity, Identifier component)
+    {
+        var datatypeId = component;
+        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        {
+            var relationId = new RelationComponentIdentifier(component);
+            datatypeId = _relationDefinitionIds[relationId.RelationType];
+        }
+
+        var onAddActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnModified);
+        if (onAddActionId != default)
+        {
+            var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            if (action is not null)
+            {
+                action(this, FixedIds.Events.OnAdd, entity, datatypeId);
+            }
+        }
     }
 
     private Entity CreateEntityFixedId(Identifier id)

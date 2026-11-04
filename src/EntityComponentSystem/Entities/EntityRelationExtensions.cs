@@ -23,6 +23,21 @@ public static class EntityRelationExtensions
         public void AddRelation(ushort relationType, Identifier targetEntity) => entity.Actions?.Add(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
 
         /// <summary>
+        /// Removes the given <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/> from the <paramref name="entity"/>.
+        /// </summary>
+        public void RemoveRelation<TRelation, TTarget>() => entity.Actions?.Remove<Relation<TRelation, TTarget>>(entity.Id);
+
+        /// <summary>
+        /// Removes the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> from the <paramref name="entity"/>.
+        /// </summary>
+        public void RemoveRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.RemoveRelation((ushort)relationType, targetEntity);
+
+        /// <summary>
+        /// Removes the given <paramref name="relationType"/> with the given <paramref name="targetEntity"/> from the <paramref name="entity"/>.
+        /// </summary>
+        public void RemoveRelation(ushort relationType, Identifier targetEntity) => entity.Actions?.Remove(entity.Id, new RelationComponentIdentifier(targetEntity.ShortId, relationType));
+
+        /// <summary>
         /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <typeparamref name="TRelation"/> with the <typeparamref name="TTarget"/>.
         /// </summary>
         public bool HasRelation<TRelation, TTarget>() => entity.Actions?.Has<Relation<TRelation, TTarget>>(entity) ?? false;
