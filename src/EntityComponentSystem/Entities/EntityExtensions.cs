@@ -25,7 +25,7 @@ public static class EntityExtensions
         public bool IsAlive => entity.Actions?.IsAlive(entity) ?? false;
 
         /// <summary>
-        /// Adds the component of type <typeparamref name="TComponent"/> to the entity, instantiating it with the parameterless constructor.
+        /// Adds the component of type <typeparamref name="TComponent"/> to the entity.
         /// Does nothing if the entity already has the component.
         /// </summary>
         public void Add<TComponent>() => entity.Actions?.Add<TComponent>(entity);
@@ -34,9 +34,6 @@ public static class EntityExtensions
         /// Adds the component with <paramref name="componentId"/> to the entity.
         /// Does nothing if the entity already has the component.
         /// </summary>
-        /// <remarks>
-        /// This overload should be used if the component does not have a value. ie: for flags or states
-        /// </remarks>
         public void Add(Identifier componentId) => entity.Actions?.Add(entity, componentId);
 
         /// <summary>

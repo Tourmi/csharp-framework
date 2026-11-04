@@ -803,7 +803,7 @@ public sealed class World : IEntityActions
             var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
             if (action is not null)
             {
-                action(this, FixedIds.Events.OnAdd, entity, datatypeId);
+                action(this, FixedIds.Events.OnModified, entity, datatypeId);
             }
         }
     }
