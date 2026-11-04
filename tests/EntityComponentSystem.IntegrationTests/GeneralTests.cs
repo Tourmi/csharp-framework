@@ -16,7 +16,6 @@ internal class GeneralTests
     private record struct Position(int X, int Y);
     private record struct Speed(int X, int Y);
     private record struct SomeComponent(float SomeValue);
-    [TagComponent]
     [ComponentRelationType(256)]
     private record struct SomeCustomRelation();
 
@@ -653,5 +652,133 @@ internal class GeneralTests
         var targetId = target.Id;
 
         Assert.That(() => ecs.Kill(targetId), Throws.Exception);
+    }
+
+    [Test]
+    public void UniqueMetaComponent()
+    {
+        var ecs = World.Create();
+
+        var child = ecs.CreateEntity();
+        var oldParent = ecs.CreateEntity();
+        child.ChildOf(oldParent);
+
+        Assert.That(child.HasRelation(BuiltInRelationType.ChildOf, oldParent));
+
+        var newParent = ecs.CreateEntity();
+        child.ChildOf(newParent);
+
+        Assert.That(child.HasRelation(BuiltInRelationType.ChildOf, newParent));
+        Assert.That(child.HasRelation(BuiltInRelationType.ChildOf, oldParent), Is.False);
+    }
+
+    [Test]
+    public void OnAddModifiedRemoveEvents()
+    {
+        var ecs = World.Create();
+
+        var hasOnAddHandlerRun = false;
+        var hasOnModifiedHandlerRun = false;
+        var hasOnRemoveHandlerRun = false;
+
+        var component = ecs.CreateComponent<float>();
+        _ = component.OnAdd((world, eventId, entityId, componentId) =>
+            {
+                hasOnAddHandlerRun = true;
+            }).OnModified((world, eventId, entityId, componentId) =>
+            {
+                hasOnModifiedHandlerRun = true;
+            }).OnRemove((world, eventId, entityId, componentId) =>
+            {
+                hasOnRemoveHandlerRun = true;
+            });
+
+        var entity = ecs.CreateEntity();
+
+        entity.Add(component);
+        Assert.That(hasOnAddHandlerRun, Is.True);
+        Assert.That(hasOnModifiedHandlerRun, Is.False);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnAddHandlerRun = false;
+        entity.Set(component, 1f);
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.True);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnModifiedHandlerRun = false;
+        entity.Modified(component);
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.True);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnModifiedHandlerRun = false;
+        entity.Remove(component);
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.False);
+        Assert.That(hasOnRemoveHandlerRun, Is.True);
+    }
+
+    [Test]
+    public void OnAddModifiedRemoveRelationEvents()
+    {
+        var ecs = World.Create();
+
+        var hasOnAddHandlerRun = false;
+        var hasOnModifiedHandlerRun = false;
+        var hasOnRemoveHandlerRun = false;
+
+        var relationDefinition = new ComponentEntity(ecs.GetEntityForType<SomeCustomRelation>());
+        _ = relationDefinition.OnAdd((world, eventId, entityId, componentId) =>
+        {
+            hasOnAddHandlerRun = true;
+        }).OnModified((world, eventId, entityId, componentId) =>
+        {
+            hasOnModifiedHandlerRun = true;
+        }).OnRemove((world, eventId, entityId, componentId) =>
+        {
+            hasOnRemoveHandlerRun = true;
+        });
+
+        var entity = ecs.CreateEntity();
+        var targetEntity = ecs.CreateEntity();
+        var relationId = new RelationComponentIdentifier(targetEntity.Id.ShortId, 256);
+
+        entity.AddRelation(256, targetEntity);
+        Assert.That(hasOnAddHandlerRun, Is.True);
+        Assert.That(hasOnModifiedHandlerRun, Is.False);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnAddHandlerRun = false;
+        entity.Set(relationId, new SomeCustomRelation());
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.True);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnModifiedHandlerRun = false;
+        entity.Modified(relationId);
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.True);
+        Assert.That(hasOnRemoveHandlerRun, Is.False);
+
+        hasOnModifiedHandlerRun = false;
+        entity.RemoveRelation(256, targetEntity);
+        Assert.That(hasOnAddHandlerRun, Is.False);
+        Assert.That(hasOnModifiedHandlerRun, Is.False);
+        Assert.That(hasOnRemoveHandlerRun, Is.True);
+    }
+
+    [Test]
+    public void Singleton()
+    {
+        var ecs = World.Create();
+
+        var singletonEntity = ecs.CreateEntity();
+        singletonEntity.Add<Singleton>();
+
+        Assert.That(singletonEntity.Has(singletonEntity));
+
+        singletonEntity.Remove<Singleton>();
+        Assert.That(singletonEntity.Has(singletonEntity), Is.False);
     }
 }

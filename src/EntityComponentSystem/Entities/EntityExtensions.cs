@@ -100,6 +100,11 @@ public static class EntityExtensions
         public bool Has(Identifier componentId) => entity.Actions?.Has(entity, componentId) ?? false;
 
         /// <summary>
+        /// Marks the <paramref name="componentId"/> as modified. Should be called when the component value was modified outside of a <c>Set</c> call.
+        /// </summary>
+        public void Modified(Identifier componentId) => entity.Actions?.Modified(entity, componentId);
+
+        /// <summary>
         /// Sets the component for the entity, adding it if the entity did not contain it.
         /// </summary>
         public void Set<TComponent>(TComponent component) => entity.Actions?.Set(entity, component);

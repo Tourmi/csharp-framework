@@ -1,7 +1,7 @@
 ﻿namespace Tourmi.EntityComponentSystem.Components;
 
 /// <summary>
-/// Represents a system that can be executed, usually every frame.
+/// Represents a system that can be executed, usually every tick.
 /// </summary>
 public readonly struct SystemComponent
 {
@@ -14,7 +14,4 @@ public readonly struct SystemComponent
     /// Executes the system.
     /// </summary>
     public Action Execute { get; }
-
-    /// <inheritdoc/>
-    public static SystemComponent Create(Action value) => new(value);
 }

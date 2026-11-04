@@ -86,6 +86,11 @@ public interface IEntityActions
     void Set<T>(Identifier entity, Identifier component, T value);
 
     /// <summary>
+    /// Signals that the <paramref name="component"/> was modified for the <paramref name="entity"/>.
+    /// </summary>
+    void Modified(Identifier entity, Identifier component);
+
+    /// <summary>
     /// Removes the given <paramref name="component"/> from the <paramref name="entity"/>.
     /// </summary>
     void Remove(Identifier entity, Identifier component);

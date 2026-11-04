@@ -217,6 +217,16 @@ public static class FixedIds
         /// <see cref="Components.SystemComponent"/>
         /// </summary>
         public static readonly Identifier SystemComponent = RegionStart + 0x07;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Unique"/>
+        /// </summary>
+        public static readonly Identifier Unique = RegionStart + 0x08;
+
+        /// <summary>
+        /// <see cref="Components.EventActionSystem"/>
+        /// </summary>
+        public static readonly Identifier EventActionSystem = RegionStart + 0x09;
     }
 
     /// <summary>
@@ -314,6 +324,16 @@ public static class FixedIds
         /// Action that crashes the application upon an event such as OnKill or OnTargetKill
         /// </summary>
         public static readonly Identifier Panic = RegionStart + 0x02;
+
+        /// <summary>
+        /// Id for the relation definition system, handling on-add and on-remove events.
+        /// </summary>
+        internal static readonly Identifier RelationDefinitionSystem = RegionStart + 0xFE;
+
+        /// <summary>
+        /// Id for the singleton system, handling on-add and on-remove events.
+        /// </summary>
+        internal static readonly Identifier SingletonSystem = RegionStart + 0xFF;
     }
 
     /// <summary>
