@@ -797,10 +797,10 @@ public sealed class World : IEntityActions
             datatypeId = _relationDefinitionIds[relationId.RelationType];
         }
 
-        var onAddActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnModified);
-        if (onAddActionId != default)
+        var onModifiedActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnModified);
+        if (onModifiedActionId != default)
         {
-            var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            var action = Get<EventActionSystem>(onModifiedActionId, FixedIds.ComponentIds.EventActionSystem).Action;
             if (action is not null)
             {
                 action(this, FixedIds.Events.OnModified, entity, datatypeId);
