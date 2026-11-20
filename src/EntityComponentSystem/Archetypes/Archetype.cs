@@ -9,16 +9,16 @@ namespace Tourmi.EntityComponentSystem.Archetypes;
 /// </summary>
 internal partial class Archetype
 {
-    private readonly Dictionary<Identifier, Archetype> _parentArchetypes = [];
-    private readonly Dictionary<Identifier, Archetype> _childArchetypes = [];
+    private readonly Dictionary<Identifier, Archetype> _addComponentArchetypes = [];
+    private readonly Dictionary<Identifier, Archetype> _removeComponentArchetypes = [];
     private readonly List<Identifier> _entities = [];
 
     private readonly ArchetypeSharedData _sharedData;
     private readonly ImmutableSortedDictionary<Identifier, Type?> _componentDataTypes;
     private readonly ImmutableSortedDictionary<Identifier, IComponentCollection> _componentsData;
     private readonly Identifier[] _components;
-    private readonly Identifier[] _wildcardRelations;
     private readonly IComponentCollection[] _data;
+    private readonly Identifier[] _wildcardRelations;
 
     internal Archetype(ArchetypeSharedData sharedData, IEnumerable<KeyValuePair<Identifier, Type?>> componentTypes)
     {
@@ -26,6 +26,7 @@ internal partial class Archetype
         _componentDataTypes = componentTypes.ToImmutableSortedDictionary();
         _componentsData = _componentDataTypes.ToImmutableSortedDictionary(c => c.Key, c => _sharedData.CreateComponentCollection(c.Value));
         _components = [.. _componentDataTypes.Keys];
+        _data = [.. _componentsData.Values];
 
         HashSet<Identifier> wildcardRelations = [];
         var hasAnyRelations = false;
@@ -37,17 +38,17 @@ internal partial class Archetype
                 continue;
             }
 
-            var targetWildcard = new RelationComponentIdentifier((component & ~RelationComponentIdentifier.TargetBitMask) | FixedIds.Relations.Wildcard);
+            var relationId = new RelationComponentIdentifier(component);
+            hasAnyRelations = true;
+
+            var targetWildcard = relationId.WithTarget(FixedIds.Relations.Wildcard);
             _ = wildcardRelations.Add(targetWildcard);
 
-            var relationTypeWildcard = new RelationComponentIdentifier((component & ~RelationComponentIdentifier.RelationTypeBitMask) | (((ulong)BuiltInRelationType.Wildcard) << RelationComponentIdentifier.RelationTypeBitOffset));
+            var relationTypeWildcard = relationId.WithRelationType(BuiltInRelationType.Wildcard);
             _ = wildcardRelations.Add(relationTypeWildcard);
-
-            hasAnyRelations = true;
         }
 
         _wildcardRelations = hasAnyRelations ? [new RelationComponentIdentifier(FixedIds.Relations.Wildcard.ShortId, BuiltInRelationType.Wildcard), .. wildcardRelations] : [];
-        _data = [.. _componentsData.Values];
     }
 
     internal Archetype(ArchetypeSharedData sharedData)
@@ -56,8 +57,8 @@ internal partial class Archetype
         _componentDataTypes = ImmutableSortedDictionary<Identifier, Type?>.Empty;
         _componentsData = ImmutableSortedDictionary<Identifier, IComponentCollection>.Empty;
         _components = [];
-        _wildcardRelations = [];
         _data = [];
+        _wildcardRelations = [];
     }
 
     /// <summary>
@@ -74,6 +75,12 @@ internal partial class Archetype
     /// The amount of entities present in this archetype
     /// </summary>
     public int EntityCount => _entities.Count;
+
+    /// <summary>
+    /// Wildcard relations for this archetype.
+    /// ie: <c>(IsA;*), (*;Speed), (*;*)</c>
+    /// </summary>
+    internal ReadOnlySpan<Identifier> WildcardRelations => _wildcardRelations;
 
     /// <summary>
     /// Returns the collection of components for the given <paramref name="componentId"/>
@@ -132,10 +139,10 @@ internal partial class Archetype
     /// </returns>
     public (ArchetypeEntityEntry CurrentEntity, Option<MovedEntity> MovedEntity) AddComponent(int currentIndex, Identifier componentIdentifier, Type? componentDataType)
     {
-        if (!_parentArchetypes.TryGetValue(componentIdentifier, out var targetArchetype))
+        if (!_addComponentArchetypes.TryGetValue(componentIdentifier, out var targetArchetype))
         {
             targetArchetype = _sharedData.GetArchetype([.. _componentDataTypes, new(componentIdentifier, componentDataType)]);
-            _parentArchetypes[componentIdentifier] = targetArchetype;
+            _addComponentArchetypes[componentIdentifier] = targetArchetype;
         }
 
         foreach (var (collectionId, componentCollection) in _componentsData)
@@ -159,10 +166,10 @@ internal partial class Archetype
     /// </returns>
     public (ArchetypeEntityEntry CurrentEntity, Option<MovedEntity> MovedEntity) RemoveComponent(int currentIndex, Identifier componentId)
     {
-        if (!_childArchetypes.TryGetValue(componentId, out var targetArchetype))
+        if (!_removeComponentArchetypes.TryGetValue(componentId, out var targetArchetype))
         {
             targetArchetype = _sharedData.GetArchetype(_componentDataTypes.Where(k => k.Key != componentId));
-            _childArchetypes[componentId] = targetArchetype;
+            _removeComponentArchetypes[componentId] = targetArchetype;
         }
 
         foreach (var (collectionId, componentCollection) in _componentsData)
@@ -209,7 +216,7 @@ internal partial class Archetype
     /// </summary>
     public ref T? GetValueRef<T>(int index, Identifier componentId)
     {
-        if (_componentsData[componentId] is not ComponentCollection<T> collection)
+        if (_componentsData[componentId] is not IComponentCollection<T> collection)
         {
             throw new InvalidOperationException($"Type {typeof(T)} not supported by component {componentId}");
         }

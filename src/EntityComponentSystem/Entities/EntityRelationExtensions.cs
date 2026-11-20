@@ -48,6 +48,11 @@ public static class EntityRelationExtensions
         public bool HasRelation(BuiltInRelationType relationType, Identifier targetEntity) => entity.Actions?.Has(entity, new RelationComponentIdentifier(targetEntity.ShortId, relationType)) ?? false;
 
         /// <summary>
+        /// Returns <see langword="true"/> if the <paramref name="entity"/> has a relation of type <paramref name="relationType"/> with the <paramref name="targetEntity"/>.
+        /// </summary>
+        public bool HasRelation(ushort relationType, Identifier targetEntity) => entity.Actions?.Has(entity, new RelationComponentIdentifier(targetEntity.ShortId, relationType)) ?? false;
+
+        /// <summary>
         /// Returns the Id of the target of the relation of type <typeparamref name="TRelation"/> for the <paramref name="entity"/>, if it has such a relation.
         /// Otherwise returns an invalid Id.
         /// </summary>

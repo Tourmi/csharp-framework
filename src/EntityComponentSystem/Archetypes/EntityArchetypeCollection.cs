@@ -11,12 +11,14 @@ namespace Tourmi.EntityComponentSystem.Archetypes;
 /// </remarks>
 internal class EntityArchetypeCollection
 {
-    private readonly LazyPagedArray<ArchetypeEntityEntry> _entities = new();
-    private readonly IdentifiersToArchetypeDictionary _archetypes = new();
+    private readonly LazyPagedArray<ArchetypeEntityEntry> _entities;
+    private readonly IdentifiersToArchetypeDictionary _archetypes;
 
     public EntityArchetypeCollection(uint initialCapacity = 0x1000)
     {
+        _entities = new();
         _entities.EnsureCapacity(initialCapacity);
+        _archetypes = new(this);
     }
 
     /// <summary>
@@ -64,7 +66,7 @@ internal class EntityArchetypeCollection
     }
 
     /// <summary>
-    /// Checks whether or not the entity has the given component
+    /// Checks whether or not the entity has the given component.
     /// </summary>
     public bool HasComponent(Identifier entityId, Identifier componentId)
         => _entities[entityId].Archetype.HasComponent(componentId);
@@ -100,13 +102,13 @@ internal class EntityArchetypeCollection
         => _archetypes[componentId];
 
     /// <summary>
-    /// Used for debugging purposes
+    /// Returns the archetype for the given <paramref name="entityId"/>
     /// </summary>
     internal Archetype? GetEntityArchetype(Identifier entityId)
         => _entities[entityId].Archetype;
 
     /// <summary>
-    /// Used for debugging purposes
+    /// Returns the archetype entity entry for the given <paramref name="entityId"/>
     /// </summary>
     internal ArchetypeEntityEntry? GetArchetypeEntry(Identifier entityId)
     {

@@ -5,4 +5,4 @@
 /// </summary>
 [TagComponent]
 [ComponentRelationType((byte)BuiltInRelationType.OnRemove, IsUnique = true)]
-internal readonly struct OnRemove;
+public readonly struct OnRemove;

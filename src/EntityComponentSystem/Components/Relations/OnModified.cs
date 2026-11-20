@@ -5,4 +5,4 @@
 /// </summary>
 [TagComponent]
 [ComponentRelationType((byte)BuiltInRelationType.OnModified, IsUnique = true)]
-internal readonly struct OnModified;
+public readonly struct OnModified;

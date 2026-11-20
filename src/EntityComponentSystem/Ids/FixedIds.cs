@@ -227,6 +227,21 @@ public static class FixedIds
         /// <see cref="Components.EventActionSystem"/>
         /// </summary>
         public static readonly Identifier EventActionSystem = RegionStart + 0x09;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Symmetric"/>
+        /// </summary>
+        public static readonly Identifier Symmetric = RegionStart + 0x10;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Transitive"/>
+        /// </summary>
+        public static readonly Identifier Transitive = RegionStart + 0x11;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Reflective"/>
+        /// </summary>
+        public static readonly Identifier Reflective = RegionStart + 0x12;
     }
 
     /// <summary>
@@ -288,6 +303,11 @@ public static class FixedIds
         /// Event raised when the target of a relation is killed.
         /// </summary>
         public static readonly Identifier OnTargetKill = RegionStart + 0x07;
+
+        /// <summary>
+        /// <see cref="Components.Relations.OnExtend"/>
+        /// </summary>
+        public static readonly Identifier OnExtend = RegionStart + 0x08;
     }
 
     /// <summary>
@@ -324,6 +344,21 @@ public static class FixedIds
         /// Action that crashes the application upon an event such as OnKill or OnTargetKill
         /// </summary>
         public static readonly Identifier Panic = RegionStart + 0x02;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Copy"/>
+        /// </summary>
+        public static readonly Identifier Copy = RegionStart + 0x03;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Inherit"/>
+        /// </summary>
+        public static readonly Identifier Inherit = RegionStart + 0x04;
+
+        /// <summary>
+        /// <see cref="Components.Metacomponents.Ignore"/>
+        /// </summary>
+        public static readonly Identifier Ignore = RegionStart + 0x05;
 
         /// <summary>
         /// Id for the relation definition system, handling on-add and on-remove events.

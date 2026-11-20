@@ -781,4 +781,82 @@ internal class GeneralTests
         singletonEntity.Remove<Singleton>();
         Assert.That(singletonEntity.Has(singletonEntity), Is.False);
     }
+
+    [Test]
+    public void Symmetric()
+    {
+        var ecs = World.Create();
+
+        var component = ecs.CreateEntity();
+        component.Add<RelationDefinition>();
+        var isDating = component.Get<RelationDefinition>().RelationType;
+        component.Add<Symmetric>();
+
+        var entity1 = ecs.CreateEntity();
+        var entity2 = ecs.CreateEntity();
+
+        entity1.AddRelation(isDating, entity2);
+
+        Assert.That(entity1.HasRelation(isDating, entity2));
+        Assert.That(entity2.HasRelation(isDating, entity1));
+
+        entity2.RemoveRelation(isDating, entity1);
+
+        Assert.That(entity1.HasRelation(isDating, entity2), Is.False);
+        Assert.That(entity2.HasRelation(isDating, entity1), Is.False);
+    }
+
+    [Test]
+    public void Reflective()
+    {
+        var ecs = World.Create();
+
+        var component = ecs.CreateEntity();
+        component.Add<RelationDefinition>();
+        var relationType = component.Get<RelationDefinition>().RelationType;
+        component.Add<Reflective>();
+
+        var entity = ecs.CreateEntity();
+
+        Assert.That(entity.HasRelation(relationType, entity));
+    }
+
+    [Test]
+    public void Transitive()
+    {
+        var ecs = World.Create();
+
+        var component = ecs.CreateEntity();
+        component.Add<RelationDefinition>();
+        var isA = component.Get<RelationDefinition>().RelationType;
+        component.Add<Transitive>();
+
+        var vehicule = ecs.CreateEntity();
+        var motorVehicule = ecs.CreateEntity();
+        motorVehicule.AddRelation(isA, vehicule);
+        var landVehicule = ecs.CreateEntity();
+        landVehicule.AddRelation(isA, vehicule);
+        var car = ecs.CreateEntity();
+        car.AddRelation(isA, motorVehicule);
+        car.AddRelation(isA, landVehicule);
+        var superCar = ecs.CreateEntity();
+        superCar.AddRelation(isA, car);
+        var electricCar = ecs.CreateEntity();
+        electricCar.AddRelation(isA, car);
+        var boat = ecs.CreateEntity();
+        boat.AddRelation(isA, motorVehicule);
+
+        HashSet<Identifier> expectedLandVehicules = [superCar, electricCar, car];
+
+        var landVehiculeQuery = ecs.GetCachedQueryFor<ParamGroup<Parameter1>>(new RelationComponentIdentifier(landVehicule.Id.ShortId, isA));
+        HashSet<Identifier> actualLandVehicules = [];
+
+        landVehiculeQuery.ForEach((Identifier id) =>
+        {
+            actualLandVehicules.Add(id);
+        });
+
+        Assert.That(actualLandVehicules, Is.EqualTo(expectedLandVehicules));
+        Assert.That(boat.HasRelation(isA, vehicule));
+    }
 }

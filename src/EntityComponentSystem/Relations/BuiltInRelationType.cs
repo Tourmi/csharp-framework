@@ -78,6 +78,13 @@ public enum BuiltInRelationType : byte
     OnTargetKill = 11,
 
     /// <summary>
+    /// Used as a relation meta-component. Determines the action to take for a component
+    /// when an entity starts inheriting from another entity that contains it.
+    /// Should have an action between copy, inherit, or ignore.
+    /// </summary>
+    OnExtend = 12,
+
+    /// <summary>
     /// Special Id which when used as the target of a Relation Id, will match any target.
     /// When used as the relation type, will match any relation type having the specified target
     /// </summary>

@@ -22,6 +22,9 @@ public sealed class World : IEntityActions
         [typeof(Schedule)] = FixedIds.ComponentIds.Schedule,
         [typeof(SystemComponent)] = FixedIds.ComponentIds.SystemComponent,
         [typeof(Unique)] = FixedIds.ComponentIds.Unique,
+        [typeof(Symmetric)] = FixedIds.ComponentIds.Symmetric,
+        [typeof(Transitive)] = FixedIds.ComponentIds.Transitive,
+        [typeof(Reflective)] = FixedIds.ComponentIds.Reflective,
         [typeof(EventActionSystem)] = FixedIds.ComponentIds.EventActionSystem,
 
         [typeof(ChildOf)] = FixedIds.Relations.ChildOf,
@@ -35,15 +38,19 @@ public sealed class World : IEntityActions
         [typeof(Events.PreTick)] = FixedIds.Events.PreTick,
         [typeof(Events.Tick)] = FixedIds.Events.Tick,
         [typeof(Events.PostTick)] = FixedIds.Events.PostTick,
-        [typeof(Events.OnAdd)] = FixedIds.Events.OnAdd,
-        [typeof(Events.OnModified)] = FixedIds.Events.OnModified,
-        [typeof(Events.OnRemove)] = FixedIds.Events.OnRemove,
-        [typeof(Events.OnKill)] = FixedIds.Events.OnKill,
-        [typeof(Events.OnTargetKill)] = FixedIds.Events.OnTargetKill,
+        [typeof(OnAdd)] = FixedIds.Events.OnAdd,
+        [typeof(OnModified)] = FixedIds.Events.OnModified,
+        [typeof(OnRemove)] = FixedIds.Events.OnRemove,
+        [typeof(OnKill)] = FixedIds.Events.OnKill,
+        [typeof(OnTargetKill)] = FixedIds.Events.OnTargetKill,
+        [typeof(OnExtend)] = FixedIds.Events.OnExtend,
 
         [typeof(Remove)] = FixedIds.Actions.Remove,
         [typeof(Kill)] = FixedIds.Actions.Kill,
         [typeof(Panic)] = FixedIds.Actions.Panic,
+        [typeof(Copy)] = FixedIds.Actions.Copy,
+        [typeof(Inherit)] = FixedIds.Actions.Inherit,
+        [typeof(Ignore)] = FixedIds.Actions.Ignore,
 
         [typeof(Parameter1)] = FixedIds.Special.Parameter1,
         [typeof(Parameter2)] = FixedIds.Special.Parameter2,
@@ -158,6 +165,9 @@ public sealed class World : IEntityActions
 
             this.Add<Unique>(FixedIds.Relations.InstanceOf);
             this.Add<Unique>(FixedIds.Relations.ChildOf);
+
+            this.Add<Transitive>(FixedIds.Relations.IsA);
+            this.Add<Reflective>(FixedIds.Relations.IsA);
         }
 
         void InitializeSystems()
@@ -255,7 +265,6 @@ public sealed class World : IEntityActions
 
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.ChildOf);
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.IsA);
-            this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.InstanceOf);
         }
     }
 
@@ -423,7 +432,51 @@ public sealed class World : IEntityActions
             return false;
         }
 
-        return Archetypes.HasComponent(entity, componentId);
+        if (Archetypes.HasComponent(entity, componentId))
+        {
+            return true;
+        }
+
+        if (!componentId.IsRelationId)
+        {
+            return false;
+        }
+
+        var relationId = componentId.ToRelationId();
+        var relationDefinitionId = _relationDefinitionIds[relationId.RelationType];
+        var relationDefinition = new Entity(relationDefinitionId, this);
+        if (relationId.Target == entity.ShortId && relationDefinition.Has<Reflective>())
+        {
+            return true;
+        }
+
+        if (relationDefinition.Has<Transitive>())
+        {
+            var archetype = Archetypes.GetEntityArchetype(entity);
+            if (archetype is not null)
+            {
+                foreach (var targetComponent in archetype.Components)
+                {
+                    if (!targetComponent.IsRelationId)
+                    {
+                        continue;
+                    }
+
+                    var targetRelation = new RelationComponentIdentifier(targetComponent);
+                    if (targetRelation.RelationType != relationId.RelationType)
+                    {
+                        continue;
+                    }
+
+                    if (TransitiveRelationsMatch(targetRelation, relationId))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>
@@ -474,6 +527,7 @@ public sealed class World : IEntityActions
         if (AddComponentIfMissing(entity, component))
         {
             OnAdd(entity, component);
+            OnModified(entity, component, skipThisEntity: true);
         }
     }
 
@@ -486,16 +540,14 @@ public sealed class World : IEntityActions
         }
 
         var wasAdded = AddComponentIfMissing(entity, component);
-
         Archetypes.SetComponent(entity, component, value);
+
         if (wasAdded)
         {
             OnAdd(entity, component);
         }
-        else
-        {
-            OnModified(entity, component);
-        }
+
+        OnModified(entity, component);
     }
 
     /// <inheritdoc/>
@@ -527,30 +579,38 @@ public sealed class World : IEntityActions
             return;
         }
 
-        var componentDefinitionId = component;
+        OnRemove(entity, component);
+        Archetypes.RemoveComponent(entity, component);
+
         if (component.IsRelationId)
         {
-            var relationId = new RelationComponentIdentifier(component);
-            componentDefinitionId = _relationDefinitionIds[relationId.RelationType];
-        }
-
-        var onRemoveActionId = GetRelationTarget(componentDefinitionId, (ushort)BuiltInRelationType.OnRemove);
-        if (onRemoveActionId != default)
-        {
-            var action = Get<EventActionSystem>(onRemoveActionId, FixedIds.ComponentIds.EventActionSystem).Action;
-            if (action is not null)
+            var relationId = component.ToRelationId();
+            var componentEntity = new Entity(_relationDefinitionIds[relationId.RelationType], this);
+            if (componentEntity.Has<Symmetric>())
             {
-                action(this, FixedIds.Events.OnRemove, entity, component);
+                var target = Ids.GetCurrentId(relationId.Target);
+                if (target.ShortId == 0)
+                {
+                    target = relationId.Target;
+                }
+
+                Remove(target, relationId.WithTarget(entity));
             }
         }
 
-        Archetypes.RemoveComponent(entity, component);
+        if (Has(entity, component))
+        {
+            // Since the entity still has the component,
+            // it means we removed the override, but it still inherits it from a base entity.
+            // Raise OnModified since the value between itself and its base entity may be different.
+            OnModified(entity, component);
+        }
     }
 
     /// <summary>
     /// Returns the id of the definition of the given <paramref name="relationType"/>.
     /// </summary>
-    public Identifier GetRelationDefinitionId(ushort relationType) => _relationDefinitionIds[relationType];
+    public Entity GetRelationDefinition(ushort relationType) => new(_relationDefinitionIds[relationType], this);
 
     /// <inheritdoc/>
     public Identifier GetRelationTarget(Identifier entity, ushort relationType)
@@ -581,6 +641,23 @@ public sealed class World : IEntityActions
         }
 
         return default;
+    }
+
+    /// <inheritdoc/>
+    public Identifier GetRelationTarget(RelationComponentIdentifier relation)
+    {
+        if (!IsValid(relation))
+        {
+            return default;
+        }
+
+        var id = Ids.GetCurrentId(relation.Target);
+        if (id.Value == 0)
+        {
+            id = new Identifier(relation.Target);
+        }
+
+        return id;
     }
 
     /// <summary>
@@ -628,6 +705,40 @@ public sealed class World : IEntityActions
         }
     }
 
+    /// <summary>
+    /// Returns the cached query for the given type <typeparamref name="T"/>.
+    /// </summary>
+    public Query GetCachedQueryFor<T>()
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var queryType = typeof(T);
+
+        if (!_queryParamsToQuery.TryGetValue(queryType, out var query))
+        {
+            query = Query.FromQueryParam<T>(this);
+            _queryParamsToQuery[queryType] = query;
+        }
+
+        return query;
+    }
+
+    /// <summary>
+    /// Returns the cached query for the given type <typeparamref name="T"/> and <paramref name="parameter1"/> value.
+    /// </summary>
+    public Query GetCachedQueryFor<T>(ulong parameter1)
+        where T : IQueryParam<T>, allows ref struct
+    {
+        var queryType = typeof(T);
+
+        if (!_parametrized1Queries.TryGetValue((queryType, parameter1), out var query))
+        {
+            query = Query.FromQueryParam<T>(this, parameter1);
+            _parametrized1Queries[(queryType, parameter1)] = query;
+        }
+
+        return query;
+    }
+
     internal EntityActions GetEntityActions()
     {
         EntityActions? actions;
@@ -673,38 +784,40 @@ public sealed class World : IEntityActions
         }
     }
 
-    /// <summary>
-    /// Returns the cached query for the given type <typeparamref name="T"/>.
-    /// </summary>
-    public Query GetCachedQueryFor<T>()
-        where T : IQueryParam<T>, allows ref struct
+    internal bool TransitiveRelationsMatch(RelationComponentIdentifier relation, RelationComponentIdentifier relationToMatch)
     {
-        var queryType = typeof(T);
-
-        if (!_queryParamsToQuery.TryGetValue(queryType, out var query))
+        if (relation == relationToMatch)
         {
-            query = Query.FromQueryParam<T>(this);
-            _queryParamsToQuery[queryType] = query;
+            return true;
         }
 
-        return query;
-    }
-
-    /// <summary>
-    /// Returns the cached query for the given type <typeparamref name="T"/> and <paramref name="parameter1"/> value.
-    /// </summary>
-    public Query GetCachedQueryFor<T>(ulong parameter1)
-        where T : IQueryParam<T>, allows ref struct
-    {
-        var queryType = typeof(T);
-
-        if (!_parametrized1Queries.TryGetValue((queryType, parameter1), out var query))
+        var target = GetRelationTarget(relation);
+        var targetArchetype = Archetypes.GetEntityArchetype(target);
+        if (targetArchetype is null)
         {
-            query = Query.FromQueryParam<T>(this, parameter1);
-            _parametrized1Queries[(queryType, parameter1)] = query;
+            return false;
         }
 
-        return query;
+        foreach (var targetComponent in targetArchetype.Components)
+        {
+            if (!targetComponent.IsRelationId)
+            {
+                continue;
+            }
+
+            var targetRelation = new RelationComponentIdentifier(targetComponent);
+            if (targetRelation.RelationType != relationToMatch.RelationType)
+            {
+                continue;
+            }
+
+            if (TransitiveRelationsMatch(targetRelation, relationToMatch))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Identifier InitializeComponentForType(Identifier entityId, Type type)
@@ -751,7 +864,7 @@ public sealed class World : IEntityActions
         }
 
         var datatypeId = component;
-        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        if (component.IsRelationId)
         {
             var relationId = new RelationComponentIdentifier(component);
             datatypeId = _relationDefinitionIds[relationId.RelationType];
@@ -771,7 +884,7 @@ public sealed class World : IEntityActions
     private void OnAdd(Identifier entity, Identifier component)
     {
         var datatypeId = component;
-        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        if (component.IsRelationId)
         {
             var relationId = new RelationComponentIdentifier(component);
             datatypeId = _relationDefinitionIds[relationId.RelationType];
@@ -783,28 +896,88 @@ public sealed class World : IEntityActions
             var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
             if (action is not null)
             {
-                action(this, FixedIds.Events.OnAdd, entity, datatypeId);
+                action(this, FixedIds.Events.OnAdd, entity, component);
+            }
+        }
+
+        if (component.IsRelationId)
+        {
+            var relationId = component.ToRelationId();
+            var componentEntity = new Entity(_relationDefinitionIds[relationId.RelationType], this);
+            if (componentEntity.Has<Symmetric>())
+            {
+                var target = Ids.GetCurrentId(relationId.Target);
+                if (target.ShortId == 0)
+                {
+                    target = relationId.Target;
+                }
+
+                Add(target, relationId.WithTarget(entity));
             }
         }
     }
 
-    private void OnModified(Identifier entity, Identifier component)
+    private void OnRemove(Identifier entity, Identifier component)
+    {
+        var componentDefinitionId = component;
+        if (component.IsRelationId)
+        {
+            var relationId = new RelationComponentIdentifier(component);
+            componentDefinitionId = _relationDefinitionIds[relationId.RelationType];
+        }
+
+        var onRemoveActionId = GetRelationTarget(componentDefinitionId, (ushort)BuiltInRelationType.OnRemove);
+        if (onRemoveActionId != default)
+        {
+            var action = Get<EventActionSystem>(onRemoveActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            if (action is not null)
+            {
+                action(this, FixedIds.Events.OnRemove, entity, component);
+            }
+        }
+    }
+
+    private void OnModified(Identifier entity, Identifier component, bool skipThisEntity = false)
     {
         var datatypeId = component;
-        if (component.Types.HasFlag(IdentifierTypes.Relation))
+        if (component.IsRelationId)
         {
             var relationId = new RelationComponentIdentifier(component);
             datatypeId = _relationDefinitionIds[relationId.RelationType];
         }
 
         var onModifiedActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnModified);
-        if (onModifiedActionId != default)
+        if (onModifiedActionId == default)
         {
-            var action = Get<EventActionSystem>(onModifiedActionId, FixedIds.ComponentIds.EventActionSystem).Action;
-            if (action is not null)
+            return;
+        }
+
+        var action = Get<EventActionSystem>(onModifiedActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+        if (action is null)
+        {
+            return;
+        }
+
+        if (!skipThisEntity)
+        {
+            action(this, FixedIds.Events.OnModified, entity, component);
+        }
+
+        var componentEntity = new Entity(datatypeId, this);
+        if (componentEntity.HasRelation<OnExtend, Inherit>())
+        {
+            RecursiveOnModified(action, this, entity, component);
+        }
+
+        static void RecursiveOnModified(EventActionSystem.EventAction action, World world, Identifier entity, Identifier component)
+        {
+            var query = world.GetCachedQueryFor<ParamGroup<Relation<IsA, Parameter1>>>(entity);
+            query.ForEach((Identifier e) =>
             {
-                action(this, FixedIds.Events.OnModified, entity, datatypeId);
-            }
+                action(world, FixedIds.Events.OnModified, e, component);
+
+                RecursiveOnModified(action, world, e, component);
+            });
         }
     }
 

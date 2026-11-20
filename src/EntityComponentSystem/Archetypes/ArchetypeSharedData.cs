@@ -3,7 +3,7 @@
 /// <summary>
 /// Shared data between the archetypes of the graph.
 /// </summary>
-internal class ArchetypeSharedData(IdentifiersToArchetypeDictionary identifierDictionary)
+internal class ArchetypeSharedData(EntityArchetypeCollection entityArchetypes)
 {
     /// <summary>
     /// Struct representing a component with no data.
@@ -14,7 +14,7 @@ internal class ArchetypeSharedData(IdentifiersToArchetypeDictionary identifierDi
     /// </remarks>
     private struct NoData;
 
-    private readonly IdentifiersToArchetypeDictionary _archetypes = identifierDictionary;
+    private readonly EntityArchetypeCollection _archetypes = entityArchetypes;
     private readonly Dictionary<Type, Func<IComponentCollection>> _componentCollectionFactories = [];
 
     public IComponentCollection CreateComponentCollection(Type? dataType)
@@ -34,5 +34,5 @@ internal class ArchetypeSharedData(IdentifiersToArchetypeDictionary identifierDi
         return factory();
     }
 
-    public Archetype GetArchetype(IEnumerable<KeyValuePair<Identifier, Type?>> components) => _archetypes[components];
+    public Archetype GetArchetype(IEnumerable<KeyValuePair<Identifier, Type?>> components) => _archetypes.ComponentsToArchetypes[components];
 }

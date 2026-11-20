@@ -139,6 +139,21 @@ public readonly struct RelationComponentIdentifier(ulong id) : IEquatable<Relati
     /// </summary>
     public RelationComponentIdentifier WithTarget(uint newTarget) => new(newTarget, RelationType, Types);
 
+    /// <summary>
+    /// Returns this id with <see cref="Target"/> set to the given <paramref name="newTarget"/>.
+    /// </summary>
+    public RelationComponentIdentifier WithTarget(Identifier newTarget) => new(newTarget.ShortId, RelationType, Types);
+
+    /// <summary>
+    /// Returns this id with <see cref="RelationType"/> set to the given <paramref name="newRelationType"/>.
+    /// </summary>
+    public RelationComponentIdentifier WithRelationType(BuiltInRelationType newRelationType) => new(Target, (ushort)newRelationType, Types);
+
+    /// <summary>
+    /// Returns this id with <see cref="RelationType"/> set to the given <paramref name="newRelationType"/>.
+    /// </summary>
+    public RelationComponentIdentifier WithRelationType(ushort newRelationType) => new(Target, newRelationType, Types);
+
     /// <inheritdoc/>
     public bool Equals(RelationComponentIdentifier other) => Value == other.Value;
 

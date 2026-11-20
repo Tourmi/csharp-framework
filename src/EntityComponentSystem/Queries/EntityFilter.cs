@@ -52,40 +52,9 @@ public sealed class EntityFilter
         {
             foreach (var excludedComponent in _excludedComponentIds)
             {
-                if (componentId == excludedComponent)
+                if (RelationsMatch(componentId, excludedComponent))
                 {
                     return false;
-                }
-
-                if (!componentId.IsRelationId || !excludedComponent.IsRelationId)
-                {
-                    continue;
-                }
-
-                var relationId = componentId.ToRelationId();
-                var excludedRelationId = excludedComponent.ToRelationId();
-
-                if (excludedRelationId.Target == FixedIds.Relations.Wildcard.ShortId)
-                {
-                    if (excludedRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
-                    {
-                        return false;
-                    }
-
-                    if (excludedRelationId.RelationType == relationId.RelationType)
-                    {
-                        return false;
-                    }
-
-                    continue;
-                }
-
-                if (excludedRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
-                {
-                    if (relationId.Target == excludedRelationId.Target)
-                    {
-                        return false;
-                    }
                 }
             }
         }
@@ -96,44 +65,10 @@ public sealed class EntityFilter
 
             foreach (var componentId in archetype.Components)
             {
-                if (componentId == requiredComponentId)
+                if (RelationsMatch(componentId, requiredComponentId))
                 {
                     hasComponent = true;
                     break;
-                }
-
-                if (!componentId.IsRelationId || !requiredComponentId.IsRelationId)
-                {
-                    continue;
-                }
-
-                var relationId = componentId.ToRelationId();
-                var requiredRelationId = requiredComponentId.ToRelationId();
-
-                if (requiredRelationId.Target == FixedIds.Relations.Wildcard.ShortId)
-                {
-                    if (requiredRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
-                    {
-                        hasComponent = true;
-                        break;
-                    }
-
-                    if (requiredRelationId.RelationType == relationId.RelationType)
-                    {
-                        hasComponent = true;
-                        break;
-                    }
-
-                    continue;
-                }
-
-                if (requiredRelationId.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
-                {
-                    if (relationId.Target == requiredRelationId.Target)
-                    {
-                        hasComponent = true;
-                        break;
-                    }
                 }
             }
 
@@ -178,6 +113,53 @@ public sealed class EntityFilter
         }
 
         parametrizedId = id;
+        return false;
+    }
+
+    private bool RelationsMatch(Identifier component, Identifier componentToMatch)
+    {
+        if (component == componentToMatch)
+        {
+            return true;
+        }
+
+        if (!component.IsRelationId || !componentToMatch.IsRelationId)
+        {
+            return false;
+        }
+
+        var relation = component.ToRelationId();
+        var relationToMatch = componentToMatch.ToRelationId();
+
+        if (relationToMatch.Target == FixedIds.Relations.Wildcard.ShortId)
+        {
+            if (relationToMatch.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+            {
+                return true;
+            }
+
+            if (relationToMatch.RelationType == relation.RelationType)
+            {
+                return true;
+            }
+        }
+        else if (relationToMatch.BuiltInRelationTypeOrNull is BuiltInRelationType.Wildcard)
+        {
+            if (relation.Target == relationToMatch.Target)
+            {
+                return true;
+            }
+        }
+
+        if (relation.RelationType == relationToMatch.RelationType)
+        {
+            var relationDefinition = _world.GetRelationDefinition(relation.RelationType);
+            if (relationDefinition.Has<Transitive>() && _world.TransitiveRelationsMatch(relation, relationToMatch))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 }

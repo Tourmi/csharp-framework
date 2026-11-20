@@ -24,9 +24,9 @@ internal class IdentifiersToArchetypeDictionary
     private readonly ArchetypeSharedData _sharedData;
     private readonly Archetype _emptyArchetype;
 
-    public IdentifiersToArchetypeDictionary()
+    public IdentifiersToArchetypeDictionary(EntityArchetypeCollection entityArchetypeCollection)
     {
-        _sharedData = new(this);
+        _sharedData = new(entityArchetypeCollection);
         _emptyArchetype = new(_sharedData);
         _archetypes[[]] = _emptyArchetype;
     }
@@ -47,7 +47,7 @@ internal class IdentifiersToArchetypeDictionary
     /// creating it if needed.
     /// </summary>
     /// <param name="components">
-    /// A collection of components, who's key is they identifier, and their value, their storage datatype
+    /// A collection of components, who's key is the identifier, and their value, their storage datatype
     /// TODO: Find a better data structure for passing in an unordered collection of components.
     /// </param>
     public Archetype this[IEnumerable<KeyValuePair<Identifier, Type?>> components]
@@ -61,13 +61,12 @@ internal class IdentifiersToArchetypeDictionary
                 _archetypes[key] = archetype;
                 foreach (var component in archetype.Components)
                 {
-                    if (!_archetypeGroups.TryGetValue(component, out var group))
-                    {
-                        group = [];
-                        _archetypeGroups[component] = group;
-                    }
+                    AddArchetypeToComponentGroup(archetype, component);
+                }
 
-                    group.Add(archetype);
+                foreach (var wildcardRelation in archetype.WildcardRelations)
+                {
+                    AddArchetypeToComponentGroup(archetype, wildcardRelation);
                 }
 
                 ArchetypeAdded?.Invoke(archetype);
@@ -86,4 +85,15 @@ internal class IdentifiersToArchetypeDictionary
     /// Returns all the archetypes contained by the dictionary.
     /// </summary>
     public IReadOnlyCollection<Archetype> Values => _archetypes.Values;
+
+    private void AddArchetypeToComponentGroup(Archetype archetype, Identifier component)
+    {
+        if (!_archetypeGroups.TryGetValue(component, out var group))
+        {
+            group = [];
+            _archetypeGroups[component] = group;
+        }
+
+        group.Add(archetype);
+    }
 }

@@ -5,4 +5,4 @@
 /// </summary>
 [TagComponent]
 [ComponentRelationType((byte)BuiltInRelationType.OnTargetKill, IsUnique = true)]
-internal readonly struct OnTargetKill;
+public readonly struct OnTargetKill;

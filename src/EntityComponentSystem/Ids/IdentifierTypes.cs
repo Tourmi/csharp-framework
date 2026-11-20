@@ -13,14 +13,9 @@ public enum IdentifierTypes : byte
 
     /// <summary>
     /// Whether or not a component should be automatically overridden 
-    /// when instantiating a prefab
+    /// when extending an entity
     /// </summary>
-    IsAutoOverride = 1 << 5,
-
-    /// <summary>
-    /// When set, the entity represented by this Id is disabled and should not be processed or returned by regular queries.
-    /// </summary>
-    IsDisabled = 1 << 6,
+    IsAutoOverride = 1 << 6,
 
     /// <summary>
     /// When set, this identifier is a <see cref="RelationComponentIdentifier"/>
