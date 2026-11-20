@@ -1,14 +1,4 @@
-﻿using Tourmi.EntityComponentSystem.Attributes;
-using Tourmi.EntityComponentSystem.Components;
-using Tourmi.EntityComponentSystem.Components.Metacomponents;
-using Tourmi.EntityComponentSystem.Components.Relations;
-using Tourmi.EntityComponentSystem.Entities;
-using Tourmi.EntityComponentSystem.Ids;
-using Tourmi.EntityComponentSystem.Queries;
-using Tourmi.EntityComponentSystem.Queries.Parameters;
-using Tourmi.EntityComponentSystem.Relations;
-
-namespace Tourmi.EntityComponentSystem;
+﻿namespace Tourmi.EntityComponentSystem;
 
 [TestFixture]
 internal class GeneralTests

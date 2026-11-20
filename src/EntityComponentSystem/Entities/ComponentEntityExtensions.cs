@@ -66,5 +66,50 @@ public static class ComponentEntityExtensions
 
             return entity;
         }
+
+        /// <summary>
+        /// When an entity with this component gets extended, inherit this component.
+        /// </summary>
+        public ComponentEntity OnExtendInherit()
+        {
+            if (entity.Actions is null)
+            {
+                throw new InvalidOperationException("Cannot set OnExtend action for an invalid entity.");
+            }
+
+            entity.AsEntity().AddRelation<OnExtend, Inherit>();
+
+            return entity;
+        }
+
+        /// <summary>
+        /// When an entity with this component gets extended, copy this component to the extending entity.
+        /// </summary>
+        public ComponentEntity OnExtendCopy()
+        {
+            if (entity.Actions is null)
+            {
+                throw new InvalidOperationException("Cannot set OnExtend action for an invalid entity.");
+            }
+
+            entity.AsEntity().AddRelation<OnExtend, Copy>();
+
+            return entity;
+        }
+
+        /// <summary>
+        /// When an entity with this component gets extended, ignore this component.
+        /// </summary>
+        public ComponentEntity OnExtendIgnore()
+        {
+            if (entity.Actions is null)
+            {
+                throw new InvalidOperationException("Cannot set OnExtend action for an invalid entity.");
+            }
+
+            entity.AsEntity().AddRelation<OnExtend, Ignore>();
+
+            return entity;
+        }
     }
 }

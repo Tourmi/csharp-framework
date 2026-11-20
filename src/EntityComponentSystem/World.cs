@@ -13,19 +13,19 @@ public sealed class World : IEntityActions
     {
         [typeof(World)] = FixedIds.Entities.World,
 
-        [typeof(Component)] = FixedIds.ComponentIds.Component,
-        [typeof(DataComponent)] = FixedIds.ComponentIds.DataComponent,
-        [typeof(Name)] = FixedIds.ComponentIds.Name,
-        [typeof(RelationDefinition)] = FixedIds.ComponentIds.RelationDefinition,
-        [typeof(Singleton)] = FixedIds.ComponentIds.Singleton,
-        [typeof(Prefab)] = FixedIds.ComponentIds.Prefab,
-        [typeof(Schedule)] = FixedIds.ComponentIds.Schedule,
-        [typeof(SystemComponent)] = FixedIds.ComponentIds.SystemComponent,
-        [typeof(Unique)] = FixedIds.ComponentIds.Unique,
-        [typeof(Symmetric)] = FixedIds.ComponentIds.Symmetric,
-        [typeof(Transitive)] = FixedIds.ComponentIds.Transitive,
-        [typeof(Reflective)] = FixedIds.ComponentIds.Reflective,
-        [typeof(EventActionSystem)] = FixedIds.ComponentIds.EventActionSystem,
+        [typeof(Component)] = FixedIds.Components.Component,
+        [typeof(DataComponent)] = FixedIds.Components.DataComponent,
+        [typeof(Name)] = FixedIds.Components.Name,
+        [typeof(RelationDefinition)] = FixedIds.Components.RelationDefinition,
+        [typeof(Singleton)] = FixedIds.Components.Singleton,
+        [typeof(Prefab)] = FixedIds.Components.Prefab,
+        [typeof(Schedule)] = FixedIds.Components.Schedule,
+        [typeof(SystemComponent)] = FixedIds.Components.SystemComponent,
+        [typeof(Unique)] = FixedIds.Components.Unique,
+        [typeof(Symmetric)] = FixedIds.Components.Symmetric,
+        [typeof(Transitive)] = FixedIds.Components.Transitive,
+        [typeof(Reflective)] = FixedIds.Components.Reflective,
+        [typeof(EventActionSystem)] = FixedIds.Components.EventActionSystem,
 
         [typeof(ChildOf)] = FixedIds.Relations.ChildOf,
         [typeof(IsA)] = FixedIds.Relations.IsA,
@@ -105,46 +105,50 @@ public sealed class World : IEntityActions
             Ids.Reserve(region);
         }
 
+        // Initialize _relationDefinitionIds collection before doing anything else.
+        for (ushort i = 0; i < FixedIds.Relations.RegionSize; i++)
+        {
+            if (!Enum.IsDefined((BuiltInRelationType)i))
+            {
+                continue;
+            }
+
+            var relation = CreateEntityFixedId(FixedIds.Relations.RegionStart + i);
+            _relationDefinitionIds[i] = relation;
+        }
+
         InitializeBaseComponents();
         InitializeRelations();
+        InitializeAdditionalComponents();
         InitializeSystems();
 
         return;
 
         void InitializeBaseComponents()
         {
-            var component = CreateEntityFixedId(FixedIds.ComponentIds.Component);
+            var component = CreateEntityFixedId(FixedIds.Components.Component);
             Archetypes.AddComponent(component, component, null);
 
-            var data = CreateEntityFixedId(FixedIds.ComponentIds.DataComponent);
+            var data = CreateEntityFixedId(FixedIds.Components.DataComponent);
             Archetypes.AddComponent(data, component, null);
             Archetypes.AddComponent(data, data, typeof(DataComponent));
             Archetypes.SetComponent(data, data, new DataComponent(typeof(DataComponent)));
 
-            var name = CreateEntityFixedId(FixedIds.ComponentIds.Name);
+            var name = CreateEntityFixedId(FixedIds.Components.Name);
             Archetypes.AddComponent(name, component, null);
             Set<DataComponent>(name, data, new(typeof(Name)));
             Set<Name>(name, name, new(nameof(Name)));
 
             Set<Name>(component, name, new(nameof(Component)));
             Set<Name>(data, name, new(nameof(DataComponent)));
-
-            var singleton = CreateEntityFixedId(FixedIds.ComponentIds.Singleton);
-            this.Add<Component>(singleton);
-            this.Set<Name>(singleton, new(nameof(Singleton)));
-
-            var world = CreateEntityFixedId(FixedIds.Entities.World);
-            this.Add<Singleton>(world);
-            this.Add(world, world);
-            this.Set<Name>(world, new(nameof(World)));
         }
 
         void InitializeRelations()
         {
-            var relationDefinition = CreateEntityFixedId(FixedIds.ComponentIds.RelationDefinition);
-            this.Add<Component>(relationDefinition);
-            this.Set<Name>(relationDefinition, new(nameof(RelationDefinition)));
-            this.Set<DataComponent>(relationDefinition, new(typeof(RelationDefinition)));
+            var relationDefinition = CreateEntityFixedId(FixedIds.Components.RelationDefinition);
+            Add(relationDefinition, FixedIds.Components.Component);
+            Set<Name>(relationDefinition, FixedIds.Components.Name, new(nameof(RelationDefinition)));
+            Set<DataComponent>(relationDefinition, FixedIds.Components.DataComponent, new(typeof(RelationDefinition)));
 
             for (ushort i = 0; i < FixedIds.Relations.RegionSize; i++)
             {
@@ -153,11 +157,10 @@ public sealed class World : IEntityActions
                     continue;
                 }
 
-                var relation = CreateEntityFixedId(FixedIds.Relations.RegionStart + i);
-                this.Add<Component>(relation);
-                this.Set<Name>(relation, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
-                this.Set<RelationDefinition>(relation, new(i));
-                _relationDefinitionIds[i] = relation;
+                var relation = _relationDefinitionIds[i];
+                Add(relation, FixedIds.Components.Component);
+                Set<Name>(relation, FixedIds.Components.Name, new(Enum.GetName((BuiltInRelationType)i) ?? $"Relation #{i}"));
+                Set<RelationDefinition>(relation, FixedIds.Components.RelationDefinition, new(i));
             }
 
             // For now, configure relations manually.
@@ -167,17 +170,32 @@ public sealed class World : IEntityActions
             this.Add<Unique>(FixedIds.Relations.ChildOf);
 
             this.Add<Transitive>(FixedIds.Relations.IsA);
+
             this.Add<Reflective>(FixedIds.Relations.IsA);
+
+            this.Add<Relation<OnExtend, Ignore>>(FixedIds.Relations.IsA);
+        }
+
+        void InitializeAdditionalComponents()
+        {
+            var singleton = CreateEntityFixedId(FixedIds.Components.Singleton);
+            this.Add<Component>(singleton);
+            this.Set<Name>(singleton, new(nameof(Singleton)));
+
+            var world = CreateEntityFixedId(FixedIds.Entities.World);
+            this.Add<Singleton>(world);
+            this.Add(world, world);
+            this.Set<Name>(world, new(nameof(World)));
         }
 
         void InitializeSystems()
         {
-            var system = CreateEntityFixedId(FixedIds.ComponentIds.SystemComponent);
+            var system = CreateEntityFixedId(FixedIds.Components.SystemComponent);
             this.Add<Component>(system);
             this.Set<DataComponent>(system, new(typeof(SystemComponent)));
             this.Set<Name>(system, new(nameof(SystemComponent)));
 
-            var scheduleComponent = CreateEntityFixedId(FixedIds.ComponentIds.Schedule);
+            var scheduleComponent = CreateEntityFixedId(FixedIds.Components.Schedule);
             this.Add<Component>(scheduleComponent);
             this.Set<DataComponent>(scheduleComponent, new(typeof(Schedule)));
             this.Set<Name>(scheduleComponent, new(nameof(Schedule)));
@@ -210,9 +228,8 @@ public sealed class World : IEntityActions
                     $"panicking due to entity {entity.DisplayName}.");
             }));
 
-            var relationDefinitionSystem = CreateEntityFixedId(FixedIds.Actions.RelationDefinitionSystem);
-            this.Set<Name>(relationDefinitionSystem, new("RelationDefinition OnAdd/OnRemove action"));
-            this.Set<EventActionSystem>(relationDefinitionSystem, new((world, eventId, entityId, componentId) =>
+            var relationDefinitionComponent = new Entity(FixedIds.Components.RelationDefinition, this);
+            this.Set<EventActionSystem>(relationDefinitionComponent, new((world, eventId, entityId, componentId) =>
             {
                 if (eventId != FixedIds.Events.OnAdd)
                 {
@@ -240,13 +257,11 @@ public sealed class World : IEntityActions
                 relationDefinition = new(relationType);
                 _relationDefinitionIds[relationDefinition.RelationType] = entityId;
             }));
+            relationDefinitionComponent.AddRelation(BuiltInRelationType.OnAdd, relationDefinitionComponent);
+            relationDefinitionComponent.AddRelation(BuiltInRelationType.OnRemove, relationDefinitionComponent);
 
-            var relationDefinitionComponent = new Entity(FixedIds.ComponentIds.RelationDefinition, this);
-            relationDefinitionComponent.AddRelation(BuiltInRelationType.OnAdd, relationDefinitionSystem);
-
-            var singletonSystem = CreateEntityFixedId(FixedIds.Actions.SingletonSystem);
-            this.Set<Name>(singletonSystem, new("Singleton OnAdd/OnRemove action"));
-            this.Set<EventActionSystem>(singletonSystem, new((world, eventId, entityId, componentId) =>
+            var singletonComponent = new Entity(FixedIds.Components.Singleton, this);
+            this.Set<EventActionSystem>(singletonComponent, new((world, eventId, entityId, componentId) =>
             {
                 var entity = new Entity(entityId, world);
                 if (eventId == FixedIds.Events.OnAdd)
@@ -258,13 +273,46 @@ public sealed class World : IEntityActions
                     entity.Remove(entity);
                 }
             }));
-
-            var singletonComponent = new Entity(FixedIds.ComponentIds.Singleton, this);
-            singletonComponent.AddRelation(BuiltInRelationType.OnAdd, singletonSystem);
-            singletonComponent.AddRelation(BuiltInRelationType.OnRemove, singletonSystem);
+            singletonComponent.AddRelation(BuiltInRelationType.OnAdd, singletonComponent);
+            singletonComponent.AddRelation(BuiltInRelationType.OnRemove, singletonComponent);
 
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.ChildOf);
             this.Add<Relation<OnTargetKill, Kill>>(FixedIds.Relations.IsA);
+
+            var isAComponent = new Entity(FixedIds.Relations.IsA, this);
+            this.Set<EventActionSystem>(isAComponent, new((world, eventId, entityId, componentId) =>
+            {
+                if (eventId == FixedIds.Events.OnAdd && componentId.IsRelationId)
+                {
+                    var superEntityId = Ids.GetCurrentId(componentId.ShortId);
+                    var superArchetype = Archetypes.GetEntityArchetype(superEntityId);
+                    if (superArchetype is null)
+                    {
+                        return;
+                    }
+
+                    for (var i = 0; i < superArchetype.Components.Length; i++)
+                    {
+                        var superComponentId = superArchetype.Components[i];
+                        var superComponentDefinition = GetComponentDefinition(superComponentId);
+                        if (superComponentDefinition.Has(FixedIds.Events.OnExtendIgnore) || superComponentDefinition.Has(FixedIds.Events.OnExtendInherit))
+                        {
+                            continue;
+                        }
+
+                        CopyValueFrom(entityId, superEntityId, superComponentId);
+                    }
+
+                    // unsure if we need to notify queries here
+                }
+                else if (eventId == FixedIds.Events.OnRemove)
+                {
+                    // unsure if we need to notify queries here
+                }
+            }));
+            isAComponent.AddRelation(BuiltInRelationType.OnAdd, isAComponent);
+            isAComponent.AddRelation(BuiltInRelationType.OnRemove, isAComponent);
+
         }
     }
 
@@ -427,50 +475,65 @@ public sealed class World : IEntityActions
     /// <inheritdoc/>
     public bool Has(Identifier entity, Identifier componentId)
     {
-        if (!IsValid(componentId, allowWildcard: true))
-        {
-            return false;
-        }
-
-        if (Archetypes.HasComponent(entity, componentId))
+        if (Owns(entity, componentId))
         {
             return true;
         }
 
-        if (!componentId.IsRelationId)
+        var componentDefinition = GetComponentDefinition(componentId);
+        if (componentDefinition.Owns(FixedIds.Events.OnExtendInherit))
         {
-            return false;
-        }
-
-        var relationId = componentId.ToRelationId();
-        var relationDefinitionId = _relationDefinitionIds[relationId.RelationType];
-        var relationDefinition = new Entity(relationDefinitionId, this);
-        if (relationId.Target == entity.ShortId && relationDefinition.Has<Reflective>())
-        {
-            return true;
-        }
-
-        if (relationDefinition.Has<Transitive>())
-        {
-            var archetype = Archetypes.GetEntityArchetype(entity);
-            if (archetype is not null)
+            var entityArchetype = Archetypes.GetArchetypeEntry(entity);
+            if (!entityArchetype.HasValue)
             {
-                foreach (var targetComponent in archetype.Components)
+                throw new InvalidOperationException("Fatal error, entity somehow does not have an archetype.");
+            }
+
+            foreach (var component in entityArchetype.Value.Archetype.Components)
+            {
+                if (!component.IsRelationId || new RelationComponentIdentifier(component).BuiltInRelationTypeOrNull is not BuiltInRelationType.IsA)
                 {
-                    if (!targetComponent.IsRelationId)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var targetRelation = new RelationComponentIdentifier(targetComponent);
-                    if (targetRelation.RelationType != relationId.RelationType)
-                    {
-                        continue;
-                    }
+                var extendedId = Ids.GetCurrentId(component);
+                if (Has(extendedId, componentId))
+                {
+                    return true;
+                }
+            }
+        }
 
-                    if (TransitiveRelationsMatch(targetRelation, relationId))
+        if (componentId.IsRelationId)
+        {
+            var relationId = componentId.ToRelationId();
+            if (relationId.Target == entity.ShortId && componentDefinition.Has<Reflective>())
+            {
+                return true;
+            }
+
+            if (componentDefinition.Owns(FixedIds.Components.Transitive))
+            {
+                var archetype = Archetypes.GetEntityArchetype(entity);
+                if (archetype is not null)
+                {
+                    foreach (var targetComponent in archetype.Components)
                     {
-                        return true;
+                        if (!targetComponent.IsRelationId)
+                        {
+                            continue;
+                        }
+
+                        var targetRelation = new RelationComponentIdentifier(targetComponent);
+                        if (targetRelation.RelationType != relationId.RelationType)
+                        {
+                            continue;
+                        }
+
+                        if (TransitiveRelationsMatch(targetRelation, relationId))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -480,130 +543,222 @@ public sealed class World : IEntityActions
     }
 
     /// <inheritdoc/>
-    public T? Get<T>(Identifier entity, Identifier component)
+    public bool Owns(Identifier entity, Identifier componentId)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        if (!Archetypes.IsAlive(entity))
         {
-            return default;
+            return false;
         }
 
-        if (!Archetypes.HasComponent(entity, component))
+        if (!IsValid(componentId, allowWildcard: true))
         {
-            return default;
+            return false;
         }
 
-        return Archetypes.GetComponent<T>(entity, component);
+        return Archetypes.HasComponent(entity, componentId);
     }
 
     /// <inheritdoc/>
-    public ref T? GetMutable<T>(Identifier entity, Identifier component)
+    public T? Get<T>(Identifier entity, Identifier componentId)
+    {
+        if (!Archetypes.IsAlive(entity) || !IsValid(componentId, allowWildcard: false))
+        {
+            return default;
+        }
+
+        if (Archetypes.HasComponent(entity, componentId))
+        {
+            return Archetypes.GetComponent<T>(entity, componentId);
+        }
+
+        var componentDefinition = GetComponentDefinition(componentId);
+        if (Has(componentDefinition, FixedIds.Events.OnExtendInherit))
+        {
+            var extendedId = RecursiveGetEntityWithComponent(entity, componentId);
+            if (extendedId.HasValue)
+            {
+                return Archetypes.GetComponent<T>(extendedId.Get(), componentId);
+            }
+        }
+
+        return default;
+    }
+
+    private Option<Identifier> RecursiveGetEntityWithComponent(Identifier entityId, Identifier componentId)
+    {
+        var entityArchetype = Archetypes.GetArchetypeEntry(entityId);
+        if (!entityArchetype.HasValue)
+        {
+            throw new InvalidOperationException("Fatal error, entity somehow does not have an archetype.");
+        }
+
+        foreach (var component in entityArchetype.Value.Archetype.Components)
+        {
+            if (!component.IsRelationId || new RelationComponentIdentifier(component).BuiltInRelationTypeOrNull is not BuiltInRelationType.IsA)
+            {
+                continue;
+            }
+
+            var extendedId = Ids.GetCurrentId(component);
+            if (Archetypes.HasComponent(extendedId, componentId))
+            {
+                return extendedId;
+            }
+
+            var recursiveGet = RecursiveGetEntityWithComponent(extendedId, componentId);
+            if (recursiveGet.HasValue)
+            {
+                return recursiveGet;
+            }
+        }
+
+        return default;
+    }
+
+    /// <inheritdoc/>
+    public ref T? GetMutable<T>(Identifier entity, Identifier componentId)
     {
         if (!Archetypes.IsAlive(entity))
         {
             EntityInvalidException.ThrowEntityInvalid(entity);
         }
 
-        if (!IsValid(component, allowWildcard: false))
+        if (!IsValid(componentId, allowWildcard: false))
         {
-            EntityInvalidException.ThrowComponentInvalid(component);
+            EntityInvalidException.ThrowComponentInvalid(componentId);
         }
 
-        if (!Archetypes.HasComponent(entity, component))
+        if (Archetypes.HasComponent(entity, componentId))
         {
-            EntityInvalidException.ThrowMissingComponent(entity, component);
+            return ref Archetypes.GetRefComponent<T>(entity, componentId);
         }
 
-        return ref Archetypes.GetRefComponent<T>(entity, component);
+        var componentDefinition = GetComponentDefinition(componentId);
+        if (Has(componentDefinition, FixedIds.Events.OnExtendInherit))
+        {
+            var extendedId = RecursiveGetEntityWithComponent(entity, componentId);
+            if (extendedId.HasValue)
+            {
+                return ref Archetypes.GetRefComponent<T>(extendedId.Get(), componentId);
+            }
+        }
+
+        EntityInvalidException.ThrowMissingComponent(entity, componentId);
+        throw new InvalidOperationException(); // line unreachable
     }
 
     /// <inheritdoc/>
-    public void Add(Identifier entity, Identifier component)
+    public void Add(Identifier entity, Identifier componentId)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        if (!Archetypes.IsAlive(entity) || !IsValid(componentId, allowWildcard: false))
         {
             return;
         }
 
-        if (AddComponentIfMissing(entity, component))
-        {
-            OnAdd(entity, component);
-            OnModified(entity, component, skipThisEntity: true);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Set<T>(Identifier entity, Identifier component, T value)
-    {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        if (!AddComponentIfMissing(entity, componentId))
         {
             return;
         }
 
-        var wasAdded = AddComponentIfMissing(entity, component);
-        Archetypes.SetComponent(entity, component, value);
+        OnAdd(entity, componentId);
+        OnModified(entity, componentId, skipThisEntity: true);
+    }
+
+    /// <summary>
+    /// Copies the <paramref name="componentId"/>'s component value from the <paramref name="sourceEntity"/> into the given <paramref name="entity"/>,
+    /// adding the component if it is missing.
+    /// </summary>
+    public void CopyValueFrom(Identifier entity, Identifier sourceEntity, Identifier componentId)
+    {
+        if (!Archetypes.IsAlive(entity) || !Archetypes.IsAlive(sourceEntity) || !IsValid(componentId, allowWildcard: false))
+        {
+            return;
+        }
+
+        if (!Has(sourceEntity, componentId))
+        {
+            return;
+        }
+
+        var wasAdded = AddComponentIfMissing(entity, componentId);
+        Archetypes.CopyValueFrom(entity, sourceEntity, componentId);
 
         if (wasAdded)
         {
-            OnAdd(entity, component);
+            OnAdd(entity, componentId);
         }
 
-        OnModified(entity, component);
+        OnModified(entity, componentId);
     }
 
     /// <inheritdoc/>
-    public void Modified(Identifier entity, Identifier component)
+    public void Set<T>(Identifier entity, Identifier componentId, T value)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        if (!Archetypes.IsAlive(entity) || !IsValid(componentId, allowWildcard: false))
         {
             return;
         }
 
-        if (!Has(entity, component))
+        var wasAdded = AddComponentIfMissing(entity, componentId);
+        Archetypes.SetComponent(entity, componentId, value);
+
+        if (wasAdded)
         {
-            return;
+            OnAdd(entity, componentId);
         }
 
-        OnModified(entity, component);
+        OnModified(entity, componentId);
     }
 
     /// <inheritdoc/>
-    public void Remove(Identifier entity, Identifier component)
+    public void Modified(Identifier entity, Identifier componentId)
     {
-        if (!Archetypes.IsAlive(entity) || !IsValid(component, allowWildcard: false))
+        if (!Archetypes.IsAlive(entity) || !IsValid(componentId, allowWildcard: false))
         {
             return;
         }
 
-        if (!Archetypes.HasComponent(entity, component))
+        if (!Has(entity, componentId))
         {
             return;
         }
 
-        OnRemove(entity, component);
-        Archetypes.RemoveComponent(entity, component);
+        OnModified(entity, componentId);
+    }
 
-        if (component.IsRelationId)
+    /// <inheritdoc/>
+    public void Remove(Identifier entity, Identifier componentId)
+    {
+        if (!Archetypes.IsAlive(entity) || !IsValid(componentId, allowWildcard: false))
         {
-            var relationId = component.ToRelationId();
+            return;
+        }
+
+        if (!Archetypes.HasComponent(entity, componentId))
+        {
+            return;
+        }
+
+        OnRemove(entity, componentId);
+        Archetypes.RemoveComponent(entity, componentId);
+
+        if (componentId.IsRelationId)
+        {
+            var relationId = componentId.ToRelationId();
             var componentEntity = new Entity(_relationDefinitionIds[relationId.RelationType], this);
             if (componentEntity.Has<Symmetric>())
             {
                 var target = Ids.GetCurrentId(relationId.Target);
-                if (target.ShortId == 0)
-                {
-                    target = relationId.Target;
-                }
-
                 Remove(target, relationId.WithTarget(entity));
             }
         }
 
-        if (Has(entity, component))
+        if (Has(entity, componentId))
         {
             // Since the entity still has the component,
             // it means we removed the override, but it still inherits it from a base entity.
             // Raise OnModified since the value between itself and its base entity may be different.
-            OnModified(entity, component);
+            OnModified(entity, componentId);
         }
     }
 
@@ -630,13 +785,7 @@ public sealed class World : IEntityActions
         {
             if (component.IsRelationId && new RelationComponentIdentifier(component).RelationType == relationType)
             {
-                var id = Ids.GetCurrentId(component);
-                if (id.Value == 0)
-                {
-                    id = new Identifier(component.ShortId);
-                }
-
-                return id;
+                return Ids.GetCurrentId(component);
             }
         }
 
@@ -651,13 +800,7 @@ public sealed class World : IEntityActions
             return default;
         }
 
-        var id = Ids.GetCurrentId(relation.Target);
-        if (id.Value == 0)
-        {
-            id = new Identifier(relation.Target);
-        }
-
-        return id;
+        return Ids.GetCurrentId(relation.Target);
     }
 
     /// <summary>
@@ -820,6 +963,20 @@ public sealed class World : IEntityActions
         return false;
     }
 
+    /// <summary>
+    /// If <paramref name="componentId"/> is a relation id, returns the relation definition, otherwise returns the original <paramref name="componentId"/>.
+    /// </summary>
+    internal Entity GetComponentDefinition(Identifier componentId)
+    {
+        var componentDefinitionId = componentId;
+        if (componentId.IsRelationId)
+        {
+            componentDefinitionId = _relationDefinitionIds[componentId.ToRelationId().RelationType];
+        }
+
+        return new Entity(componentDefinitionId, this);
+    }
+
     private Identifier InitializeComponentForType(Identifier entityId, Type type)
     {
         var entity = entityId.ShortId != 0 ? CreateEntityFixedId(entityId) : CreateEntity();
@@ -843,6 +1000,21 @@ public sealed class World : IEntityActions
             {
                 entity.Add<Unique>();
             }
+
+            if (relationTypeAttribute.IsReflective)
+            {
+                entity.Add<Reflective>();
+            }
+
+            if (relationTypeAttribute.IsTransitive)
+            {
+                entity.Add<Transitive>();
+            }
+
+            if (relationTypeAttribute.IsSymmetric)
+            {
+                entity.Add<Symmetric>();
+            }
         }
 
         if (type.GetCustomAttribute<SingletonAttribute>() is not null)
@@ -863,19 +1035,19 @@ public sealed class World : IEntityActions
             return false;
         }
 
-        var datatypeId = component;
+        var definitionId = component;
         if (component.IsRelationId)
         {
             var relationId = new RelationComponentIdentifier(component);
-            datatypeId = _relationDefinitionIds[relationId.RelationType];
-            if (Has(datatypeId, FixedIds.ComponentIds.Unique) && Has(entity, relationId.WithTarget(FixedIds.Relations.Wildcard.ShortId)))
+            definitionId = _relationDefinitionIds[relationId.RelationType];
+            if (Has(definitionId, FixedIds.Components.Unique) && Owns(entity, relationId.WithTarget(FixedIds.Relations.Wildcard.ShortId)))
             {
                 var target = GetRelationTarget(entity, relationId.RelationType);
                 Remove(entity, relationId.WithTarget(target.ShortId));
             }
         }
 
-        var dataType = this.Get<DataComponent>(datatypeId);
+        var dataType = Get<DataComponent>(definitionId, FixedIds.Components.DataComponent);
         Archetypes.AddComponent(entity, component, dataType.DataType);
 
         return true;
@@ -883,17 +1055,11 @@ public sealed class World : IEntityActions
 
     private void OnAdd(Identifier entity, Identifier component)
     {
-        var datatypeId = component;
-        if (component.IsRelationId)
-        {
-            var relationId = new RelationComponentIdentifier(component);
-            datatypeId = _relationDefinitionIds[relationId.RelationType];
-        }
-
-        var onAddActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnAdd);
+        var componentDefinition = GetComponentDefinition(component);
+        var onAddActionId = GetRelationTarget(componentDefinition, (ushort)BuiltInRelationType.OnAdd);
         if (onAddActionId != default)
         {
-            var action = Get<EventActionSystem>(onAddActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            var action = Get<EventActionSystem>(onAddActionId, FixedIds.Components.EventActionSystem).Action;
             if (action is not null)
             {
                 action(this, FixedIds.Events.OnAdd, entity, component);
@@ -903,15 +1069,9 @@ public sealed class World : IEntityActions
         if (component.IsRelationId)
         {
             var relationId = component.ToRelationId();
-            var componentEntity = new Entity(_relationDefinitionIds[relationId.RelationType], this);
-            if (componentEntity.Has<Symmetric>())
+            if (componentDefinition.Has<Symmetric>())
             {
                 var target = Ids.GetCurrentId(relationId.Target);
-                if (target.ShortId == 0)
-                {
-                    target = relationId.Target;
-                }
-
                 Add(target, relationId.WithTarget(entity));
             }
         }
@@ -919,17 +1079,11 @@ public sealed class World : IEntityActions
 
     private void OnRemove(Identifier entity, Identifier component)
     {
-        var componentDefinitionId = component;
-        if (component.IsRelationId)
-        {
-            var relationId = new RelationComponentIdentifier(component);
-            componentDefinitionId = _relationDefinitionIds[relationId.RelationType];
-        }
-
-        var onRemoveActionId = GetRelationTarget(componentDefinitionId, (ushort)BuiltInRelationType.OnRemove);
+        var componentDefinition = GetComponentDefinition(component);
+        var onRemoveActionId = GetRelationTarget(componentDefinition, (ushort)BuiltInRelationType.OnRemove);
         if (onRemoveActionId != default)
         {
-            var action = Get<EventActionSystem>(onRemoveActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+            var action = Get<EventActionSystem>(onRemoveActionId, FixedIds.Components.EventActionSystem).Action;
             if (action is not null)
             {
                 action(this, FixedIds.Events.OnRemove, entity, component);
@@ -939,20 +1093,14 @@ public sealed class World : IEntityActions
 
     private void OnModified(Identifier entity, Identifier component, bool skipThisEntity = false)
     {
-        var datatypeId = component;
-        if (component.IsRelationId)
-        {
-            var relationId = new RelationComponentIdentifier(component);
-            datatypeId = _relationDefinitionIds[relationId.RelationType];
-        }
-
-        var onModifiedActionId = GetRelationTarget(datatypeId, (ushort)BuiltInRelationType.OnModified);
+        var componentDefinition = GetComponentDefinition(component);
+        var onModifiedActionId = GetRelationTarget(componentDefinition, (ushort)BuiltInRelationType.OnModified);
         if (onModifiedActionId == default)
         {
             return;
         }
 
-        var action = Get<EventActionSystem>(onModifiedActionId, FixedIds.ComponentIds.EventActionSystem).Action;
+        var action = Get<EventActionSystem>(onModifiedActionId, FixedIds.Components.EventActionSystem).Action;
         if (action is null)
         {
             return;
@@ -963,8 +1111,7 @@ public sealed class World : IEntityActions
             action(this, FixedIds.Events.OnModified, entity, component);
         }
 
-        var componentEntity = new Entity(datatypeId, this);
-        if (componentEntity.HasRelation<OnExtend, Inherit>())
+        if (componentDefinition.HasRelation<OnExtend, Inherit>())
         {
             RecursiveOnModified(action, this, entity, component);
         }

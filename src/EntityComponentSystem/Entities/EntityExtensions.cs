@@ -91,10 +91,11 @@ public static class EntityExtensions
         /// </summary>
         public bool Has<TComponent>() => entity.Actions?.Has<TComponent>(entity) ?? false;
 
-        /// <summary>
-        /// Returns <see langword="true"/> if the entity contains the given component with <paramref name="componentId"/>.
-        /// </summary>
+        /// <inheritdoc cref="IEntityActions.Has(Identifier, Identifier)"/>
         public bool Has(Identifier componentId) => entity.Actions?.Has(entity, componentId) ?? false;
+
+        /// <inheritdoc cref="IEntityActions.Owns(Identifier, Identifier)"/>
+        public bool Owns(Identifier componentId) => entity.Actions?.Owns(entity, componentId) ?? false;
 
         /// <summary>
         /// Marks the <paramref name="componentId"/> as modified. Should be called when the component value was modified outside of a <c>Set</c> call.

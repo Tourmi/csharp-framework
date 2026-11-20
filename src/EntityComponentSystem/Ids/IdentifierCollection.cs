@@ -173,8 +173,14 @@ internal partial class IdentifierCollection
 
     /// <summary>
     /// Returns the current identifier based on the <paramref name="entityId"/>'s short id.
+    /// If this collection doesn't have the given Id, returns the given <paramref name="entityId"/>'s short id with default values instead.
     /// </summary>
-    public Identifier GetCurrentId(Identifier entityId) => _identifiers[_idToIndex[entityId.ShortId]];
+    public Identifier GetCurrentId(Identifier entityId)
+    {
+        var id = _identifiers[_idToIndex[entityId.ShortId]];
+
+        return id.ShortId != 0 ? id : new(entityId.ShortId);
+    }
 
     /// <summary>
     /// Releases the given <paramref name="entityId"/> to the pool.

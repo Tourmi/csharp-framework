@@ -58,42 +58,48 @@ public interface IEntityActions
     void Kill(Identifier entity);
 
     /// <summary>
-    /// Returns true if the <paramref name="entity"/> has the given <paramref name="componentId"/>.
+    /// Returns <see langword="true"/> if the <paramref name="entity"/> has the given <paramref name="componentId"/>.
     /// </summary>
     bool Has(Identifier entity, Identifier componentId);
 
     /// <summary>
-    /// Returns the <paramref name="component"/> value for the given <paramref name="entity"/>.
+    /// Returns <see langword="true"/> if the <paramref name="entity"/> has the given <paramref name="componentId"/>, and owns its value.
+    /// ie: This will returns <see langword="false"/> if the <paramref name="entity"/> has the component only due to inheritance or transitivity.
     /// </summary>
-    T? Get<T>(Identifier entity, Identifier component);
+    bool Owns(Identifier entity, Identifier componentId);
 
     /// <summary>
-    /// Returns a mutable reference of the <paramref name="component"/> for the given <paramref name="entity"/>.
+    /// Returns the <paramref name="componentId"/> value for the given <paramref name="entity"/>.
+    /// </summary>
+    T? Get<T>(Identifier entity, Identifier componentId);
+
+    /// <summary>
+    /// Returns a mutable reference of the <paramref name="componentId"/> for the given <paramref name="entity"/>.
     /// </summary>
     /// <remarks>
     /// Will throw if the entity or the component are not valid.
     /// </remarks>
-    ref T? GetMutable<T>(Identifier entity, Identifier component);
+    ref T? GetMutable<T>(Identifier entity, Identifier componentId);
 
     /// <summary>
-    /// Adds the given <paramref name="component"/> to the <paramref name="entity"/>, without any associated data.
+    /// Adds the given <paramref name="componentId"/> to the <paramref name="entity"/>, without any associated data.
     /// </summary>
-    void Add(Identifier entity, Identifier component);
+    void Add(Identifier entity, Identifier componentId);
 
     /// <summary>
-    /// Sets the <paramref name="component"/>'s value for the <paramref name="entity"/> to the given <paramref name="value"/>
+    /// Sets the <paramref name="componentId"/>'s value for the <paramref name="entity"/> to the given <paramref name="value"/>
     /// </summary>
-    void Set<T>(Identifier entity, Identifier component, T value);
+    void Set<T>(Identifier entity, Identifier componentId, T value);
 
     /// <summary>
-    /// Signals that the <paramref name="component"/> was modified for the <paramref name="entity"/>.
+    /// Signals that the <paramref name="componentId"/> was modified for the <paramref name="entity"/>.
     /// </summary>
-    void Modified(Identifier entity, Identifier component);
+    void Modified(Identifier entity, Identifier componentId);
 
     /// <summary>
-    /// Removes the given <paramref name="component"/> from the <paramref name="entity"/>.
+    /// Removes the given <paramref name="componentId"/> from the <paramref name="entity"/>.
     /// </summary>
-    void Remove(Identifier entity, Identifier component);
+    void Remove(Identifier entity, Identifier componentId);
 
     /// <summary>
     /// Returns the target of the relation represented by the given <paramref name="relationType"/> for the <paramref name="entity"/>.

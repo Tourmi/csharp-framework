@@ -39,5 +39,19 @@ public static class WorldComponentExtensions
 
             return new ComponentEntity(entity);
         }
+
+        /// <summary>
+        /// Returns the component represented by the given <see langword="type"/> <typeparamref name="T"/>, or an invalid entity if it is invalid.
+        /// </summary>
+        public ComponentEntity GetComponent<T>()
+        {
+            var entity = world.ThrowIfNull().GetEntityForType<T>();
+            if (entity.Id.IsRelationId)
+            {
+                return default;
+            }
+
+            return new ComponentEntity(entity);
+        }
     }
 }

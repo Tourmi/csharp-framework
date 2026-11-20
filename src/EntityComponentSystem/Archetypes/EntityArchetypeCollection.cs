@@ -90,6 +90,16 @@ internal class EntityArchetypeCollection
         => _entities[entityId].SetValue(componentId, value);
 
     /// <summary>
+    /// Copies the value for the <paramref name="componentId"/> from the <paramref name="sourceEntityId"/> into the <paramref name="entityId"/>.
+    /// </summary>
+    public void CopyValueFrom(Identifier entityId, Identifier sourceEntityId, Identifier componentId)
+    {
+        var entityEntry = _entities[entityId];
+        var sourceEntityEntry = _entities[sourceEntityId];
+        entityEntry.Archetype.GetComponentCollection(componentId).CopyValueFrom(sourceEntityEntry.Archetype.GetComponentCollection(componentId), sourceEntityEntry.Index, entityEntry.Index);
+    }
+
+    /// <summary>
     /// Returns all archetypes
     /// </summary>
     internal IEnumerable<Archetype> GetArchetypes() => _archetypes.Values;

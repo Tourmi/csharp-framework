@@ -63,38 +63,38 @@ public sealed class EntityActions : IEntityActions
     }
 
     /// <inheritdoc/>
-    public T? Get<T>(Identifier entity, Identifier component)
+    public T? Get<T>(Identifier entity, Identifier componentId)
     {
-        if (!Has(entity, component))
+        if (!Has(entity, componentId))
         {
             return default;
         }
 
-        if (_componentValueOverrideIndexes.TryGetValue((entity, component), out var index))
+        if (_componentValueOverrideIndexes.TryGetValue((entity, componentId), out var index))
         {
-            var collection = GetComponentCollection<T>(component);
+            var collection = GetComponentCollection<T>(componentId);
             return collection[index];
         }
 
-        return World.Get<T>(entity, component);
+        return World.Get<T>(entity, componentId);
     }
 
     /// <inheritdoc/>
-    public ref T? GetMutable<T>(Identifier entity, Identifier component)
+    public ref T? GetMutable<T>(Identifier entity, Identifier componentId)
     {
-        if (!Has(entity, component))
+        if (!Has(entity, componentId))
         {
-            EntityInvalidException.ThrowMissingComponent(entity, component);
+            EntityInvalidException.ThrowMissingComponent(entity, componentId);
         }
 
-        var collection = GetComponentCollection<T>(component);
+        var collection = GetComponentCollection<T>(componentId);
 
-        if (_componentValueOverrideIndexes.TryGetValue((entity, component), out var index))
+        if (_componentValueOverrideIndexes.TryGetValue((entity, componentId), out var index))
         {
             return ref collection[index];
         }
 
-        return ref World.GetMutable<T>(entity, component);
+        return ref World.GetMutable<T>(entity, componentId);
     }
 
     /// <inheritdoc/>
@@ -106,6 +106,17 @@ public sealed class EntityActions : IEntityActions
         }
 
         return World.Has(entity, componentId);
+    }
+
+    /// <inheritdoc/>
+    public bool Owns(Identifier entity, Identifier componentId)
+    {
+        if (_hasComponentOverrides.TryGetValue((entity, componentId), out var hasComponent))
+        {
+            return hasComponent;
+        }
+
+        return World.Owns(entity, componentId);
     }
 
     /// <inheritdoc/>
@@ -131,83 +142,83 @@ public sealed class EntityActions : IEntityActions
     }
 
     /// <inheritdoc/>
-    public void Add(Identifier entity, Identifier component)
+    public void Add(Identifier entity, Identifier componentId)
     {
         if (!DeferActions)
         {
-            World.Add(entity, component);
+            World.Add(entity, componentId);
             return;
         }
 
-        if (Has(entity, component))
+        if (Owns(entity, componentId))
         {
             return;
         }
 
         _queuedActions.Enqueue(ActionType.Add);
-        _queuedAdds.Enqueue((entity, component));
-        _hasComponentOverrides[(entity, component)] = true;
+        _queuedAdds.Enqueue((entity, componentId));
+        _hasComponentOverrides[(entity, componentId)] = true;
     }
 
     /// <inheritdoc/>
-    public void Remove(Identifier entity, Identifier component)
+    public void Remove(Identifier entity, Identifier componentId)
     {
         if (!DeferActions)
         {
-            World.Remove(entity, component);
+            World.Remove(entity, componentId);
             return;
         }
 
         _queuedActions.Enqueue(ActionType.Remove);
-        _queuedRemoves.Enqueue((entity, component));
-        _hasComponentOverrides[(entity, component)] = false;
+        _queuedRemoves.Enqueue((entity, componentId));
+        _hasComponentOverrides[(entity, componentId)] = false;
     }
 
     /// <inheritdoc/>
-    public void Set<T>(Identifier entity, Identifier component, T value)
+    public void Set<T>(Identifier entity, Identifier componentId, T value)
     {
         if (!DeferActions)
         {
-            World.Set(entity, component, value);
+            World.Set(entity, componentId, value);
             return;
         }
 
-        if (!Has(entity, component))
+        if (!Owns(entity, componentId))
         {
-            Add(entity, component);
+            Add(entity, componentId);
         }
 
-        var collection = GetComponentCollection<T>(component);
-        if (!_componentValueOverrideIndexes.TryGetValue((entity, component), out var componentIndex))
+        var collection = GetComponentCollection<T>(componentId);
+        if (!_componentValueOverrideIndexes.TryGetValue((entity, componentId), out var componentIndex))
         {
             componentIndex = collection.Count;
             collection.AddEntry();
 
-            _componentValueOverrideIndexes[(entity, component)] = componentIndex;
+            _componentValueOverrideIndexes[(entity, componentId)] = componentIndex;
         }
 
         collection[componentIndex] = value;
 
         _queuedActions.Enqueue(ActionType.Set);
-        _queuedSets.Enqueue((entity, component));
+        _queuedSets.Enqueue((entity, componentId));
     }
 
     /// <inheritdoc/>
-    public void Modified(Identifier entity, Identifier component)
+    public void Modified(Identifier entity, Identifier componentId)
     {
         if (!DeferActions)
         {
-            World.Modified(entity, component);
+            World.Modified(entity, componentId);
             return;
         }
 
-        if (!Has(entity, component))
+        if (!Has(entity, componentId))
         {
             return;
         }
 
         _queuedActions.Enqueue(ActionType.Modified);
-        _queuedModified.Enqueue((entity, component));
+        _queuedModified.Enqueue((entity, componentId));
     }
 
     /// <inheritdoc/>
@@ -301,6 +312,7 @@ public sealed class EntityActions : IEntityActions
 
             var targetCollection = entry.Value.Archetype.GetComponentCollection(action.Component);
             targetCollection.CopyValueFrom(sourceCollection, sourceIndex, targetIndex: entry.Value.Index);
+            World.Modified(action.Entity, action.Component);
         }
 
         void OnModified()

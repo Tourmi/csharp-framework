@@ -17,13 +17,14 @@ public enum BuiltInRelationType : byte
     ChildOf = 1,
 
     /// <summary>
-    /// Defines that X is a Y. When adding X to an entity, Y will also be added to the entity.
+    /// Defines that X is a Y. Upon adding the relationship, will copy most components from Y into X, unless they are defined as OnExtend: Ignore or Inherit.
+    /// X will inherit any components that are (OnExtend, Inherit)
     /// <para />ie: Apple is a Fruit, Car is a Vehicle.
     /// </summary>
     IsA = 2,
 
     /// <summary>
-    /// Defines that X is an instance of Y. If a component does not exist in the entity, Y will be queried for the component.
+    /// Defines that X is an instance of Y.
     /// Usually used for instances of <see cref="Prefab"/>.
     /// <para />ie: PlayerCar entity is an instance of CarPrefab
     /// </summary>

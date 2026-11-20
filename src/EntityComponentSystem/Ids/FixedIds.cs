@@ -161,7 +161,7 @@ public static class FixedIds
     /// <summary>
     /// Entity Ids of built-in components.
     /// </summary>
-    public static class ComponentIds
+    public static class Components
     {
         /// <summary>
         /// Start of the Id region.
@@ -179,67 +179,67 @@ public static class FixedIds
         public const uint RegionEnd = RegionStart + RegionSize;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Component"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Component"/>
         /// </summary>
         public static readonly Identifier Component = RegionStart + 0x00;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.DataComponent"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.DataComponent"/>
         /// </summary>
         public static readonly Identifier DataComponent = RegionStart + 0x01;
 
         /// <summary>
-        /// <see cref="Components.Name"/>
+        /// <see cref="EntityComponentSystem.Components.Name"/>
         /// </summary>
         public static readonly Identifier Name = RegionStart + 0x02;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.RelationDefinition"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.RelationDefinition"/>
         /// </summary>
         public static readonly Identifier RelationDefinition = RegionStart + 0x03;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Singleton"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Singleton"/>
         /// </summary>
         public static readonly Identifier Singleton = RegionStart + 0x04;
 
         /// <summary>
-        /// <see cref="Components.Tags.Prefab"/>
+        /// <see cref="EntityComponentSystem.Components.Tags.Prefab"/>
         /// </summary>
         public static readonly Identifier Prefab = RegionStart + 0x05;
 
         /// <summary>
-        /// <see cref="Components.Schedule"/>
+        /// <see cref="EntityComponentSystem.Components.Schedule"/>
         /// </summary>
         public static readonly Identifier Schedule = RegionStart + 0x06;
 
         /// <summary>
-        /// <see cref="Components.SystemComponent"/>
+        /// <see cref="EntityComponentSystem.Components.SystemComponent"/>
         /// </summary>
         public static readonly Identifier SystemComponent = RegionStart + 0x07;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Unique"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Unique"/>
         /// </summary>
         public static readonly Identifier Unique = RegionStart + 0x08;
 
         /// <summary>
-        /// <see cref="Components.EventActionSystem"/>
+        /// <see cref="EntityComponentSystem.Components.EventActionSystem"/>
         /// </summary>
         public static readonly Identifier EventActionSystem = RegionStart + 0x09;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Symmetric"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Symmetric"/>
         /// </summary>
         public static readonly Identifier Symmetric = RegionStart + 0x10;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Transitive"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Transitive"/>
         /// </summary>
         public static readonly Identifier Transitive = RegionStart + 0x11;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Reflective"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Reflective"/>
         /// </summary>
         public static readonly Identifier Reflective = RegionStart + 0x12;
     }
@@ -252,7 +252,7 @@ public static class FixedIds
         /// <summary>
         /// Start of the Id region.
         /// </summary>
-        public const uint RegionStart = ComponentIds.RegionEnd;
+        public const uint RegionStart = Components.RegionEnd;
 
         /// <summary>
         /// Size of the Id region.
@@ -305,9 +305,24 @@ public static class FixedIds
         public static readonly Identifier OnTargetKill = RegionStart + 0x07;
 
         /// <summary>
-        /// <see cref="Components.Relations.OnExtend"/>
+        /// <see cref="EntityComponentSystem.Components.Relations.OnExtend"/>
         /// </summary>
         public static readonly Identifier OnExtend = RegionStart + 0x08;
+
+        /// <summary>
+        /// Shorthand for a Relation(OnExtend, Copy) id.
+        /// </summary>
+        public static readonly RelationComponentIdentifier OnExtendCopy = Actions.Copy.ToRelationId().WithRelationType(BuiltInRelationType.OnExtend);
+
+        /// <summary>
+        /// Shorthand for a Relation(OnExtend, Inherit) id.
+        /// </summary>
+        public static readonly RelationComponentIdentifier OnExtendInherit = Actions.Inherit.ToRelationId().WithRelationType(BuiltInRelationType.OnExtend);
+
+        /// <summary>
+        /// Shorthand for a Relation(OnExtend, Ignore) id.
+        /// </summary>
+        public static readonly RelationComponentIdentifier OnExtendIgnore = Actions.Ignore.ToRelationId().WithRelationType(BuiltInRelationType.OnExtend);
     }
 
     /// <summary>
@@ -346,29 +361,19 @@ public static class FixedIds
         public static readonly Identifier Panic = RegionStart + 0x02;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Copy"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Copy"/>
         /// </summary>
         public static readonly Identifier Copy = RegionStart + 0x03;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Inherit"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Inherit"/>
         /// </summary>
         public static readonly Identifier Inherit = RegionStart + 0x04;
 
         /// <summary>
-        /// <see cref="Components.Metacomponents.Ignore"/>
+        /// <see cref="EntityComponentSystem.Components.Metacomponents.Ignore"/>
         /// </summary>
         public static readonly Identifier Ignore = RegionStart + 0x05;
-
-        /// <summary>
-        /// Id for the relation definition system, handling on-add and on-remove events.
-        /// </summary>
-        internal static readonly Identifier RelationDefinitionSystem = RegionStart + 0xFE;
-
-        /// <summary>
-        /// Id for the singleton system, handling on-add and on-remove events.
-        /// </summary>
-        internal static readonly Identifier SingletonSystem = RegionStart + 0xFF;
     }
 
     /// <summary>
